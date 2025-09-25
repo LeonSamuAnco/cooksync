@@ -53,6 +53,49 @@ class RecipeService {
     }
   }
 
+  // Buscar recetas por ingredientes con filtros adicionales
+  async searchByIngredientsWithFilters(ingredientIds, additionalFilters = {}) {
+    try {
+      if (!ingredientIds || ingredientIds.length === 0) {
+        return [];
+      }
+
+      const queryParams = new URLSearchParams();
+      
+      // Agregar ingredientes
+      queryParams.append('ingredients', ingredientIds.join(','));
+      
+      // Agregar filtros adicionales
+      Object.keys(additionalFilters).forEach(key => {
+        if (additionalFilters[key] !== undefined && 
+            additionalFilters[key] !== null && 
+            additionalFilters[key] !== '' && 
+            additionalFilters[key] !== false &&
+            key !== 'ingredients') { // Evitar duplicar ingredientes
+          if (Array.isArray(additionalFilters[key])) {
+            queryParams.append(key, additionalFilters[key].join(','));
+          } else {
+            queryParams.append(key, additionalFilters[key]);
+          }
+        }
+      });
+
+      const url = `${API_BASE_URL}/recipes/by-ingredients?${queryParams.toString()}`;
+      console.log('URL de búsqueda con filtros:', url);
+      
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error buscando recetas por ingredientes con filtros:', error);
+      throw error;
+    }
+  }
+
   // Obtener una receta específica por ID
   async getRecipeById(id) {
     try {

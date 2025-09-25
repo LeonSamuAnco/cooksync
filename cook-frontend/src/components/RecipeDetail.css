@@ -443,13 +443,96 @@
 
 /* Ingrediente que al usuario le FALTA */
 .ingredient-missing {
-    /* No necesita fondo especial */
+  color: #6b7280; /* Texto gris para el ingrediente que falta */
 }
 
 .ingredient-missing .ingredient-check {
-  color: #ef4444; /* Rojo */
+  color: #ef4444;
 }
 
-.ingredient-missing {
-  color: #6b7280; /* Texto gris para el ingrediente que falta */
+/* Estilos para la descripción de la receta */
+.recipe-description {
+  background: white;
+  padding: 2rem;
+  border-radius: 16px;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  border-left: 4px solid #10b981;
+}
+
+.recipe-description p {
+  margin: 0;
+  color: #4a5568;
+  font-size: 1.1rem;
+  line-height: 1.6;
+}
+
+/* Estilos para las instrucciones */
+.instructions-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.instruction-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.instruction-step:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.step-number {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.step-content {
+  flex: 1;
+  color: #2d3748;
+  font-size: 1rem;
+  line-height: 1.6;
+  padding-top: 0.25rem;
+}
+
+/* Mejoras para ingredientes */
+.ingredients-section ul li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.5rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.ingredients-section ul li:hover {
+  transform: translateX(4px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.ingredients-section ul li strong {
+  color: #10b981;
+  font-weight: 600;
 }

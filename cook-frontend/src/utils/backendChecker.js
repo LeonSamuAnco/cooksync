@@ -21,7 +21,7 @@ export const BackendChecker = {
     const endpoints = [
       { name: 'Backend Base', url: '/' },
       { name: 'Recipes', url: '/recipes' },
-      { name: 'Ingredients', url: '/ingredients' },
+      { name: 'Ingredients', url: '/recipes/ingredients/all' },
       { name: 'Admin Test', url: '/admin/test' },
     ];
 

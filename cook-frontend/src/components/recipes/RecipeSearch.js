@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import recipeService from '../../services/recipeService';
 import './RecipeSearch.css';
 
@@ -20,11 +20,117 @@ const RecipeSearch = ({ onRecipesFound, onLoading }) => {
   });
   const [showFilters, setShowFilters] = useState(false);
   const [loading, setLoading] = useState(false);
+  const searchTimeoutRef = useRef(null);
+  const lastSearchRef = useRef('');
+
+  // Buscar recetas
+  const handleSearch = useCallback(async () => {
+    setLoading(true);
+    onLoading?.(true);
+
+    try {
+      let results = [];
+
+      // Preparar filtros combinados
+      const searchFilters = {
+        ...filters,
+        search: searchTerm,
+      };
+
+      // Agregar ingredientes si están seleccionados
+      if (selectedIngredients.length > 0) {
+        searchFilters.ingredients = selectedIngredients;
+      }
+
+      // Limpiar filtros vacíos
+      Object.keys(searchFilters).forEach(key => {
+        if (searchFilters[key] === '' || searchFilters[key] === false) {
+          delete searchFilters[key];
+        }
+      });
+
+      console.log('Filtros aplicados:', searchFilters);
+
+      if (selectedIngredients.length > 0) {
+        // Búsqueda por ingredientes con filtros adicionales
+        results = await recipeService.searchByIngredientsWithFilters(selectedIngredients, searchFilters);
+      } else {
+        // Búsqueda general con filtros
+        const response = await recipeService.getAllRecipes(searchFilters);
+        results = response.recipes || response;
+      }
+
+      onRecipesFound?.(results);
+    } catch (error) {
+      console.error('Error en búsqueda:', error);
+      // Fallback: intentar búsqueda simple si falla la búsqueda con filtros
+      try {
+        if (selectedIngredients.length > 0) {
+          const fallbackResults = await recipeService.searchByIngredients(selectedIngredients);
+          onRecipesFound?.(fallbackResults);
+        } else {
+          onRecipesFound?.([]);
+        }
+      } catch (fallbackError) {
+        console.error('Error en búsqueda fallback:', fallbackError);
+        onRecipesFound?.([]);
+      }
+    } finally {
+      setLoading(false);
+      onLoading?.(false);
+    }
+  }, [selectedIngredients, filters, searchTerm, onRecipesFound, onLoading]);
 
   // Cargar datos iniciales
   useEffect(() => {
     loadInitialData();
   }, []);
+
+  // Debounce para evitar peticiones excesivas
+  useEffect(() => {
+    // Limpiar timeout anterior
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    // Crear clave única para los ingredientes seleccionados
+    const currentSearchKey = selectedIngredients.sort().join(',');
+    
+    // Solo buscar si los ingredientes han cambiado
+    if (currentSearchKey === lastSearchRef.current) {
+      return;
+    }
+
+    searchTimeoutRef.current = setTimeout(async () => {
+      if (selectedIngredients.length > 0) {
+        setLoading(true);
+        onLoading?.(true);
+        
+        try {
+          const results = await recipeService.searchByIngredients(selectedIngredients);
+          onRecipesFound?.(results);
+          lastSearchRef.current = currentSearchKey; // Actualizar la última búsqueda
+        } catch (error) {
+          console.error('Error en búsqueda automática:', error);
+          onRecipesFound?.([]);
+        } finally {
+          setLoading(false);
+          onLoading?.(false);
+        }
+      } else {
+        // Limpiar resultados cuando no hay ingredientes seleccionados
+        onRecipesFound?.([]);
+        lastSearchRef.current = '';
+      }
+    }, 500);
+
+    // Cleanup function
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [selectedIngredients, onRecipesFound, onLoading]);
 
   const loadInitialData = async () => {
     try {
@@ -39,45 +145,6 @@ const RecipeSearch = ({ onRecipesFound, onLoading }) => {
       setDifficulties(difficultiesData);
     } catch (error) {
       console.error('Error cargando datos iniciales:', error);
-    }
-  };
-
-  // Buscar recetas
-  const handleSearch = async () => {
-    setLoading(true);
-    onLoading?.(true);
-
-    try {
-      let results = [];
-
-      if (selectedIngredients.length > 0) {
-        // Búsqueda por ingredientes
-        results = await recipeService.searchByIngredients(selectedIngredients);
-      } else {
-        // Búsqueda general con filtros
-        const searchFilters = {
-          ...filters,
-          search: searchTerm,
-        };
-
-        // Limpiar filtros vacíos
-        Object.keys(searchFilters).forEach(key => {
-          if (searchFilters[key] === '' || searchFilters[key] === false) {
-            delete searchFilters[key];
-          }
-        });
-
-        const response = await recipeService.getAllRecipes(searchFilters);
-        results = response.recipes || response;
-      }
-
-      onRecipesFound?.(results);
-    } catch (error) {
-      console.error('Error en búsqueda:', error);
-      onRecipesFound?.([]);
-    } finally {
-      setLoading(false);
-      onLoading?.(false);
     }
   };
 

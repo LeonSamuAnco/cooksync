@@ -51,9 +51,12 @@ export class RecipesController {
     return this.recipesService.findAll(filters);
   }
 
-  // Buscar recetas por ingredientes
+  // Buscar recetas por ingredientes con filtros adicionales
   @Get('by-ingredients')
-  async findByIngredients(@Query('ingredients') ingredients: string) {
+  async findByIngredients(
+    @Query('ingredients') ingredients: string,
+    @Query(ValidationPipe) filters: RecipeFiltersDto,
+  ) {
     if (!ingredients) {
       return [];
     }
@@ -62,7 +65,10 @@ export class RecipesController {
       .map((id) => parseInt(id.trim()))
       .filter((id) => !isNaN(id));
     
-    return this.recipesService.findByIngredients(ingredientIds);
+    return await this.recipesService.findByIngredientsWithFilters(
+      ingredientIds,
+      filters,
+    );
   }
 
   // Obtener una receta específica
@@ -93,6 +99,25 @@ export class RecipesController {
   @Get('units/all')
   async findAllMeasurementUnits() {
     return this.recipesService.findAllMeasurementUnits();
+  }
+
+  // Obtener recomendaciones inteligentes
+  @Get('recommendations')
+  async getRecommendations(@Query() params: any) {
+    const userId = params.userId ? parseInt(params.userId) : null;
+    const limit = params.limit ? parseInt(params.limit) : 12;
+    return await this.recipesService.getIntelligentRecommendations(userId, limit);
+  }
+
+  // Obtener recetas similares a una receta específica
+  @Get(':id/similar')
+  async getSimilarRecipes(
+    @Param('id') id: string,
+    @Query('limit') limit?: string,
+  ) {
+    const recipeId = parseInt(id);
+    const limitNum = limit ? parseInt(limit) : 6;
+    return await this.recipesService.getSimilarRecipes(recipeId, limitNum);
   }
 
   // ========================================

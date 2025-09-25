@@ -31,7 +31,7 @@ export const API_CONFIG = {
     },
     
     // Ingredientes
-    INGREDIENTS: '/ingredients',
+    INGREDIENTS: '/recipes/ingredients/all',
   },
   
   // Configuración de timeouts

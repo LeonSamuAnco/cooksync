@@ -248,6 +248,124 @@ export class RecipesPrismaService {
     }
   }
 
+  // Buscar recetas por ingredientes con filtros adicionales
+  async findByIngredientsWithFilters(ingredientIds: number[], filters: RecipeFiltersDto) {
+    try {
+      if (!ingredientIds || ingredientIds.length === 0) {
+        throw new BadRequestException(
+          'Debe proporcionar al menos un ingrediente',
+        );
+      }
+
+      // Construir condiciones de filtrado
+      const whereConditions: any = {
+        esActivo: true,
+        ingredientes: {
+          some: {
+            ingredienteMaestroId: {
+              in: ingredientIds,
+            },
+          },
+        },
+      };
+
+      // Aplicar filtros adicionales
+      if (filters.categoriaId) {
+        whereConditions.categoriaRecetaId = parseInt(filters.categoriaId);
+      }
+
+      if (filters.dificultadId) {
+        whereConditions.dificultadId = parseInt(filters.dificultadId);
+      }
+
+      if (filters.tiempoMax) {
+        whereConditions.tiempoTotal = {
+          lte: parseInt(filters.tiempoMax),
+        };
+      }
+
+      if (filters.search) {
+        whereConditions.OR = [
+          { nombre: { contains: filters.search, mode: 'insensitive' } },
+          { descripcion: { contains: filters.search, mode: 'insensitive' } },
+        ];
+      }
+
+      // Filtros dietéticos
+      if (filters.esVegetariana) {
+        whereConditions.esVegetariana = true;
+      }
+
+      if (filters.esVegana) {
+        whereConditions.esVegana = true;
+      }
+
+      if (filters.sinGluten) {
+        whereConditions.sinGluten = true;
+      }
+
+      if (filters.sinLactosa) {
+        whereConditions.sinLactosa = true;
+      }
+
+      if (filters.esSaludable) {
+        whereConditions.esSaludable = true;
+      }
+
+      const recipes = await this.prisma.recipe.findMany({
+        where: whereConditions,
+        include: {
+          categoria: true,
+          dificultad: true,
+          ingredientes: {
+            include: {
+              ingredienteMaestro: true,
+              unidadMedida: true,
+            },
+          },
+        },
+        orderBy: {
+          calificacionPromedio: 'desc',
+        },
+      });
+
+      // Calcular porcentaje de coincidencia de ingredientes
+      const recipesWithMatch = recipes.map((recipe) => {
+        const recipeIngredientIds = recipe.ingredientes.map(
+          (ing) => ing.ingredienteMaestroId,
+        );
+        const matchingIngredients = recipeIngredientIds.filter((id) =>
+          ingredientIds.includes(id),
+        );
+        const matchPercentage =
+          (matchingIngredients.length / recipeIngredientIds.length) * 100;
+
+        return {
+          ...recipe,
+          matchPercentage: Math.round(matchPercentage),
+          matchingIngredients: matchingIngredients.length,
+          totalIngredients: recipeIngredientIds.length,
+        };
+      });
+
+      // Ordenar por porcentaje de coincidencia
+      recipesWithMatch.sort((a, b) => b.matchPercentage - a.matchPercentage);
+
+      this.logger.log(
+        `Encontradas ${recipesWithMatch.length} recetas para ${ingredientIds.length} ingredientes con filtros aplicados`,
+      );
+      return recipesWithMatch;
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      this.logger.error('Error buscando recetas por ingredientes con filtros:', error);
+      throw new InternalServerErrorException(
+        'Error al buscar recetas por ingredientes con filtros',
+      );
+    }
+  }
+
   // Obtener ingredientes maestros
   async findAllIngredients() {
     try {
@@ -262,6 +380,207 @@ export class RecipesPrismaService {
       this.logger.error('Error obteniendo ingredientes:', error);
       throw new InternalServerErrorException(
         'Error al obtener los ingredientes',
+      );
+    }
+  }
+
+  // Obtener recomendaciones inteligentes
+  async getIntelligentRecommendations(userId?: number, limit: number = 12) {
+    try {
+      // Algoritmo de recomendación inteligente
+      const recommendations = await this.prisma.recipe.findMany({
+        where: {
+          esActivo: true,
+        },
+        include: {
+          categoria: true,
+          dificultad: true,
+          ingredientes: {
+            include: {
+              ingredienteMaestro: true,
+              unidadMedida: true,
+            },
+          },
+        },
+        take: limit * 2, // Obtener más para poder aplicar algoritmo
+      });
+
+      // Aplicar algoritmo de scoring
+      const scoredRecipes = recommendations.map((recipe) => {
+        let score = 0;
+
+        // Factor 1: Calificación promedio (peso 30%)
+        score += (recipe.calificacionPromedio?.toNumber() || 0) * 0.3;
+
+        // Factor 2: Popularidad (veces preparada) (peso 25%)
+        const popularityScore = Math.min((recipe.vecesPreparada || 0) / 100, 1) * 5;
+        score += popularityScore * 0.25;
+
+        // Factor 3: Veces favorita (peso 20%)
+        const favoritesScore = Math.min((recipe.vecesFavorita || 0) / 50, 1) * 5;
+        score += favoritesScore * 0.2;
+
+        // Factor 4: Recetas destacadas (peso 15%)
+        if (recipe.esDestacada) {
+          score += 5 * 0.15;
+        }
+
+        // Factor 5: Recetas verificadas (peso 10%)
+        if (recipe.esVerificada) {
+          score += 5 * 0.1;
+        }
+
+        // Factor 6: Bonus por tiempo de preparación razonable
+        if (recipe.tiempoTotal && recipe.tiempoTotal <= 60) {
+          score += 0.5;
+        }
+
+        // Factor 7: Bonus por recetas saludables
+        if (recipe.esSaludable) {
+          score += 0.3;
+        }
+
+        return {
+          ...recipe,
+          recommendationScore: Math.round(score * 100) / 100,
+        };
+      });
+
+      // Ordenar por score y tomar el límite solicitado
+      const sortedRecommendations = scoredRecipes
+        .sort((a, b) => b.recommendationScore - a.recommendationScore)
+        .slice(0, limit);
+
+      this.logger.log(
+        `Generadas ${sortedRecommendations.length} recomendaciones inteligentes`,
+      );
+
+      return sortedRecommendations;
+    } catch (error) {
+      this.logger.error('Error generando recomendaciones:', error);
+      throw new InternalServerErrorException(
+        'Error al generar recomendaciones',
+      );
+    }
+  }
+
+  // Obtener recetas similares a una receta específica
+  async getSimilarRecipes(recipeId: number, limit: number = 6) {
+    try {
+      // Obtener la receta base
+      const baseRecipe = await this.prisma.recipe.findUnique({
+        where: { id: recipeId },
+        include: {
+          categoria: true,
+          dificultad: true,
+          ingredientes: {
+            include: {
+              ingredienteMaestro: true,
+            },
+          },
+        },
+      });
+
+      if (!baseRecipe) {
+        throw new NotFoundException('Receta no encontrada');
+      }
+
+      // Obtener ingredientes de la receta base
+      const baseIngredientIds = baseRecipe.ingredientes.map(
+        (ing) => ing.ingredienteMaestroId,
+      );
+
+      // Buscar recetas similares
+      const similarRecipes = await this.prisma.recipe.findMany({
+        where: {
+          esActivo: true,
+          id: { not: recipeId }, // Excluir la receta base
+          OR: [
+            // Misma categoría
+            { categoriaRecetaId: baseRecipe.categoriaRecetaId },
+            // Misma dificultad
+            { dificultadId: baseRecipe.dificultadId },
+            // Ingredientes en común
+            {
+              ingredientes: {
+                some: {
+                  ingredienteMaestroId: {
+                    in: baseIngredientIds,
+                  },
+                },
+              },
+            },
+          ],
+        },
+        include: {
+          categoria: true,
+          dificultad: true,
+          ingredientes: {
+            include: {
+              ingredienteMaestro: true,
+              unidadMedida: true,
+            },
+          },
+        },
+        take: limit * 3, // Obtener más para poder aplicar algoritmo de similitud
+      });
+
+      // Calcular score de similitud
+      const scoredSimilarRecipes = similarRecipes.map((recipe) => {
+        let similarityScore = 0;
+
+        // Factor 1: Misma categoría (peso 40%)
+        if (recipe.categoriaRecetaId === baseRecipe.categoriaRecetaId) {
+          similarityScore += 40;
+        }
+
+        // Factor 2: Misma dificultad (peso 20%)
+        if (recipe.dificultadId === baseRecipe.dificultadId) {
+          similarityScore += 20;
+        }
+
+        // Factor 3: Ingredientes en común (peso 30%)
+        const recipeIngredientIds = recipe.ingredientes.map(
+          (ing) => ing.ingredienteMaestroId,
+        );
+        const commonIngredients = baseIngredientIds.filter((id) =>
+          recipeIngredientIds.includes(id),
+        );
+        const ingredientSimilarity =
+          (commonIngredients.length / Math.max(baseIngredientIds.length, recipeIngredientIds.length)) * 30;
+        similarityScore += ingredientSimilarity;
+
+        // Factor 4: Tiempo de preparación similar (peso 10%)
+        if (baseRecipe.tiempoTotal && recipe.tiempoTotal) {
+          const timeDiff = Math.abs(baseRecipe.tiempoTotal - recipe.tiempoTotal);
+          const timeSimilarity = Math.max(0, (60 - timeDiff) / 60) * 10;
+          similarityScore += timeSimilarity;
+        }
+
+        return {
+          ...recipe,
+          similarityScore: Math.round(similarityScore * 100) / 100,
+          commonIngredients: commonIngredients.length,
+        };
+      });
+
+      // Ordenar por similitud y tomar el límite
+      const sortedSimilarRecipes = scoredSimilarRecipes
+        .sort((a, b) => b.similarityScore - a.similarityScore)
+        .slice(0, limit);
+
+      this.logger.log(
+        `Encontradas ${sortedSimilarRecipes.length} recetas similares a la receta ${recipeId}`,
+      );
+
+      return sortedSimilarRecipes;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      this.logger.error('Error buscando recetas similares:', error);
+      throw new InternalServerErrorException(
+        'Error al buscar recetas similares',
       );
     }
   }

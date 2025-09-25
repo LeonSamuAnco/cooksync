@@ -43,7 +43,7 @@ const PantryManager = ({ user, onClose }) => {
 
   const loadAvailableIngredients = async () => {
     try {
-      const response = await fetch('http://localhost:3002/recipes/ingredients');
+      const response = await fetch('http://localhost:3002/recipes/ingredients/all');
       if (response.ok) {
         const data = await response.json();
         setAvailableIngredients(data.ingredients || []);

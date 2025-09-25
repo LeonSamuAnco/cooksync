@@ -1,21 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import RecipeSearch from './RecipeSearch';
 import RecipeGrid from './RecipeGrid';
 import recipeService from '../../services/recipeService';
 import './RecipesPage.css';
 
 const RecipesPage = () => {
+  const navigate = useNavigate();
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [initialLoad, setInitialLoad] = useState(true);
-
-  // Cargar recetas iniciales al montar el componente
-  useEffect(() => {
-    loadInitialRecipes();
-  }, []);
+  const [hasSearched, setHasSearched] = useState(false);
 
   const loadInitialRecipes = async () => {
     setLoading(true);
+    setHasSearched(true);
     try {
       const response = await recipeService.getAllRecipes({ limit: 12 });
       setRecipes(response.recipes || response);
@@ -24,23 +22,23 @@ const RecipesPage = () => {
       setRecipes([]);
     } finally {
       setLoading(false);
-      setInitialLoad(false);
     }
   };
 
-  const handleRecipesFound = (foundRecipes) => {
+  const handleRecipesFound = useCallback((foundRecipes) => {
     setRecipes(foundRecipes);
-  };
+    setHasSearched(true);
+  }, []);
 
-  const handleLoading = (isLoading) => {
+  const handleLoading = useCallback((isLoading) => {
     setLoading(isLoading);
-  };
+  }, []);
 
-  const handleRecipeClick = (recipe) => {
-    // Aquí puedes implementar la navegación al detalle de la receta
-    console.log('Receta seleccionada:', recipe);
-    // Por ejemplo: navigate(`/recipes/${recipe.id}`);
-  };
+  const handleRecipeClick = useCallback((recipe) => {
+    console.log('Navegando a receta:', recipe);
+    // Navegar al detalle de la receta
+    navigate(`/recipes/${recipe.id}`);
+  }, [navigate]);
 
   return (
     <div className="recipes-page">
@@ -70,14 +68,14 @@ const RecipesPage = () => {
         loading={loading}
         onRecipeClick={handleRecipeClick}
         emptyMessage={
-          initialLoad 
-            ? "Cargando recetas..." 
+          !hasSearched 
+            ? "👋 ¡Selecciona ingredientes para encontrar recetas deliciosas!" 
             : "No se encontraron recetas con los criterios de búsqueda seleccionados."
         }
       />
 
       {/* Sugerencias cuando no hay resultados */}
-      {!loading && recipes.length === 0 && !initialLoad && (
+      {!loading && recipes.length === 0 && hasSearched && (
         <div className="suggestions-section">
           <div className="suggestions-card">
             <h3>💡 Sugerencias para mejorar tu búsqueda</h3>

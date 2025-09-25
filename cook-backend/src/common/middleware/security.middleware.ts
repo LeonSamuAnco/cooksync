@@ -55,10 +55,25 @@ export class SecurityMiddleware implements NestMiddleware {
       });
     }
 
+    // Rutas que necesitan rate limiting más permisivo
+    const highFrequencyRoutes = [
+      '/recipes',
+      '/recipes/ingredients',
+      '/recipes/by-ingredients',
+      '/admin/test'
+    ];
+    
+    const isHighFrequencyRoute = highFrequencyRoutes.some(route => req.url.includes(route));
+
     // Rate limiting básico por IP (simple implementación)
     const now = Date.now();
     const windowMs = 60 * 1000; // 1 minuto
-    const maxRequests = 100; // máximo 100 requests por minuto
+    let maxRequests = process.env.NODE_ENV === 'development' ? 5000 : 200; // muy permisivo en desarrollo
+    
+    // Aún más permisivo para rutas de alta frecuencia
+    if (isHighFrequencyRoute) {
+      maxRequests = process.env.NODE_ENV === 'development' ? 10000 : 500;
+    }
 
     if (!global.rateLimitStore) {
       global.rateLimitStore = new Map();
@@ -76,13 +91,19 @@ export class SecurityMiddleware implements NestMiddleware {
 
     global.rateLimitStore.set(clientKey, clientData);
 
+    // En desarrollo, solo logear pero no bloquear
     if (clientData.count > maxRequests) {
-      this.logger.warn(`🚫 Rate limit excedido para IP: ${ip}`);
-      return res.status(429).json({
-        statusCode: 429,
-        message: 'Demasiadas solicitudes. Intenta de nuevo en un minuto.',
-        error: 'Too Many Requests'
-      });
+      if (process.env.NODE_ENV === 'development') {
+        this.logger.warn(`⚠️ Rate limit excedido en desarrollo para IP: ${ip} (${clientData.count}/${maxRequests}) - URL: ${req.url} - PERMITIENDO`);
+      } else {
+        this.logger.warn(`🚫 Rate limit excedido para IP: ${ip} (${clientData.count}/${maxRequests}) - URL: ${req.url}`);
+        return res.status(429).json({
+          statusCode: 429,
+          message: 'Demasiadas solicitudes. Intenta de nuevo en un minuto.',
+          error: 'Too Many Requests',
+          retryAfter: Math.ceil((clientData.resetTime - now) / 1000)
+        });
+      }
     }
 
     // Agregar headers informativos
