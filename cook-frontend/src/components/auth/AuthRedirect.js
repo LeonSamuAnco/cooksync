@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
@@ -8,7 +8,29 @@ import { useAuth } from '../../context/AuthContext';
  * Si no está logueado, muestra el componente hijo (Login/Register)
  */
 const AuthRedirect = ({ children }) => {
-  const { isAuthenticated, loading, getDashboardRoute } = useAuth();
+  const { isAuthenticated, loading, user } = useAuth();
+
+  // Memoizar la ruta del dashboard para evitar recálculos
+  const dashboardRoute = useMemo(() => {
+    if (!user) return '/dashboard';
+    
+    const userRole = user.rol || user.role;
+    if (!userRole) return '/dashboard';
+    
+    const roleCode = userRole.codigo;
+    switch (roleCode) {
+      case 'ADMIN':
+        return '/admin';
+      case 'MODERADOR':
+        return '/moderador';
+      case 'VENDEDOR':
+        return '/vendedor';
+      case 'CLIENTE':
+        return '/cliente';
+      default:
+        return '/dashboard';
+    }
+  }, [user]);
 
   // Mostrar loading mientras se verifica la autenticación
   if (loading) {
@@ -40,7 +62,7 @@ const AuthRedirect = ({ children }) => {
 
   // Si está autenticado, redirigir al dashboard
   if (isAuthenticated) {
-    return <Navigate to={getDashboardRoute()} replace />;
+    return <Navigate to={dashboardRoute} replace />;
   }
 
   // Si no está autenticado, mostrar el componente hijo (Login/Register)

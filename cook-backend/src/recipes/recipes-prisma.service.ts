@@ -271,16 +271,16 @@ export class RecipesPrismaService {
 
       // Aplicar filtros adicionales
       if (filters.categoriaId) {
-        whereConditions.categoriaRecetaId = parseInt(filters.categoriaId);
+        whereConditions.categoriaRecetaId = parseInt(filters.categoriaId.toString());
       }
 
       if (filters.dificultadId) {
-        whereConditions.dificultadId = parseInt(filters.dificultadId);
+        whereConditions.dificultadId = parseInt(filters.dificultadId.toString());
       }
 
       if (filters.tiempoMax) {
         whereConditions.tiempoTotal = {
-          lte: parseInt(filters.tiempoMax),
+          lte: parseInt(filters.tiempoMax.toString()),
         };
       }
 

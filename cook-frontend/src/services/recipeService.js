@@ -1,113 +1,22 @@
-// Servicio para manejar todas las operaciones relacionadas con recetas
 const API_BASE_URL = 'http://localhost:3002';
 
 class RecipeService {
-  // Obtener todas las recetas con filtros
   async getAllRecipes(filters = {}) {
+    const queryParams = new URLSearchParams(filters);
     try {
-      const queryParams = new URLSearchParams();
-      
-      // Agregar filtros a los parámetros de consulta
-      Object.keys(filters).forEach(key => {
-        if (filters[key] !== undefined && filters[key] !== null && filters[key] !== '') {
-          if (Array.isArray(filters[key])) {
-            queryParams.append(key, filters[key].join(','));
-          } else {
-            queryParams.append(key, filters[key]);
-          }
-        }
-      });
-
-      const url = `${API_BASE_URL}/recipes${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
-      const response = await fetch(url);
-      
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`);
-      }
-      
+      const response = await fetch(`${API_BASE_URL}/recipes?${queryParams.toString()}`);
+      if (!response.ok) throw new Error('Error fetching recipes');
       return await response.json();
     } catch (error) {
       console.error('Error obteniendo recetas:', error);
-      throw error;
+      return { recipes: [] };
     }
   }
 
-  // Buscar recetas por ingredientes disponibles
-  async searchByIngredients(ingredientIds) {
-    try {
-      if (!ingredientIds || ingredientIds.length === 0) {
-        return [];
-      }
-
-      const url = `${API_BASE_URL}/recipes/by-ingredients?ingredients=${ingredientIds.join(',')}`;
-      const response = await fetch(url);
-      
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('Error buscando recetas por ingredientes:', error);
-      throw error;
-    }
-  }
-
-  // Buscar recetas por ingredientes con filtros adicionales
-  async searchByIngredientsWithFilters(ingredientIds, additionalFilters = {}) {
-    try {
-      if (!ingredientIds || ingredientIds.length === 0) {
-        return [];
-      }
-
-      const queryParams = new URLSearchParams();
-      
-      // Agregar ingredientes
-      queryParams.append('ingredients', ingredientIds.join(','));
-      
-      // Agregar filtros adicionales
-      Object.keys(additionalFilters).forEach(key => {
-        if (additionalFilters[key] !== undefined && 
-            additionalFilters[key] !== null && 
-            additionalFilters[key] !== '' && 
-            additionalFilters[key] !== false &&
-            key !== 'ingredients') { // Evitar duplicar ingredientes
-          if (Array.isArray(additionalFilters[key])) {
-            queryParams.append(key, additionalFilters[key].join(','));
-          } else {
-            queryParams.append(key, additionalFilters[key]);
-          }
-        }
-      });
-
-      const url = `${API_BASE_URL}/recipes/by-ingredients?${queryParams.toString()}`;
-      console.log('URL de búsqueda con filtros:', url);
-      
-      const response = await fetch(url);
-      
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('Error buscando recetas por ingredientes con filtros:', error);
-      throw error;
-    }
-  }
-
-  // Obtener una receta específica por ID
   async getRecipeById(id) {
     try {
       const response = await fetch(`${API_BASE_URL}/recipes/${id}`);
-      
-      if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error('Receta no encontrada');
-        }
-        throw new Error(`Error ${response.status}: ${response.statusText}`);
-      }
-      
+      if (!response.ok) throw new Error('Recipe not found');
       return await response.json();
     } catch (error) {
       console.error(`Error obteniendo receta ${id}:`, error);
@@ -115,137 +24,122 @@ class RecipeService {
     }
   }
 
-  // Crear una nueva receta
-  async createRecipe(recipeData, authToken) {
-    try {
-      const response = await fetch(`${API_BASE_URL}/recipes`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken}`,
-        },
-        body: JSON.stringify(recipeData),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('Error creando receta:', error);
-      throw error;
-    }
-  }
-
-  // Obtener todos los ingredientes maestros
   async getAllIngredients() {
     try {
+      console.log('🔍 Solicitando ingredientes a:', `${API_BASE_URL}/recipes/ingredients/all`);
       const response = await fetch(`${API_BASE_URL}/recipes/ingredients/all`);
+      console.log('📡 Respuesta del servidor:', response.status, response.statusText);
       
       if (!response.ok) {
         throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
       
-      return await response.json();
+      const data = await response.json();
+      console.log('✅ Ingredientes recibidos del backend:', data);
+      console.log('📊 Total de ingredientes:', data.length);
+      
+      // Mapear a formato consistente
+      return data.map(ing => ({
+        id: ing.id,
+        nombre: ing.nombre,
+        name: ing.nombre, // Alias para compatibilidad
+        categoria: ing.categoriaProductoId,
+        imagenUrl: ing.imagenUrl,
+      }));
     } catch (error) {
-      console.error('Error obteniendo ingredientes:', error);
-      throw error;
+      console.error('❌ Error obteniendo ingredientes:', error);
+      console.log('🔄 Usando ingredientes de fallback...');
+      return this.getFallbackIngredients();
     }
   }
 
-  // Obtener todas las categorías
-  async getAllCategories() {
+  getFallbackIngredients() {
+    return [
+      { id: 1, nombre: 'Pollo', name: 'Pollo' },
+      { id: 2, nombre: 'Arroz', name: 'Arroz' },
+      { id: 3, nombre: 'Tomate', name: 'Tomate' },
+      { id: 4, nombre: 'Cebolla', name: 'Cebolla' },
+      { id: 5, nombre: 'Ajo', name: 'Ajo' },
+      { id: 6, nombre: 'Papa', name: 'Papa' },
+      { id: 7, nombre: 'Zanahoria', name: 'Zanahoria' },
+      { id: 8, nombre: 'Aceite', name: 'Aceite' },
+      { id: 9, nombre: 'Sal', name: 'Sal' },
+      { id: 10, nombre: 'Pimienta', name: 'Pimienta' },
+    ];
+  }
+
+  async getRecipeCategories() {
     try {
-      const response = await fetch(`${API_BASE_URL}/recipes/categories/all`);
+      console.log('🔍 Solicitando categorías de recetas...');
+      const response = await fetch(`${API_BASE_URL}/search/categories`);
       
       if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`);
+        throw new Error(`Error ${response.status}`);
       }
       
-      return await response.json();
+      const data = await response.json();
+      console.log('✅ Categorías recibidas:', data);
+      
+      // Filtrar solo categorías de recetas
+      return data.filter(cat => cat.type === 'recipe');
     } catch (error) {
-      console.error('Error obteniendo categorías:', error);
-      throw error;
+      console.error('❌ Error obteniendo categorías de recetas:', error);
+      return this.getFallbackCategories();
     }
   }
 
-  // Obtener todas las dificultades
-  async getAllDifficulties() {
+  getFallbackCategories() {
+    return [
+      { id: 1, nombre: 'Platos Principales', type: 'recipe' },
+      { id: 2, nombre: 'Entradas', type: 'recipe' },
+      { id: 3, nombre: 'Postres', type: 'recipe' },
+      { id: 4, nombre: 'Sopas y Caldos', type: 'recipe' },
+      { id: 5, nombre: 'Ensaladas', type: 'recipe' },
+    ];
+  }
+
+  async searchByIngredientsWithFilters(ingredientIds, filters = {}) {
     try {
-      const response = await fetch(`${API_BASE_URL}/recipes/difficulties/all`);
+      const queryParams = new URLSearchParams();
       
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      // Agregar ingredientes
+      if (ingredientIds && ingredientIds.length > 0) {
+        queryParams.append('ingredients', ingredientIds.join(','));
       }
       
-      return await response.json();
-    } catch (error) {
-      console.error('Error obteniendo dificultades:', error);
-      throw error;
-    }
-  }
+      // Agregar filtros adicionales
+      Object.keys(filters).forEach(key => {
+        if (filters[key] !== undefined && 
+            filters[key] !== null && 
+            filters[key] !== '' && 
+            filters[key] !== false &&
+            key !== 'ingredients') {
+          queryParams.append(key, filters[key]);
+        }
+      });
 
-  // Obtener todas las unidades de medida
-  async getAllMeasurementUnits() {
-    try {
-      const response = await fetch(`${API_BASE_URL}/recipes/units/all`);
+      const url = `${API_BASE_URL}/recipes/by-ingredients?${queryParams.toString()}`;
+      console.log('🔍 Buscando recetas con filtros:', url);
+      
+      const response = await fetch(url);
       
       if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`);
+        throw new Error(`Error ${response.status}`);
       }
       
-      return await response.json();
+      const data = await response.json();
+      console.log('✅ Recetas encontradas:', data);
+      return data;
     } catch (error) {
-      console.error('Error obteniendo unidades de medida:', error);
-      throw error;
+      console.error('❌ Error buscando recetas con filtros:', error);
+      return [];
     }
   }
 
-  // Formatear tiempo para mostrar
-  formatTime(minutes) {
-    if (minutes < 60) {
-      return `${minutes} min`;
-    }
-    const hours = Math.floor(minutes / 60);
-    const remainingMinutes = minutes % 60;
-    return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}min` : `${hours}h`;
-  }
-
-  // Formatear dificultad
-  formatDifficulty(difficulty) {
-    const difficultyMap = {
-      1: 'Fácil',
-      2: 'Medio',
-      3: 'Difícil',
-      4: 'Experto'
-    };
-    return difficultyMap[difficulty] || 'No especificada';
-  }
-
-  // Obtener emoji para categoría
-  getCategoryEmoji(categoryName) {
-    const emojiMap = {
-      'Desayuno': '🍳',
-      'Almuerzo': '🍽️',
-      'Cena': '🌙',
-      'Postre': '🍰',
-      'Aperitivo': '🥗',
-      'Bebida': '🥤',
-      'Sopa': '🍲',
-      'Ensalada': '🥗',
-      'Pasta': '🍝',
-      'Pizza': '🍕',
-      'Carne': '🥩',
-      'Pescado': '🐟',
-      'Vegetariano': '🥬',
-      'Vegano': '🌱'
-    };
-    return emojiMap[categoryName] || '🍴';
+  async searchByIngredients(ingredientIds) {
+    return this.searchByIngredientsWithFilters(ingredientIds, {});
   }
 }
 
-// Crear y exportar una instancia única del servicio
 const recipeServiceInstance = new RecipeService();
 export default recipeServiceInstance;

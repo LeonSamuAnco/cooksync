@@ -16,6 +16,13 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
+  const logout = useCallback(() => {
+    clearAuthData();
+    setUser(null);
+    setIsAuthenticated(false);
+    // No navegamos aquí, dejamos que el componente que llama logout maneje la navegación
+  }, []);
+
   const checkAuthStatus = useCallback(async () => {
     try {
       const token = localStorage.getItem('authToken');
@@ -65,7 +72,7 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [logout]);
 
   // Verificar si hay una sesión activa al cargar la aplicación
   useEffect(() => {
@@ -129,14 +136,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = () => {
-    clearAuthData();
-    setUser(null);
-    setIsAuthenticated(false);
-    // No navegamos aquí, dejamos que el componente que llama logout maneje la navegación
-  };
-
-  const getDashboardRoute = () => {
+  const getDashboardRoute = useCallback(() => {
     if (!user) return '/dashboard';
     
     // Verificar si el rol viene como 'rol' o 'role'
@@ -156,7 +156,7 @@ export const AuthProvider = ({ children }) => {
       default:
         return '/dashboard';
     }
-  };
+  }, [user]);
 
   const value = {
     user,

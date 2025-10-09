@@ -1,32 +1,36 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import RecipeSearch from './RecipeSearch';
-import RecipeGrid from './RecipeGrid';
-import recipeService from '../../services/recipeService';
-import './RecipesPage.css';
+import ProductSearch from './ProductSearch';
+import ProductGrid from './ProductGrid';
+import productService from '../../services/productService';
+import './ProductsPage.css';
 
-const RecipesPage = () => {
+const ProductsPage = () => {
   const navigate = useNavigate();
-  const [recipes, setRecipes] = useState([]);
+  const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
 
-  const loadInitialRecipes = async () => {
+  useEffect(() => {
+    loadInitialProducts();
+  }, []);
+
+  const loadInitialProducts = async () => {
     setLoading(true);
     setHasSearched(true);
     try {
-      const response = await recipeService.getAllRecipes({ limit: 12 });
-      setRecipes(response.recipes || response);
+      const response = await productService.getAllProducts({ limit: 12 });
+      setProducts(response.products || response);
     } catch (error) {
-      console.error('Error cargando recetas iniciales:', error);
-      setRecipes([]);
+      console.error('Error cargando productos iniciales:', error);
+      setProducts([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleRecipesFound = useCallback((foundRecipes) => {
-    setRecipes(foundRecipes);
+  const handleProductsFound = useCallback((foundProducts) => {
+    setProducts(foundProducts);
     setHasSearched(true);
   }, []);
 
@@ -34,48 +38,48 @@ const RecipesPage = () => {
     setLoading(isLoading);
   }, []);
 
-  const handleRecipeClick = useCallback((recipe) => {
-    console.log('Navegando a receta:', recipe);
+  const handleProductClick = useCallback((product) => {
+    console.log('Navegando a producto:', product);
     // Navegar al detalle de la receta
-    navigate(`/recipes/${recipe.id}`);
+    navigate(`/products/${product.id}`);
   }, [navigate]);
 
   return (
-    <div className="recipes-page">
+    <div className="products-page">
       {/* Header de la página */}
       <div className="recipes-header">
         <div className="header-content">
-          <h1>🍳 Descubre Recetas Deliciosas</h1>
-          <p>Encuentra la receta perfecta con los ingredientes que tienes disponibles</p>
+          <h1>🛍️ Descubre Productos Increíbles</h1>
+          <p>Encuentra el producto perfecto para tus necesidades</p>
         </div>
         <div className="header-stats">
           <div className="stat-item">
-            <span className="stat-number">{recipes.length}</span>
-            <span className="stat-label">Recetas encontradas</span>
+            <span className="stat-number">{products.length}</span>
+            <span className="stat-label">Productos encontrados</span>
           </div>
         </div>
       </div>
 
       {/* Componente de búsqueda */}
-      <RecipeSearch 
-        onRecipesFound={handleRecipesFound}
+      <ProductSearch 
+        onProductsFound={handleProductsFound}
         onLoading={handleLoading}
       />
 
       {/* Grid de recetas */}
-      <RecipeGrid 
-        recipes={recipes}
+      <ProductGrid 
+        products={products}
         loading={loading}
-        onRecipeClick={handleRecipeClick}
+        onProductClick={handleProductClick}
         emptyMessage={
           !hasSearched 
-            ? "👋 ¡Selecciona ingredientes para encontrar recetas deliciosas!" 
-            : "No se encontraron recetas con los criterios de búsqueda seleccionados."
+            ? "👋 ¡Usa los filtros para encontrar productos geniales!" 
+            : "No se encontraron productos con los criterios de búsqueda seleccionados."
         }
       />
 
       {/* Sugerencias cuando no hay resultados */}
-      {!loading && recipes.length === 0 && hasSearched && (
+      {!loading && products.length === 0 && hasSearched && (
         <div className="suggestions-section">
           <div className="suggestions-card">
             <h3>💡 Sugerencias para mejorar tu búsqueda</h3>
@@ -111,9 +115,9 @@ const RecipesPage = () => {
             </div>
             <button 
               className="reset-search-btn"
-              onClick={loadInitialRecipes}
+              onClick={loadInitialProducts}
             >
-              🔄 Ver todas las recetas
+              🔄 Ver todos los productos
             </button>
           </div>
         </div>
@@ -123,16 +127,16 @@ const RecipesPage = () => {
       <div className="recipes-footer">
         <div className="footer-content">
           <div className="footer-section">
-            <h4>🎯 Búsqueda inteligente</h4>
-            <p>Nuestro algoritmo encuentra las mejores recetas basadas en tus ingredientes disponibles</p>
+            <h4>🎯 Búsqueda Avanzada</h4>
+            <p>Encuentra productos por categoría, características y filtros personalizados para obtener exactamente lo que necesitas</p>
           </div>
           <div className="footer-section">
-            <h4>📊 Información detallada</h4>
-            <p>Tiempo de preparación, dificultad, porciones y información nutricional</p>
+            <h4>📊 Información Completa</h4>
+            <p>Detalles, especificaciones, precios y toda la información que necesitas para tomar la mejor decisión</p>
           </div>
           <div className="footer-section">
-            <h4>🌱 Filtros dietéticos</h4>
-            <p>Encuentra recetas vegetarianas, veganas, sin gluten y más opciones saludables</p>
+            <h4>🌟 Calidad Garantizada</h4>
+            <p>Productos verificados y de alta calidad seleccionados cuidadosamente para tu satisfacción</p>
           </div>
         </div>
       </div>
@@ -140,4 +144,4 @@ const RecipesPage = () => {
   );
 };
 
-export default RecipesPage;
+export default ProductsPage;

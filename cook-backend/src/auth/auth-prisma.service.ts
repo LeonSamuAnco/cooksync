@@ -85,7 +85,7 @@ export class AuthPrismaService {
           await prisma.client.create({
             data: {
               usuarioId: newUser.id,
-              planClienteId: 1, // Plan básico por defecto
+              planClienteId: 1, // Plan BASICO por defecto (id: 1)
               fechaRegistro: new Date(),
               puntosFidelidad: 0,
               nivelCliente: 'BRONCE',

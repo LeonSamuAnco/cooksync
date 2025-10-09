@@ -7,6 +7,7 @@ import { RecipesModule } from './recipes/recipes.module';
 import { AuthModule } from './auth/auth.module';
 import { ClientsModule } from './clients/clients.module';
 import { AdminModule } from './admin/admin.module';
+import { ProductsModule } from './products/products.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { SecurityMiddleware } from './common/middleware/security.middleware';
 
@@ -32,6 +33,7 @@ import { SecurityMiddleware } from './common/middleware/security.middleware';
     AuthModule,
     ClientsModule,
     AdminModule,
+    ProductsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

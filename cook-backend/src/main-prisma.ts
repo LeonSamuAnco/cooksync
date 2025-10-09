@@ -5,10 +5,12 @@ import { AppPrismaModule } from './app-prisma.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppPrismaModule);
 
-  // Configurar CORS
+  // Configurar CORS - Permitir múltiples orígenes
   app.enableCors({
-    origin: 'http://localhost:3000', // URL del frontend
+    origin: ['http://localhost:3000', 'http://localhost:3001'], // URLs del frontend
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
   // Configurar validación global

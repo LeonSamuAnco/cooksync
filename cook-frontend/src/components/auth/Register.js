@@ -30,22 +30,33 @@ const Register = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        console.log('🔍 Cargando roles y tipos de documento...');
+        
         const [rolesResponse, docTypesResponse] = await Promise.all([
           fetch("http://localhost:3002/auth/roles"),
           fetch("http://localhost:3002/auth/document-types")
         ])
         
+        console.log('📡 Respuesta roles:', rolesResponse.status);
+        console.log('📡 Respuesta tipos documento:', docTypesResponse.status);
+        
         if (rolesResponse.ok) {
           const rolesData = await rolesResponse.json()
+          console.log('✅ Roles cargados:', rolesData);
           setRoles(rolesData)
+        } else {
+          console.error('❌ Error al cargar roles:', rolesResponse.statusText);
         }
         
         if (docTypesResponse.ok) {
           const docTypesData = await docTypesResponse.json()
+          console.log('✅ Tipos de documento cargados:', docTypesData);
           setDocumentTypes(docTypesData)
+        } else {
+          console.error('❌ Error al cargar tipos de documento:', docTypesResponse.statusText);
         }
       } catch (error) {
-        console.error("Error cargando datos:", error)
+        console.error("❌ Error cargando datos:", error)
       }
     }
     

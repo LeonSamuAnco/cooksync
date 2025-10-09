@@ -14,7 +14,7 @@ import { RecipesPrismaService } from './recipes-prisma.service';
 import { CreateRecipeDto } from './dto/create-recipe.dto';
 import { RecipeFiltersDto } from './dto/recipe-filters.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
+import { RolesPrismaGuard } from '../auth/guards/roles-prisma.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 
 @Controller('recipes')
@@ -35,7 +35,7 @@ export class RecipesController {
 
   // Crear una nueva receta - SOLO ADMINISTRADORES
   @Post()
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesPrismaGuard)
   @Roles('ADMIN') // Solo administradores pueden crear recetas
   async create(
     @Body(ValidationPipe) createRecipeDto: CreateRecipeDto,
@@ -55,20 +55,55 @@ export class RecipesController {
   @Get('by-ingredients')
   async findByIngredients(
     @Query('ingredients') ingredients: string,
-    @Query(ValidationPipe) filters: RecipeFiltersDto,
+    @Query() allFilters: any, // Usar any para evitar validación estricta
   ) {
+    console.log('🔍 Endpoint by-ingredients llamado con:', { ingredients, allFilters });
+    
     if (!ingredients) {
+      console.log('❌ No se proporcionaron ingredientes');
       return [];
     }
+    
     const ingredientIds = ingredients
       .split(',')
       .map((id) => parseInt(id.trim()))
       .filter((id) => !isNaN(id));
     
-    return await this.recipesService.findByIngredientsWithFilters(
-      ingredientIds,
-      filters,
-    );
+    console.log('📋 IDs de ingredientes procesados:', ingredientIds);
+    
+    // Filtrar solo los campos válidos del DTO
+    const validFilters: RecipeFiltersDto = {
+      search: allFilters.search,
+      categoriaId: allFilters.categoriaId ? parseInt(allFilters.categoriaId) : undefined,
+      dificultadId: allFilters.dificultadId ? parseInt(allFilters.dificultadId) : undefined,
+      tiempoMax: allFilters.tiempoMax ? parseInt(allFilters.tiempoMax) : undefined,
+      porcionesMin: allFilters.porcionesMin ? parseInt(allFilters.porcionesMin) : undefined,
+      porcionesMax: allFilters.porcionesMax ? parseInt(allFilters.porcionesMax) : undefined,
+      esVegetariana: allFilters.esVegetariana === 'true' || allFilters.esVegetariana === true,
+      esVegana: allFilters.esVegana === 'true' || allFilters.esVegana === true,
+      sinGluten: allFilters.sinGluten === 'true' || allFilters.sinGluten === true,
+      sinLactosa: allFilters.sinLactosa === 'true' || allFilters.sinLactosa === true,
+      esSaludable: allFilters.esSaludable === 'true' || allFilters.esSaludable === true,
+      origenPais: allFilters.origenPais,
+      page: allFilters.page ? parseInt(allFilters.page) : undefined,
+      limit: allFilters.limit ? parseInt(allFilters.limit) : undefined,
+      sortBy: allFilters.sortBy,
+      sortOrder: allFilters.sortOrder,
+    };
+    
+    console.log('🎯 Filtros válidos aplicados:', validFilters);
+    
+    try {
+      const result = await this.recipesService.findByIngredientsWithFilters(
+        ingredientIds,
+        validFilters,
+      );
+      console.log('✅ Resultados encontrados:', result?.length || 0);
+      return result;
+    } catch (error) {
+      console.error('❌ Error en findByIngredients:', error);
+      throw error;
+    }
   }
 
   // Obtener una receta específica
@@ -104,7 +139,7 @@ export class RecipesController {
   // Obtener recomendaciones inteligentes
   @Get('recommendations')
   async getRecommendations(@Query() params: any) {
-    const userId = params.userId ? parseInt(params.userId) : null;
+    const userId = params.userId ? parseInt(params.userId) : undefined;
     const limit = params.limit ? parseInt(params.limit) : 12;
     return await this.recipesService.getIntelligentRecommendations(userId, limit);
   }

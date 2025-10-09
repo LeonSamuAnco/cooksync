@@ -1,15 +1,13 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { RecipesController } from './recipes.controller';
 import { RecipesPrismaService } from './recipes-prisma.service';
-import { User } from '../auth/entities/user.entity';
-import { Role } from '../auth/entities/role.entity';
-import { RolesGuard } from '../auth/guards/roles.guard';
+import { RolesPrismaGuard } from '../auth/guards/roles-prisma.guard';
+import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, Role])],
+  imports: [PrismaModule],
   controllers: [RecipesController],
-  providers: [RecipesPrismaService, RolesGuard],
+  providers: [RecipesPrismaService, RolesPrismaGuard],
   exports: [RecipesPrismaService],
 })
 export class RecipesModule {}

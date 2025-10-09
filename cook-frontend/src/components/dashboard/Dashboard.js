@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import ClientProfile from '../profiles/ClientProfile';
 import VendorProfile from '../profiles/VendorProfile';
 import AdminProfile from '../profiles/AdminProfile';
@@ -7,70 +8,11 @@ import ModeratorProfile from '../profiles/ModeratorProfile';
 import './Dashboard.css';
 
 const Dashboard = () => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { user, loading, logout } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    loadUserProfile();
-  }, []);
-
-  const loadUserProfile = async () => {
-    try {
-      const token = localStorage.getItem('authToken');
-      if (!token) {
-        navigate('/login');
-        return;
-      }
-
-      // Decodificar el token para obtener el ID del usuario
-      const tokenPayload = JSON.parse(atob(token.split('.')[1]));
-      const userId = tokenPayload.sub || tokenPayload.id;
-
-      // Verificar si el token no ha expirado
-      const currentTime = Date.now() / 1000;
-      if (tokenPayload.exp < currentTime) {
-        localStorage.removeItem('authToken');
-        navigate('/login');
-        return;
-      }
-
-      // Obtener los datos completos del usuario
-      const response = await fetch(`http://localhost:3002/auth/user/${userId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al cargar el perfil del usuario');
-      }
-
-      const userData = await response.json();
-      console.log('Datos del usuario recibidos:', userData);
-      
-      // Verificar si los datos vienen en userData.user o directamente en userData
-      const userInfo = userData.user || userData;
-      console.log('Información del usuario procesada:', userInfo);
-      
-      setUser(userInfo);
-    } catch (error) {
-      console.error('Error cargando perfil:', error);
-      setError(error.message);
-      // Si hay error, redirigir al login después de un momento
-      setTimeout(() => {
-        navigate('/login');
-      }, 3000);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('user');
+    logout();
     navigate('/home', { replace: true });
   };
 
@@ -133,21 +75,6 @@ const Dashboard = () => {
           </div>
           <h2>Cargando tu Dashboard...</h2>
           <p>Preparando tu experiencia personalizada</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="dashboard-error">
-        <div className="error-content">
-          <h2>⚠️ Error al Cargar Dashboard</h2>
-          <p>{error}</p>
-          <p>Serás redirigido al login en unos segundos...</p>
-          <button onClick={() => navigate('/login')}>
-            Ir al Login Ahora
-          </button>
         </div>
       </div>
     );
