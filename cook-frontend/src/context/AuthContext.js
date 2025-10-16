@@ -63,12 +63,22 @@ export const AuthProvider = ({ children }) => {
         setUser(userData.user);
         setIsAuthenticated(true);
       } else {
-        // Error al obtener usuario, limpiar sesión
-        logout();
+        // Si es 404, el endpoint no existe pero el token puede ser válido
+        // Solo cerrar sesión si es 401 (no autorizado)
+        if (response.status === 401) {
+          console.log('Token inválido o expirado');
+          logout();
+        } else {
+          console.warn('Error obteniendo datos del usuario, pero manteniendo sesión');
+          // Mantener la sesión activa con datos básicos del token
+          setIsAuthenticated(true);
+        }
       }
     } catch (error) {
       console.error('Error verificando autenticación:', error);
-      logout();
+      // No cerrar sesión por errores de red
+      console.warn('Error de red, manteniendo sesión activa');
+      setIsAuthenticated(true);
     } finally {
       setLoading(false);
     }

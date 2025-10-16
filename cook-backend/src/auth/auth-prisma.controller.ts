@@ -5,10 +5,13 @@ import {
   HttpCode,
   HttpStatus,
   Get,
+  Param,
+  UseGuards,
 } from '@nestjs/common';
 import { AuthPrismaService } from './auth-prisma.service';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Controller('auth')
 export class AuthPrismaController {
@@ -64,10 +67,12 @@ export class AuthPrismaController {
     }
   }
 
-  @Get('users/:id')
-  async getUserById(@Body('id') id: number) {
+  @Get('user/:id')
+  @UseGuards(JwtAuthGuard)
+  async getUserById(@Param('id') id: string) {
     try {
-      const user = await this.authPrismaService.getUserById(id);
+      const userId = parseInt(id);
+      const user = await this.authPrismaService.getUserById(userId);
       return {
         message: 'Usuario encontrado',
         user,

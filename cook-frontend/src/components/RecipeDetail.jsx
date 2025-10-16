@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { FaArrowLeft, FaClock, FaFire, FaUserFriends, FaListUl, FaBookOpen } from "react-icons/fa";
+import { FaArrowLeft, FaClock, FaFire, FaUserFriends, FaListUl, FaBookOpen, FaShoppingCart } from "react-icons/fa";
+import ShoppingList from "./ShoppingList";
 import "./RecipeDetail.css"; // Asegúrate de que la ruta sea correcta
 
 const API_URL = "http://localhost:3002";
@@ -14,17 +15,38 @@ const RecipeDetail = () => {
   const [recipe, setRecipe] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showShoppingList, setShowShoppingList] = useState(false);
 
   // Leemos los ingredientes que se pasaron desde la página principal.
   // Si no hay estado (navegación directa), es un array vacío.
-  const ingredientsFromHome = location.state?.selectedIngredients || [];
+  const selectedIngredientIds = location.state?.selectedIngredients || [];
+  
+  console.log('🧂 Ingredientes seleccionados (IDs):', selectedIngredientIds);
 
   // Función para normalizar los datos de la receta
   const normalizeRecipeData = (data) => {
+    // Procesar instrucciones: convertir texto a array si es necesario
+    let instruccionesArray = [];
+    
+    if (Array.isArray(data.instrucciones)) {
+      instruccionesArray = data.instrucciones;
+    } else if (typeof data.instrucciones === 'string' && data.instrucciones.trim()) {
+      // Dividir por líneas y numerar
+      const lines = data.instrucciones
+        .split(/\n|\d+\.\s*/) // Dividir por saltos de línea o números seguidos de punto
+        .map(line => line.trim())
+        .filter(line => line.length > 0);
+      
+      instruccionesArray = lines.map((descripcion, index) => ({
+        paso: index + 1,
+        descripcion: descripcion
+      }));
+    }
+    
     return {
       ...data,
       ingredientes: Array.isArray(data.ingredientes) ? data.ingredientes : [],
-      instrucciones: Array.isArray(data.instrucciones) ? data.instrucciones : [],
+      instrucciones: instruccionesArray,
     };
   };
 
@@ -146,17 +168,33 @@ const RecipeDetail = () => {
 
       <div className="recipe-content">
         <div className="ingredients-section">
-          <h2><FaListUl /> Ingredientes</h2>
+          <div className="ingredients-header">
+            <h2><FaListUl /> Ingredientes</h2>
+            {safeRecipe.ingredientes.filter(ing => {
+              const ingredienteId = ing.ingredienteMaestroId || ing.ingredienteMaestro?.id;
+              return !selectedIngredientIds.includes(ingredienteId);
+            }).length > 0 && (
+              <button 
+                className="buy-ingredients-btn"
+                onClick={() => setShowShoppingList(true)}
+              >
+                <FaShoppingCart /> Comprar Ingredientes Faltantes
+              </button>
+            )}
+          </div>
           <ul>
             {safeRecipe.ingredientes.length > 0 ? (
               safeRecipe.ingredientes.map((ingrediente, index) => {
-                // Estructura del backend: { cantidad, unidadMedida: { nombre }, ingredienteMaestro: { nombre } }
+                // Estructura del backend: { cantidad, unidadMedida: { nombre }, ingredienteMaestro: { id, nombre } }
                 const ingredienteName = ingrediente.ingredienteMaestro?.nombre || ingrediente.nombre || ingrediente;
+                const ingredienteId = ingrediente.ingredienteMaestroId || ingrediente.ingredienteMaestro?.id;
                 const cantidad = ingrediente.cantidad || '';
                 const unidad = ingrediente.unidadMedida?.nombre || '';
                 
-                // Comprobamos si el ingrediente de la receta está en la lista que nos llegó
-                const hasIngredient = ingredientsFromHome.includes(ingredienteName);
+                // Comprobamos si el ID del ingrediente de la receta está en la lista de IDs seleccionados
+                const hasIngredient = selectedIngredientIds.includes(ingredienteId);
+                
+                console.log(`Ingrediente: ${ingredienteName} (ID: ${ingredienteId}) - Seleccionado: ${hasIngredient}`);
                 
                 return (
                   <li key={index} className={hasIngredient ? "ingredient-owned" : "ingredient-missing"}>
@@ -205,6 +243,18 @@ const RecipeDetail = () => {
           )}
         </div>
       </div>
+
+      {/* Shopping List Modal */}
+      {showShoppingList && (
+        <ShoppingList
+          missingIngredients={safeRecipe.ingredientes.filter(ing => {
+            const ingredienteId = ing.ingredienteMaestroId || ing.ingredienteMaestro?.id;
+            return !selectedIngredientIds.includes(ingredienteId);
+          })}
+          userLocation={{ lat: -12.0464, lng: -77.0428 }} // Lima, Perú por defecto
+          onClose={() => setShowShoppingList(false)}
+        />
+      )}
     </div>
   );
 };

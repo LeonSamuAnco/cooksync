@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import favoritesService from '../services/favoritesService';
 import "../App.css"; // Usa los estilos globales
 
 const API_URL = "http://localhost:3002";
@@ -16,7 +18,10 @@ const HomePage = () => {
   const [recipes, setRecipes] = useState([]);
   const [selectedIngredients, setSelectedIngredients] = useState([]);
   const [showIngredients, setShowIngredients] = useState(false);
+  const [favorites, setFavorites] = useState({});
+  const [togglingFavorite, setTogglingFavorite] = useState({});
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
 
   // --- Lógica de fetch (sin cambios) ---
   useEffect(() => {
@@ -89,6 +94,63 @@ const HomePage = () => {
 
   const handleNavigateToRecipe = (recipeId) => {
     navigate(`/receta/${recipeId}`, { state: { selectedIngredients } });
+  };
+
+  // Cargar estado de favoritos para las recetas mostradas
+  useEffect(() => {
+    if (isAuthenticated && recipes.length > 0) {
+      loadFavoritesStatus();
+    }
+  }, [isAuthenticated, recipes]);
+
+  const loadFavoritesStatus = async () => {
+    try {
+      const favoritesMap = {};
+      for (const recipe of recipes) {
+        const result = await favoritesService.checkIsFavorite('receta', recipe.id);
+        favoritesMap[recipe.id] = result;
+      }
+      setFavorites(favoritesMap);
+    } catch (error) {
+      console.error('Error cargando estado de favoritos:', error);
+    }
+  };
+
+  const handleToggleFavorite = async (recipeId, event) => {
+    event.stopPropagation();
+    
+    if (!isAuthenticated) {
+      // Mostrar mensaje amigable
+      if (window.confirm('👉 Primero debes iniciar sesión para poder agregar a favoritos.\n\n¿Deseas ir a la página de inicio de sesión?')) {
+        navigate('/login');
+      }
+      return;
+    }
+
+    setTogglingFavorite(prev => ({ ...prev, [recipeId]: true }));
+
+    try {
+      const currentFavorite = favorites[recipeId];
+      
+      if (currentFavorite?.isFavorite) {
+        await favoritesService.removeFromFavorites(currentFavorite.favoriteId);
+        setFavorites(prev => ({
+          ...prev,
+          [recipeId]: { isFavorite: false, favoriteId: null }
+        }));
+      } else {
+        const result = await favoritesService.addToFavorites('receta', recipeId);
+        setFavorites(prev => ({
+          ...prev,
+          [recipeId]: { isFavorite: true, favoriteId: result.id }
+        }));
+      }
+    } catch (error) {
+      console.error('Error al alternar favorito:', error);
+      alert('❌ Hubo un error al actualizar los favoritos. Por favor, intenta de nuevo.');
+    } finally {
+      setTogglingFavorite(prev => ({ ...prev, [recipeId]: false }));
+    }
   };
   
   return (
@@ -245,16 +307,24 @@ const HomePage = () => {
                       />
                       <div style={{ position: "absolute", top: "15px", right: "15px" }}>
                         <button
+                          onClick={(e) => handleToggleFavorite(recipe.id, e)}
+                          disabled={togglingFavorite[recipe.id]}
                           style={{
                             background: "rgba(255, 255, 255, 0.9)",
                             border: "none",
                             padding: "8px",
                             borderRadius: "50%",
-                            cursor: "pointer",
+                            cursor: togglingFavorite[recipe.id] ? "wait" : "pointer",
                             fontSize: "1.2rem",
+                            transition: "all 0.3s ease",
+                            opacity: togglingFavorite[recipe.id] ? 0.6 : 1,
                           }}
+                          title={isAuthenticated 
+                            ? (favorites[recipe.id]?.isFavorite ? "Quitar de favoritos" : "Agregar a favoritos")
+                            : "Inicia sesión para agregar a favoritos"
+                          }
                         >
-                          ❤️
+                          {togglingFavorite[recipe.id] ? "⏳" : (favorites[recipe.id]?.isFavorite ? "❤️" : "🤍")}
                         </button>
                       </div>
                       {/* Indicador de recomendación inteligente */}

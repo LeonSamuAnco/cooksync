@@ -83,7 +83,12 @@ model User {
   updatedAt          DateTime             @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
   cliente            Client?
   despensa           UserPantry[]
+  listaCompras       ShoppingList[]
   recetasFavoritas   UserFavoriteRecipe[]
+  resenasRecetas     RecipeReview[]
+  favoritos          Favorite[]
+  notificaciones     Notification[]
+  actividades        UserActivity[]
   rol                Role                 @relation(fields: [rolId], references: [id])
   tipoDocumento      DocumentType         @relation(fields: [tipoDocumentoId], references: [id])
 
@@ -186,6 +191,7 @@ model MeasurementUnit {
   ingredientesMaestros MasterIngredient[]
   recetaIngredientes   RecipeIngredient[]
   despensaUsuarios     UserPantry[]
+  listaCompras         ShoppingList[]
 
   @@map("unidades_medida")
 }
@@ -222,6 +228,7 @@ model MasterIngredient {
   unidadMedidaBase          MeasurementUnit     @relation(fields: [unidadMedidaBaseId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_ingredientes_unidad")
   recetaIngredientes        RecipeIngredient[]
   despensaUsuarios          UserPantry[]
+  listaCompras              ShoppingList[]
 
   @@index([esActivo], map: "idx_activo")
   @@index([esBasico], map: "idx_basico")
@@ -273,6 +280,8 @@ model Recipe {
   updatedAt            DateTime             @default(now()) @map("updated_at") @db.Timestamp(0)
   productId            Int?                 @unique @map("product_id")
   ingredientes         RecipeIngredient[]
+  resenas              RecipeReview[]
+  listaCompras         ShoppingList[]
   categoria            RecipeCategory       @relation(fields: [categoriaRecetaId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_recetas_categoria")
   dificultad           RecipeDifficulty     @relation(fields: [dificultadId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_recetas_dificultad")
   product              Product?             @relation(fields: [productId], references: [id], onDelete: Cascade)
@@ -377,6 +386,63 @@ model UserPantry {
   @@map("usuario_despensa")
 }
 
+model RecipeReview {
+  id              Int      @id @default(autoincrement())
+  usuarioId       Int      @map("usuario_id")
+  recetaId        Int      @map("receta_id")
+  calificacion    Int      @db.TinyInt
+  comentario      String?  @db.Text
+  tituloResena    String?  @map("titulo_resena") @db.VarChar(200)
+  esVerificado    Boolean  @default(false) @map("es_verificado")
+  esReportado     Boolean  @default(false) @map("es_reportado")
+  meGusta         Int      @default(0) @map("me_gusta")
+  esUtil          Int      @default(0) @map("es_util")
+  imagenes        String?  @db.LongText
+  esActivo        Boolean  @default(true) @map("es_activo")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+  usuario         User     @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  receta          Recipe   @relation(fields: [recetaId], references: [id], onDelete: Cascade)
+
+  @@unique([usuarioId, recetaId], name: "uk_usuario_receta_review")
+  @@index([usuarioId], map: "idx_usuario_review")
+  @@index([recetaId], map: "idx_receta_review")
+  @@index([calificacion], map: "idx_calificacion_review")
+  @@index([createdAt], map: "idx_fecha_review")
+  @@index([esActivo], map: "idx_activo_review")
+  @@map("receta_resenas")
+}
+
+model ShoppingList {
+  id                   Int              @id @default(autoincrement())
+  usuarioId            Int              @map("usuario_id")
+  ingredienteMaestroId Int              @map("ingrediente_maestro_id")
+  cantidad             Decimal          @db.Decimal(8, 2)
+  unidadMedidaId       Int              @map("unidad_medida_id")
+  recetaId             Int?             @map("receta_id")
+  esComprado           Boolean          @default(false) @map("es_comprado")
+  fechaCompra          DateTime?        @map("fecha_compra") @db.Timestamp(0)
+  prioridad            Int              @default(1)
+  notas                String?          @db.VarChar(200)
+  precioEstimado       Decimal?         @map("precio_estimado") @db.Decimal(8, 2)
+  tiendaSugerida       String?          @map("tienda_sugerida") @db.VarChar(100)
+  urlTienda            String?          @map("url_tienda") @db.VarChar(500)
+  esActivo             Boolean          @default(true) @map("es_activo")
+  createdAt            DateTime         @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt            DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+  ingredienteMaestro   MasterIngredient @relation(fields: [ingredienteMaestroId], references: [id])
+  unidadMedida         MeasurementUnit  @relation(fields: [unidadMedidaId], references: [id])
+  usuario              User             @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  receta               Recipe?          @relation(fields: [recetaId], references: [id], onDelete: SetNull)
+
+  @@index([usuarioId], map: "idx_usuario_lista")
+  @@index([ingredienteMaestroId], map: "idx_ingrediente_lista")
+  @@index([esComprado], map: "idx_comprado")
+  @@index([prioridad], map: "idx_prioridad")
+  @@index([createdAt], map: "idx_fecha_lista")
+  @@map("lista_compras")
+}
+
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
@@ -447,4 +513,117 @@ enum planes_negocio_soporte_nivel {
   EMAIL
   TELEFONO
   CONSULTOR
+}
+
+// Modelo de Favoritos
+model Favorite {
+  id           Int          @id @default(autoincrement())
+  usuarioId    Int          @map("usuario_id")
+  tipo         FavoriteType
+  referenciaId Int          @map("referencia_id")
+  esActivo     Boolean      @default(true) @map("es_activo")
+  createdAt    DateTime     @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt    DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+  
+  usuario User @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@unique([usuarioId, tipo, referenciaId, esActivo], name: "unique_favorito")
+  @@index([usuarioId], map: "idx_usuario_favorito")
+  @@index([tipo], map: "idx_tipo_favorito")
+  @@index([referenciaId], map: "idx_referencia_favorito")
+  @@index([createdAt], map: "idx_fecha_favorito")
+  @@index([usuarioId, tipo, esActivo], map: "idx_usuario_tipo_activo")
+  @@map("favoritos")
+}
+
+enum FavoriteType {
+  receta
+  producto
+  ingrediente
+}
+
+// Modelo de Notificaciones
+model Notification {
+  id              Int              @id @default(autoincrement())
+  usuarioId       Int              @map("usuario_id")
+  titulo          String           @db.VarChar(200)
+  mensaje         String           @db.Text
+  tipo            NotificationType
+  leido           Boolean          @default(false)
+  fechaEnvio      DateTime         @default(now()) @map("fecha_envio") @db.Timestamp(0)
+  fechaLectura    DateTime?        @map("fecha_lectura") @db.Timestamp(0)
+  prioridad       NotificationPriority @default(NORMAL)
+  programada      Boolean          @default(false)
+  fechaProgramada DateTime?        @map("fecha_programada") @db.Timestamp(0)
+  referenciaId    Int?             @map("referencia_id")
+  referenciaUrl   String?          @map("referencia_url") @db.VarChar(500)
+  icono           String?          @db.VarChar(50)
+  esActivo        Boolean          @default(true) @map("es_activo")
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt       DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+  
+  usuario User @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId], map: "idx_usuario_notificacion")
+  @@index([tipo], map: "idx_tipo_notificacion")
+  @@index([leido], map: "idx_leido_notificacion")
+  @@index([fechaEnvio], map: "idx_fecha_envio")
+  @@index([programada, fechaProgramada], map: "idx_programada")
+  @@index([usuarioId, leido, esActivo], map: "idx_usuario_leido_activo")
+  @@map("notificaciones")
+}
+
+enum NotificationType {
+  sistema
+  receta
+  ingrediente
+  compra
+  recordatorio
+  promocion
+  resena       @map("reseña")
+  favorito
+  vencimiento
+}
+
+enum NotificationPriority {
+  BAJA
+  NORMAL
+  ALTA
+  URGENTE
+}
+
+// Modelo de Historial de Actividad del Usuario
+model UserActivity {
+  id              Int              @id @default(autoincrement())
+  usuarioId       Int              @map("usuario_id")
+  tipo            ActivityType
+  descripcion     String           @db.VarChar(500)
+  referenciaId    Int?             @map("referencia_id")
+  referenciaTipo  String?          @map("referencia_tipo") @db.VarChar(50)
+  metadata        Json?            @db.Json
+  fecha           DateTime         @default(now()) @db.Timestamp(0)
+  esActivo        Boolean          @default(true) @map("es_activo")
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamp(0)
+  
+  usuario User @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId], map: "idx_usuario_actividad")
+  @@index([tipo], map: "idx_tipo_actividad")
+  @@index([fecha], map: "idx_fecha_actividad")
+  @@index([usuarioId, tipo, fecha], map: "idx_usuario_tipo_fecha")
+  @@index([usuarioId, esActivo], map: "idx_usuario_activo")
+  @@map("actividades_usuario")
+}
+
+enum ActivityType {
+  RECETA_VISTA
+  RECETA_PREPARADA
+  COMPRA_REALIZADA
+  RESENA_PUBLICADA    @map("RESEÑA_PUBLICADA")
+  FAVORITO_AGREGADO
+  FAVORITO_ELIMINADO
+  LOGIN
+  LOGOUT
+  PERFIL_ACTUALIZADO
+  LISTA_CREADA
 }

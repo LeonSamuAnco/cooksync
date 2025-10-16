@@ -1,0 +1,225 @@
+/* Notification Item */
+.notification-item {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 15px;
+  margin-bottom: 8px;
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  animation: slideInUp 0.3s ease-out;
+}
+
+.notification-item:hover {
+  background: #f8f9fa;
+  border-color: #667eea;
+  transform: translateX(-4px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+}
+
+/* Unread indicator */
+.notification-item.unread {
+  background: linear-gradient(to right, #f0f4ff 0%, white 100%);
+  border-left: 4px solid #667eea;
+}
+
+.unread-indicator {
+  position: absolute;
+  top: 18px;
+  left: 8px;
+  width: 8px;
+  height: 8px;
+  background: #667eea;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+/* Icon */
+.notification-icon {
+  font-size: 2rem;
+  min-width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 10px;
+  padding: 5px;
+}
+
+/* Content */
+.notification-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.notification-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #212529;
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+
+.notification-message {
+  font-size: 0.9rem;
+  color: #6c757d;
+  line-height: 1.5;
+  margin-bottom: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.notification-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.notification-time {
+  font-size: 0.8rem;
+  color: #adb5bd;
+}
+
+.notification-type-badge {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: #e9ecef;
+  color: #495057;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+/* Delete button */
+.notification-delete {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.2s;
+  padding: 5px;
+  border-radius: 6px;
+}
+
+.notification-item:hover .notification-delete {
+  opacity: 1;
+}
+
+.notification-delete:hover {
+  background: #fee;
+  transform: scale(1.1);
+}
+
+/* Priority styles */
+.notification-item.priority-urgent {
+  border-left-color: #dc3545;
+}
+
+.notification-item.priority-urgent .notification-icon {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+}
+
+.notification-item.priority-high {
+  border-left-color: #fd7e14;
+}
+
+.notification-item.priority-high .notification-icon {
+  background: linear-gradient(135deg, #fd7e14 0%, #e8590c 100%);
+}
+
+.notification-item.priority-normal {
+  border-left-color: #667eea;
+}
+
+.notification-item.priority-low {
+  border-left-color: #6c757d;
+}
+
+.notification-item.priority-low .notification-icon {
+  background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+}
+
+/* Type-specific styles */
+.notification-type-receta .notification-icon {
+  background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+}
+
+.notification-type-compra .notification-icon {
+  background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+}
+
+.notification-type-vencimiento .notification-icon {
+  background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+}
+
+.notification-type-promocion .notification-icon {
+  background: linear-gradient(135deg, #e83e8c 0%, #d63384 100%);
+}
+
+/* Read state */
+.notification-item.read {
+  opacity: 0.7;
+}
+
+.notification-item.read:hover {
+  opacity: 1;
+}
+
+/* Animations */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.2);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .notification-item {
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .notification-icon {
+    font-size: 1.5rem;
+    min-width: 35px;
+    height: 35px;
+  }
+
+  .notification-title {
+    font-size: 0.9rem;
+  }
+
+  .notification-message {
+    font-size: 0.85rem;
+  }
+
+  .notification-delete {
+    opacity: 1;
+  }
+}

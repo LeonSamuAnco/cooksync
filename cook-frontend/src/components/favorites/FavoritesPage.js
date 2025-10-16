@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import favoritesService from '../../services/favoritesService';
 import './FavoritesPage.css';
 
@@ -8,11 +10,19 @@ const FavoritesPage = () => {
   const [error, setError] = useState(null);
   const [stats, setStats] = useState({});
   const [removingFavorite, setRemovingFavorite] = useState({});
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
+    // Verificar si el usuario está autenticado
+    if (!isAuthenticated) {
+      setLoading(false);
+      return;
+    }
+    
     loadFavorites();
     loadStats();
-  }, []);
+  }, [isAuthenticated]);
 
   const loadFavorites = async () => {
     try {
@@ -24,6 +34,8 @@ const FavoritesPage = () => {
       console.error('Error cargando favoritas:', error);
       if (error.message.includes('500')) {
         setError('El servidor está procesando cambios. Por favor, reinicia el backend y vuelve a intentar.');
+      } else if (error.message.includes('401')) {
+        setError('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
       } else {
         setError('Error al cargar tus recetas favoritas. Verifica que el backend esté funcionando.');
       }
@@ -90,6 +102,33 @@ const FavoritesPage = () => {
     };
     return emojiMap[categoryName] || '🍴';
   };
+
+  // Mostrar mensaje amigable si no está autenticado
+  if (!isAuthenticated && !loading) {
+    return (
+      <div className="favorites-page">
+        <div className="favorites-auth-required">
+          <span className="auth-emoji">🔒</span>
+          <h2>Inicia sesión para ver tus favoritos</h2>
+          <p>Para agregar y gestionar tus recetas favoritas, primero debes iniciar sesión en tu cuenta.</p>
+          <div className="auth-buttons">
+            <button 
+              onClick={() => navigate('/login')} 
+              className="login-button"
+            >
+              Iniciar Sesión
+            </button>
+            <button 
+              onClick={() => navigate('/register')} 
+              className="register-button"
+            >
+              Crear Cuenta
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

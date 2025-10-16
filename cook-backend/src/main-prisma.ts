@@ -1,9 +1,11 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppPrismaModule } from './app-prisma.module';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppPrismaModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppPrismaModule);
 
   // Configurar CORS - Permitir múltiples orígenes
   app.enableCors({
@@ -16,8 +18,14 @@ async function bootstrap() {
   // Configurar validación global
   app.useGlobalPipes(new ValidationPipe());
 
+  // Servir archivos estáticos (imágenes)
+  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
+    prefix: '/uploads/',
+  });
+
   const port = process.env.PORT || 3002;
   await app.listen(port);
   console.log(`La aplicación está corriendo en: http://localhost:${port}`);
+  console.log(`Archivos estáticos servidos desde: /uploads/`);
 }
 bootstrap();

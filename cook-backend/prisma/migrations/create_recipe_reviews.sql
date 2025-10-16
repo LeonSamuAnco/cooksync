@@ -1,0 +1,26 @@
+-- Crear tabla de reseñas de recetas
+CREATE TABLE IF NOT EXISTS `receta_resenas` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `usuario_id` INT NOT NULL,
+  `receta_id` INT NOT NULL,
+  `calificacion` TINYINT NOT NULL,
+  `comentario` TEXT NULL,
+  `titulo_resena` VARCHAR(200) NULL,
+  `es_verificado` BOOLEAN NOT NULL DEFAULT false,
+  `es_reportado` BOOLEAN NOT NULL DEFAULT false,
+  `me_gusta` INT NOT NULL DEFAULT 0,
+  `es_util` INT NOT NULL DEFAULT 0,
+  `imagenes` LONGTEXT NULL,
+  `es_activo` BOOLEAN NOT NULL DEFAULT true,
+  `created_at` TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE INDEX `uk_usuario_receta_review` (`usuario_id`, `receta_id`),
+  INDEX `idx_usuario_review` (`usuario_id`),
+  INDEX `idx_receta_review` (`receta_id`),
+  INDEX `idx_calificacion_review` (`calificacion`),
+  INDEX `idx_fecha_review` (`created_at`),
+  INDEX `idx_activo_review` (`es_activo`),
+  CONSTRAINT `fk_resenas_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_resenas_receta` FOREIGN KEY (`receta_id`) REFERENCES `recetas` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

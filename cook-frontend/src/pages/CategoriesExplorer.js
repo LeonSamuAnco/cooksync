@@ -97,23 +97,29 @@ const CategoriesExplorer = () => {
   const handleCategorySelect = (category) => {
     setSelectedCategory(category);
     setFilters({});
+    setResults([]); // Limpiar resultados al cambiar de categoría
     // Animación de transición
     setTimeout(() => {
       setShowFilters(true);
-      // Cargar datos iniciales
-      if (category.id === 'recipes') {
-        loadRecipes();
-      }
+      // NO cargar recetas automáticamente - esperar a que el usuario seleccione filtros
     }, 300);
   };
 
-  const loadRecipes = async (appliedFilters = {}) => {
+  const searchRecipesByIngredients = async (ingredientIds, additionalFilters = {}) => {
     setLoading(true);
     try {
-      const response = await recipeService.getAllRecipes(appliedFilters);
-      setResults(response.recipes || response || []);
+      console.log('🔍 Buscando recetas con ingredientes:', ingredientIds);
+      console.log('🎯 Filtros adicionales:', additionalFilters);
+      
+      const results = await recipeService.searchByIngredientsWithFilters(
+        ingredientIds,
+        additionalFilters
+      );
+      
+      console.log('✅ Recetas encontradas:', results);
+      setResults(results || []);
     } catch (error) {
-      console.error('Error cargando recetas:', error);
+      console.error('❌ Error buscando recetas:', error);
       setResults([]);
     } finally {
       setLoading(false);
@@ -122,7 +128,49 @@ const CategoriesExplorer = () => {
 
   const handleApplyFilters = () => {
     if (selectedCategory?.id === 'recipes') {
-      loadRecipes(filters);
+      console.log('🔍 Aplicando filtros:', filters);
+      
+      // Verificar si hay ingredientes seleccionados
+      const hasIngredients = filters.ingredients && filters.ingredients.length > 0;
+      
+      if (!hasIngredients) {
+        console.log('⚠️ No hay ingredientes seleccionados');
+        setResults([]);
+        return;
+      }
+      
+      // Construir filtros para el backend
+      const backendFilters = {};
+      
+      // Agregar categoría si existe
+      if (filters.category) {
+        backendFilters.categoriaId = filters.category;
+      }
+      
+      // Agregar dificultad si existe
+      if (filters.difficulty) {
+        backendFilters.dificultadId = filters.difficulty;
+      }
+      
+      // Agregar tiempo máximo si existe
+      if (filters.maxTime) {
+        backendFilters.tiempoMax = filters.maxTime;
+      }
+      
+      // Agregar filtros dietéticos
+      if (filters.dietary) {
+        if (filters.dietary.vegetarian) backendFilters.esVegetariana = true;
+        if (filters.dietary.vegan) backendFilters.esVegana = true;
+        if (filters.dietary.glutenFree) backendFilters.sinGluten = true;
+        if (filters.dietary.lactoseFree) backendFilters.sinLactosa = true;
+        if (filters.dietary.healthy) backendFilters.esSaludable = true;
+      }
+      
+      console.log('🎯 Filtros para backend:', backendFilters);
+      console.log('🧂 Ingredientes:', filters.ingredients);
+      
+      // Buscar recetas con ingredientes y filtros
+      searchRecipesByIngredients(filters.ingredients, backendFilters);
     }
   };
 
@@ -319,7 +367,9 @@ const CategoriesExplorer = () => {
                   <div
                     key={item.id || index}
                     className="result-card"
-                    onClick={() => navigate(`/receta/${item.id}`)}
+                    onClick={() => navigate(`/receta/${item.id}`, { 
+                      state: { selectedIngredients: filters.ingredients || [] }
+                    })}
                   >
                     <div className="result-image">
                       {item.imagenPrincipal ? (
@@ -344,7 +394,15 @@ const CategoriesExplorer = () => {
             ) : (
               <div className="empty-results">
                 <span className="empty-icon">{selectedCategory.image}</span>
-                <p>No se encontraron resultados. Intenta ajustar los filtros.</p>
+                <p>
+                  {Object.keys(filters).length === 0 || !Object.keys(filters).some(key => {
+                    const value = filters[key];
+                    if (Array.isArray(value)) return value.length > 0;
+                    return value !== undefined && value !== null && value !== '';
+                  })
+                    ? '👈 Selecciona ingredientes o aplica filtros para buscar recetas'
+                    : 'No se encontraron resultados. Intenta ajustar los filtros.'}
+                </p>
               </div>
             )}
           </div>

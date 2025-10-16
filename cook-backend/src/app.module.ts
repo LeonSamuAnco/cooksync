@@ -4,7 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { RecipesModule } from './recipes/recipes.module';
-import { AuthModule } from './auth/auth.module';
+import { AuthPrismaModule } from './auth/auth-prisma.module';
 import { ClientsModule } from './clients/clients.module';
 import { AdminModule } from './admin/admin.module';
 import { ProductsModule } from './products/products.module';
@@ -30,7 +30,7 @@ import { SecurityMiddleware } from './common/middleware/security.middleware';
       logging: process.env.NODE_ENV === 'development',
     }),
     RecipesModule,
-    AuthModule,
+    AuthPrismaModule,
     ClientsModule,
     AdminModule,
     ProductsModule,
