@@ -5,8 +5,16 @@ import { useAuth } from '../../context/AuthContext';
 const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   const { user, loading, isAuthenticated } = useAuth();
 
+  // Logging para debugging
+  console.log('🔒 ProtectedRoute - Loading:', loading, 'Authenticated:', isAuthenticated);
+  console.log('🔒 ProtectedRoute - User:', user);
+  console.log('🔒 ProtectedRoute - AllowedRoles:', allowedRoles);
+
   // Memoizar la verificación de autorización
   const isAuthorized = useMemo(() => {
+    // Durante la carga, consideramos no autorizado pero no mostramos error
+    if (loading) return null;
+    
     if (!user || !isAuthenticated) return false;
     
     // Si no hay roles específicos requeridos, permitir acceso a usuarios autenticados
@@ -14,10 +22,17 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     
     // Verificar si el usuario tiene uno de los roles permitidos
     const userRole = user.rol || user.role;
-    if (!userRole) return false;
+    console.log('🔒 ProtectedRoute - UserRole:', userRole);
     
-    return allowedRoles.includes(userRole.codigo);
-  }, [user, isAuthenticated, allowedRoles]);
+    if (!userRole) {
+      console.error('❌ ProtectedRoute - Usuario no tiene rol definido');
+      return false;
+    }
+    
+    const hasPermission = allowedRoles.includes(userRole.codigo);
+    console.log('🔒 ProtectedRoute - HasPermission:', hasPermission);
+    return hasPermission;
+  }, [user, isAuthenticated, allowedRoles, loading]);
 
   if (loading) {
     return (
@@ -35,16 +50,76 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   }
 
   if (!isAuthorized) {
+    const userRole = user?.rol || user?.role;
+    const roleName = userRole?.nombre || 'No definido';
+    const roleCode = userRole?.codigo || 'NINGUNO';
+    
     return (
-      <div className="unauthorized-container">
-        <div className="unauthorized-message">
-          <h2>🚫 Acceso Denegado</h2>
-          <p>No tienes permisos para acceder a esta sección.</p>
-          <p>Tu rol actual: <strong>{user?.role?.nombre || user?.rol?.nombre}</strong></p>
-          <p>Roles permitidos: <strong>{allowedRoles.join(', ')}</strong></p>
-          <button onClick={() => window.location.href = '/dashboard'}>
-            Ir al Dashboard
-          </button>
+      <div className="unauthorized-container" style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '80vh',
+        padding: '2rem'
+      }}>
+        <div className="unauthorized-message" style={{
+          background: 'white',
+          padding: '3rem',
+          borderRadius: '20px',
+          boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
+          textAlign: 'center',
+          maxWidth: '500px'
+        }}>
+          <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🚫</div>
+          <h2 style={{ color: '#e53e3e', marginBottom: '1rem' }}>Acceso Denegado</h2>
+          <p style={{ color: '#718096', marginBottom: '1.5rem' }}>
+            No tienes permisos para acceder a esta sección.
+          </p>
+          <div style={{ 
+            background: '#f7fafc', 
+            padding: '1rem', 
+            borderRadius: '10px',
+            marginBottom: '1.5rem'
+          }}>
+            <p style={{ margin: '0.5rem 0', fontSize: '0.9rem', color: '#4a5568' }}>
+              Tu rol actual: <strong style={{ color: '#667eea' }}>{roleName} ({roleCode})</strong>
+            </p>
+            <p style={{ margin: '0.5rem 0', fontSize: '0.9rem', color: '#4a5568' }}>
+              Roles permitidos: <strong style={{ color: '#e83e8c' }}>
+                {allowedRoles.length > 0 ? allowedRoles.join(', ') : 'NINGUNO'}
+              </strong>
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+            <button 
+              onClick={() => window.location.href = '/dashboard'}
+              style={{
+                padding: '0.75rem 1.5rem',
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '10px',
+                fontWeight: '600',
+                cursor: 'pointer'
+              }}
+            >
+              Ir al Dashboard
+            </button>
+            <button 
+              onClick={() => window.location.reload()}
+              style={{
+                padding: '0.75rem 1.5rem',
+                background: '#f7fafc',
+                color: '#4a5568',
+                border: '2px solid #e2e8f0',
+                borderRadius: '10px',
+                fontWeight: '600',
+                cursor: 'pointer'
+              }}
+            >
+              Recargar
+            </button>
+          </div>
         </div>
       </div>
     );

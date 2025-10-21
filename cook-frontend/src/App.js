@@ -4,13 +4,16 @@ import Register from "./components/auth/Register";
 import Dashboard from "./components/dashboard/Dashboard";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import ProductsPage from "./components/products/ProductsPage";
-import FavoritesPage from "./components/favorites/FavoritesPage";
+import FavoritesPage from "./pages/FavoritesPage";
+import ActivityPage from "./pages/ActivityPage";
 import CategoriesExplorer from "./pages/CategoriesExplorer";
 import AuthRedirect from "./components/auth/AuthRedirect";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { NotificationProvider, useNotification } from "./context/NotificationContext";
 import RecipeDetail from "./components/RecipeDetail";
 import HomePage from "./components/home/HomePage";
+import LandingPage from "./pages/LandingPage";
+import SessionExpiredModal from "./components/SessionExpiredModal";
 import "./App.css";
 import "./utils/backendChecker";
 
@@ -70,18 +73,35 @@ const TopBar = () => {
 };
 
 const AppContent = () => {
-  const { loading } = useAuth();
+  const { loading, sessionExpired, logout } = useAuth();
+
+  const handleCloseSessionExpired = () => {
+    logout(false); // Cerrar sin mostrar el mensaje de nuevo
+  };
 
   if (loading) {
-    return <div>Cargando...</div>;
+    return (
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh',
+        fontSize: '1.2rem',
+        color: '#667eea'
+      }}>
+        ⏳ Cargando...
+      </div>
+    );
   }
 
   return (
     <Router>
       <TopBar />
+      {sessionExpired && <SessionExpiredModal onClose={handleCloseSessionExpired} />}
       <Routes>
         <Route path="/login" element={<AuthRedirect><Login /></AuthRedirect>} />
         <Route path="/registro" element={<AuthRedirect><Register /></AuthRedirect>} />
+        <Route path="/landing" element={<LandingPage />} />
         <Route path="/home" element={<HomePage />} />
         <Route path="/categorias" element={<CategoriesExplorer />} />
         <Route path="/explore" element={<CategoriesExplorer />} />
@@ -89,6 +109,9 @@ const AppContent = () => {
         <Route path="/receta/:id" element={<RecipeDetail />} />
         <Route path="/recipes/:id" element={<RecipeDetail />} />
         <Route path="/favoritas" element={<FavoritesPage />} />
+        <Route path="/favorites" element={<FavoritesPage />} />
+        <Route path="/activity" element={<ActivityPage />} />
+        <Route path="/history" element={<ActivityPage />} />
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/admin/*" element={<ProtectedRoute allowedRoles={['ADMIN']}><Dashboard /></ProtectedRoute>} />
         <Route path="/moderador/*" element={<ProtectedRoute allowedRoles={['MODERADOR']}><Dashboard /></ProtectedRoute>} />

@@ -440,6 +440,7 @@
   height: 200px;
   overflow: hidden;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  position: relative;
 }
 
 .result-image img {
@@ -451,6 +452,42 @@
 
 .result-card:hover .result-image img {
   transform: scale(1.1);
+}
+
+/* Botón de favorito en las tarjetas */
+.favorite-button {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: rgba(255, 255, 255, 0.95);
+  border: none;
+  padding: 10px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.3rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 45px;
+  height: 45px;
+}
+
+.favorite-button:hover:not(:disabled) {
+  transform: scale(1.15);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  background: rgba(255, 255, 255, 1);
+}
+
+.favorite-button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.favorite-button:active:not(:disabled) {
+  transform: scale(0.95);
 }
 
 .result-placeholder {

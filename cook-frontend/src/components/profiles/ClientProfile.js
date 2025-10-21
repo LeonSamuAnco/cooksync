@@ -76,31 +76,53 @@ const ClientProfile = ({ user }) => {
       
       if (response.ok) {
         const data = await response.json();
-        setClientData(data.user);
+        setClientData(data.user || data.client);
+      } else if (response.status === 404) {
+        console.warn('⚠️ Endpoint /clients no disponible, usando datos del usuario actual');
+        // Usar datos del usuario actual como fallback
+        setClientData(user);
+      } else {
+        console.warn('⚠️ Error obteniendo datos, usando usuario actual');
+        setClientData(user);
       }
     } catch (error) {
-      console.error('Error cargando datos del cliente:', error);
+      console.error('❌ Error cargando datos del cliente:', error);
+      // Usar datos del usuario actual como fallback
+      setClientData(user);
     }
   };
 
   const loadFavoriteRecipes = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`http://localhost:3002/clients/${user.id}/favorite-recipes`, {
+      // Intentar endpoint de clientes primero
+      let response = await fetch(`http://localhost:3002/clients/${user.id}/favorite-recipes`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
       
+      // Si falla, intentar endpoint de favoritos
+      if (!response.ok && response.status === 404) {
+        console.warn('⚠️ Usando endpoint alternativo /favorites/my-favorites');
+        response = await fetch(`http://localhost:3002/favorites/my-favorites?tipo=receta`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+      }
+      
       if (response.ok) {
         const data = await response.json();
-        setFavoriteRecipes(data.recipes || []);
+        setFavoriteRecipes(data.recipes || data.favorites || []);
       } else {
+        console.warn('⚠️ No se pudieron cargar favoritos');
         setFavoriteRecipes([]);
       }
     } catch (error) {
-      console.error('Error cargando recetas favoritas:', error);
+      console.error('❌ Error cargando recetas favoritas:', error);
       setFavoriteRecipes([]);
     }
   };
@@ -117,12 +139,16 @@ const ClientProfile = ({ user }) => {
       
       if (response.ok) {
         const data = await response.json();
-        setPantryItems(data.items || []);
+        setPantryItems(data.items || data.pantry || []);
+      } else if (response.status === 404) {
+        console.warn('⚠️ Endpoint /clients/pantry no disponible');
+        console.info('💡 La despensa estará disponible cuando se implemente el endpoint');
+        setPantryItems([]);
       } else {
         setPantryItems([]);
       }
     } catch (error) {
-      console.error('Error cargando despensa:', error);
+      console.error('❌ Error cargando despensa:', error);
       setPantryItems([]);
     }
   };
@@ -130,12 +156,24 @@ const ClientProfile = ({ user }) => {
   const loadRecentActivity = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`http://localhost:3002/clients/${user.id}/activity`, {
+      // Intentar endpoint de clientes primero
+      let response = await fetch(`http://localhost:3002/clients/${user.id}/activity`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
+      
+      // Si falla, intentar endpoint de actividad
+      if (!response.ok && response.status === 404) {
+        console.warn('⚠️ Usando endpoint alternativo /activity/my-activities');
+        response = await fetch(`http://localhost:3002/activity/my-activities?limit=10`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+      }
       
       if (response.ok) {
         const data = await response.json();

@@ -8,6 +8,7 @@ import { AuthPrismaModule } from './auth/auth-prisma.module';
 import { ClientsModule } from './clients/clients.module';
 import { AdminModule } from './admin/admin.module';
 import { ProductsModule } from './products/products.module';
+import { VendorsModule } from './vendors/vendors.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { SecurityMiddleware } from './common/middleware/security.middleware';
 
@@ -34,6 +35,7 @@ import { SecurityMiddleware } from './common/middleware/security.middleware';
     ClientsModule,
     AdminModule,
     ProductsModule,
+    VendorsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

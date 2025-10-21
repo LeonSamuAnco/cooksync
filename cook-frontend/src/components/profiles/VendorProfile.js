@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
+import vendorService from '../../services/vendorService';
 import './VendorProfile.css';
 
 const VendorProfile = ({ user }) => {
@@ -12,29 +13,58 @@ const VendorProfile = ({ user }) => {
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
   const [analytics, setAnalytics] = useState({});
+  const [stats, setStats] = useState({});
+  const [reviews, setReviews] = useState([]);
+  const [customers, setCustomers] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [productsPage, setProductsPage] = useState(1);
+  const [ordersPage, setOrdersPage] = useState(1);
 
   useEffect(() => {
-    loadProducts();
-    loadOrders();
-    loadAnalytics();
+    loadInitialData();
   }, [user.id]);
 
-  const loadProducts = async () => {
+  const loadInitialData = async () => {
+    setLoading(true);
     try {
-      const response = await fetch(`http://localhost:3002/vendors/${user.id}/products`);
-      const data = await response.json();
-      setProducts(Array.isArray(data) ? data : []);
+      await Promise.all([
+        loadStats(),
+        loadProducts(),
+        loadOrders(),
+        loadAnalytics(),
+      ]);
+    } catch (error) {
+      showNotification('Error al cargar datos', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadStats = async () => {
+    try {
+      const data = await vendorService.getVendorStats(user.id);
+      setStats(data);
+    } catch (error) {
+      console.error('Error loading stats:', error);
+    }
+  };
+
+  const loadProducts = async (page = 1) => {
+    try {
+      const data = await vendorService.getVendorProducts(user.id, page, 10);
+      setProducts(data.products || []);
+      setProductsPage(page);
     } catch (error) {
       console.error('Error cargando productos:', error);
       setProducts([]);
     }
   };
 
-  const loadOrders = async () => {
+  const loadOrders = async (page = 1) => {
     try {
-      const response = await fetch(`http://localhost:3002/vendors/${user.id}/orders`);
-      const data = await response.json();
-      setOrders(Array.isArray(data) ? data : []);
+      const data = await vendorService.getVendorOrders(user.id, page, 10);
+      setOrders(data.orders || []);
+      setOrdersPage(page);
     } catch (error) {
       console.error('Error cargando pedidos:', error);
       setOrders([]);
@@ -43,11 +73,38 @@ const VendorProfile = ({ user }) => {
 
   const loadAnalytics = async () => {
     try {
-      const response = await fetch(`http://localhost:3002/vendors/${user.id}/analytics`);
-      const data = await response.json();
+      const data = await vendorService.getVendorAnalytics(user.id, 30);
       setAnalytics(data);
     } catch (error) {
       console.error('Error cargando analytics:', error);
+    }
+  };
+
+  const loadReviews = async () => {
+    try {
+      const data = await vendorService.getVendorReviews(user.id, 1, 10);
+      setReviews(data.reviews || []);
+    } catch (error) {
+      console.error('Error cargando reseñas:', error);
+    }
+  };
+
+  const loadCustomers = async () => {
+    try {
+      const data = await vendorService.getVendorCustomers(user.id);
+      setCustomers(data.customers || []);
+    } catch (error) {
+      console.error('Error cargando clientes:', error);
+    }
+  };
+
+  const handleToggleProduct = async (productId) => {
+    try {
+      await vendorService.toggleProduct(user.id, productId);
+      showNotification('Estado del producto actualizado', 'success');
+      loadProducts(productsPage);
+    } catch (error) {
+      showNotification('Error al actualizar producto', 'error');
     }
   };
 
@@ -96,33 +153,33 @@ const VendorProfile = ({ user }) => {
         <div className="stat-card">
           <div className="stat-icon">🛍️</div>
           <div className="stat-info">
-            <h3>{products.length || 0}</h3>
-            <p>Productos Activos</p>
-            <span className="stat-change positive">+3 esta semana</span>
+            <h3>{stats.totalRecipes || 0}</h3>
+            <p>Recetas Activas</p>
+            <span className="stat-change positive">Total publicadas</span>
           </div>
         </div>
         <div className="stat-card">
           <div className="stat-icon">📦</div>
           <div className="stat-info">
-            <h3>{orders.length || 0}</h3>
-            <p>Pedidos Totales</p>
-            <span className="stat-change positive">+15% vs mes anterior</span>
+            <h3>{stats.totalViews || 0}</h3>
+            <p>Vistas Totales</p>
+            <span className="stat-change positive">Recetas preparadas</span>
           </div>
         </div>
         <div className="stat-card">
           <div className="stat-icon">💰</div>
           <div className="stat-info">
-            <h3>S/ {analytics.totalSales || 2850}</h3>
-            <p>Ventas del Mes</p>
-            <span className="stat-change positive">+28% vs mes anterior</span>
+            <h3>S/ {stats.totalSales || 0}</h3>
+            <p>Ingresos Estimados</p>
+            <span className="stat-change positive">Basado en vistas</span>
           </div>
         </div>
         <div className="stat-card">
           <div className="stat-icon">⭐</div>
           <div className="stat-info">
-            <h3>4.8</h3>
+            <h3>{stats.averageRating?.toFixed(1) || 0}</h3>
             <p>Rating Promedio</p>
-            <span className="stat-change neutral">Excelente</span>
+            <span className="stat-change neutral">{stats.totalReviews || 0} reseñas</span>
           </div>
         </div>
       </div>
@@ -171,65 +228,114 @@ const VendorProfile = ({ user }) => {
     <div className="vendor-content-section">
       <div className="section-header">
         <h2>🛍️ Gestión de Productos</h2>
-        <button className="primary-btn">+ Nuevo Producto</button>
+        <button className="primary-btn" onClick={() => navigate('/recipes/create')}>
+          + Nueva Receta
+        </button>
       </div>
       
-      <div className="products-grid">
-        <div className="product-card">
-          <div className="product-image">🍽️</div>
-          <div className="product-info">
-            <h4>Ceviche Clásico</h4>
-            <p>S/ 25.00</p>
-            <span className="product-status active">Activo</span>
-          </div>
-          <div className="product-actions">
-            <button className="edit-btn">Editar</button>
-            <button className="view-btn">Ver</button>
-          </div>
+      {loading ? (
+        <div className="loading-container">
+          <div className="spinner"></div>
+          <p>Cargando productos...</p>
         </div>
-        <div className="product-card">
-          <div className="product-image">🥘</div>
-          <div className="product-info">
-            <h4>Lomo Saltado</h4>
-            <p>S/ 32.00</p>
-            <span className="product-status active">Activo</span>
-          </div>
-          <div className="product-actions">
-            <button className="edit-btn">Editar</button>
-            <button className="view-btn">Ver</button>
-          </div>
+      ) : (
+        <div className="products-grid">
+          {products.length > 0 ? (
+            products.map(product => (
+              <div key={product.id} className="product-card">
+                <div className="product-image">
+                  {product.image ? (
+                    <img src={product.image} alt={product.name} />
+                  ) : (
+                    <div className="image-placeholder">🍽️</div>
+                  )}
+                </div>
+                <div className="product-info">
+                  <h4>{product.name}</h4>
+                  <p>S/ {product.price.toFixed(2)}</p>
+                  <span className={`product-status ${product.status}`}>
+                    {product.status === 'active' ? 'Activo' : 'Inactivo'}
+                  </span>
+                  <div className="product-meta">
+                    <span>⭐ {product.rating?.toFixed(1) || 0}</span>
+                    <span>👁️ {product.views || 0} vistas</span>
+                  </div>
+                </div>
+                <div className="product-actions">
+                  <button 
+                    className="edit-btn"
+                    onClick={() => navigate(`/recipes/${product.id}/edit`)}
+                  >
+                    Editar
+                  </button>
+                  <button 
+                    className="view-btn"
+                    onClick={() => navigate(`/recipes/${product.id}`)}
+                  >
+                    Ver
+                  </button>
+                  <button 
+                    className="toggle-btn"
+                    onClick={() => handleToggleProduct(product.id)}
+                  >
+                    {product.status === 'active' ? 'Desactivar' : 'Activar'}
+                  </button>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="no-products">
+              <p>No tienes productos publicados</p>
+              <button className="primary-btn" onClick={() => navigate('/recipes/create')}>
+                Crear Primera Receta
+              </button>
+            </div>
+          )}
         </div>
-      </div>
+      )}
     </div>
   );
 
   const renderOrders = () => (
     <div className="vendor-content-section">
       <div className="section-header">
-        <h2>📦 Gestión de Pedidos</h2>
+        <h2>📦 Pedidos (Recetas Preparadas)</h2>
+        <p>{orders.length} pedidos totales</p>
       </div>
       
-      <div className="orders-table">
-        <div className="table-header">
-          <span>Pedido</span>
-          <span>Cliente</span>
-          <span>Fecha</span>
-          <span>Total</span>
-          <span>Estado</span>
-          <span>Acciones</span>
+      {loading ? (
+        <div className="loading-container">
+          <div className="spinner"></div>
+          <p>Cargando pedidos...</p>
         </div>
-        <div className="table-row">
-          <span>#001</span>
-          <span>Juan Pérez</span>
-          <span>22/09/2024</span>
-          <span>S/ 45.00</span>
-          <span className="status-badge pending">Pendiente</span>
-          <div className="action-buttons">
-            <button className="action-btn">Procesar</button>
-            <button className="action-btn">Ver</button>
-          </div>
+      ) : (
+        <div className="orders-table">
+          {orders.length > 0 ? (
+            <>
+              <div className="table-header">
+                <span>Pedido</span>
+                <span>Cliente</span>
+                <span>Receta</span>
+                <span>Fecha</span>
+                <span>Monto</span>
+              </div>
+              {orders.map(order => (
+                <div key={order.id} className="table-row">
+                  <span>{order.orderNumber}</span>
+                  <span>{order.customer}</span>
+                  <span>{order.recipeName}</span>
+                  <span>{new Date(order.date).toLocaleDateString()}</span>
+                  <span>S/ {order.amount.toFixed(2)}</span>
+                </div>
+              ))}
+            </>
+          ) : (
+            <div className="no-data">
+              <p>No hay pedidos registrados</p>
+            </div>
+          )}
         </div>
-      </div>
+      )}
     </div>
   );
 
@@ -248,23 +354,93 @@ const VendorProfile = ({ user }) => {
     <div className="vendor-content-section">
       <div className="section-header">
         <h2>📈 Analytics de Ventas</h2>
+        <p>Últimos 30 días</p>
       </div>
-      <div className="analytics-content">
-        <p>Módulo de analytics en desarrollo...</p>
+      
+      <div className="analytics-stats">
+        <div className="stat-card">
+          <h4>Ingresos Totales</h4>
+          <p className="big-number">S/ {analytics.totalRevenue || 0}</p>
+        </div>
+        <div className="stat-card">
+          <h4>Pedidos Totales</h4>
+          <p className="big-number">{analytics.totalOrders || 0}</p>
+        </div>
+        <div className="stat-card">
+          <h4>Valor Promedio</h4>
+          <p className="big-number">S/ {analytics.averageOrderValue || 0}</p>
+        </div>
       </div>
+
+      {analytics.topRecipes?.length > 0 && (
+        <div className="widget">
+          <h3>🏆 Recetas Más Populares</h3>
+          <div className="top-products-list">
+            {analytics.topRecipes.map((recipe, index) => (
+              <div key={recipe.id} className="top-product-item">
+                <span className="rank">#{index + 1}</span>
+                <span className="name">{recipe.name}</span>
+                <span className="orders">{recipe.orders} pedidos</span>
+                <span className="revenue">S/ {recipe.revenue}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 
-  const renderCustomers = () => (
-    <div className="vendor-content-section">
-      <div className="section-header">
-        <h2>👥 Gestión de Clientes</h2>
+  const renderCustomers = () => {
+    if (customers.length === 0 && !loading) {
+      loadCustomers();
+    }
+
+    return (
+      <div className="vendor-content-section">
+        <div className="section-header">
+          <h2>👥 Mis Clientes</h2>
+          <p>{customers.length} clientes totales</p>
+        </div>
+        
+        {loading ? (
+          <div className="loading-container">
+            <div className="spinner"></div>
+            <p>Cargando clientes...</p>
+          </div>
+        ) : (
+          <div className="customers-grid">
+            {customers.length > 0 ? (
+              customers.map(customer => (
+                <div key={customer.id} className="customer-card">
+                  <div className="customer-avatar">
+                    {customer.avatar ? (
+                      <img src={customer.avatar} alt={customer.name} />
+                    ) : (
+                      <div className="avatar-placeholder">
+                        {customer.name.charAt(0)}
+                      </div>
+                    )}
+                  </div>
+                  <div className="customer-info">
+                    <h4>{customer.name}</h4>
+                    <p>{customer.email}</p>
+                    <div className="customer-stats">
+                      <span>📦 {customer.totalOrders} pedidos</span>
+                      <span>💰 S/ {customer.totalSpent}</span>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="no-data">
+                <p>Aún no tienes clientes</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
-      <div className="customers-content">
-        <p>Módulo de clientes en desarrollo...</p>
-      </div>
-    </div>
-  );
+    );
+  };
 
   const renderMarketing = () => (
     <div className="vendor-content-section">

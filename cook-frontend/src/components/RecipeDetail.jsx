@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { FaArrowLeft, FaClock, FaFire, FaUserFriends, FaListUl, FaBookOpen, FaShoppingCart } from "react-icons/fa";
 import ShoppingList from "./ShoppingList";
+import activityService from "../services/activityService";
 import "./RecipeDetail.css"; // Asegúrate de que la ruta sea correcta
 
 const API_URL = "http://localhost:3002";
@@ -71,6 +72,24 @@ const RecipeDetail = () => {
         const normalizedData = normalizeRecipeData(data);
         console.log('Normalized recipe data:', normalizedData);
         setRecipe(normalizedData);
+        
+        // Registrar vista de receta en actividad del usuario
+        try {
+          const token = localStorage.getItem('authToken');
+          if (token) {
+            await activityService.create({
+              tipo: 'RECETA_VISTA',
+              descripcion: `Viste la receta "${normalizedData.titulo || normalizedData.nombre}"`,
+              referenciaId: parseInt(id),
+              referenciaTipo: 'receta',
+              referenciaUrl: `/recipes/${id}`,
+            });
+            console.log('✅ Vista de receta registrada en actividad');
+          }
+        } catch (activityError) {
+          console.warn('⚠️ No se pudo registrar la actividad:', activityError);
+          // No lanzamos error para no interrumpir la carga de la receta
+        }
       } catch (err) {
         console.error('Error fetching recipe:', err);
         

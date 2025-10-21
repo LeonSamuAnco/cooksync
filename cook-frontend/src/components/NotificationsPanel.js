@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useNotifications } from '../hooks/useNotifications';
 import NotificationItem from './NotificationItem';
 import './NotificationsPanel.css';
 
 const NotificationsPanel = ({ isOpen, onClose }) => {
+  const navigate = useNavigate();
   const {
     notifications,
     unreadCount,
@@ -39,7 +41,8 @@ const NotificationsPanel = ({ isOpen, onClose }) => {
 
     // Navegar a la URL de referencia si existe
     if (notification.referenciaUrl) {
-      window.location.href = notification.referenciaUrl;
+      onClose(); // Cerrar el panel antes de navegar
+      navigate(notification.referenciaUrl);
     }
   };
 

@@ -280,36 +280,45 @@
 /* Grid de favoritas */
 .favorites-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 25px;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 30px;
   margin-top: 20px;
+  padding: 10px;
 }
 
 .favorite-recipe-card {
-  background: rgba(255, 255, 255, 0.95);
+  background: white;
   border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: 1px solid #e8e8e8;
 }
 
 .favorite-recipe-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
 }
 
 .recipe-image-container {
   position: relative;
+  width: 100%;
   height: 200px;
   overflow: hidden;
+  background: #f5f5f5;
+  flex-shrink: 0;
+  border-radius: 20px 20px 0 0;
 }
 
 .recipe-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s ease;
+  transition: transform 0.4s ease;
 }
 
 .favorite-recipe-card:hover .recipe-image {
@@ -342,101 +351,112 @@
 
 /* Contenido de la receta */
 .recipe-content {
-  padding: 25px;
-}
-
-.recipe-header {
+  padding: 20px;
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 15px;
-  gap: 15px;
+  flex-direction: column;
+  flex: 1;
+  gap: 12px;
 }
 
 .recipe-title {
   font-size: 1.4rem;
-  color: #333;
+  font-weight: 700;
+  color: #2c3e50;
   margin: 0;
-  flex: 1;
-  line-height: 1.3;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-align: left;
+  order: 1;
 }
 
 .recipe-category {
   background: linear-gradient(135deg, #a29bfe, #6c5ce7);
   color: white;
-  padding: 5px 12px;
-  border-radius: 15px;
+  padding: 6px 14px;
+  border-radius: 20px;
   font-size: 0.8rem;
-  font-weight: 500;
+  font-weight: 600;
   white-space: nowrap;
+  align-self: flex-start;
+  box-shadow: 0 2px 8px rgba(108, 92, 231, 0.3);
+  display: inline-block;
+  order: 2;
 }
 
 .recipe-description {
-  color: #666;
-  margin-bottom: 20px;
-  line-height: 1.5;
+  color: #7f8c8d;
+  font-size: 0.9rem;
+  line-height: 1.6;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  margin: 0;
+  text-align: left;
+  order: 3;
 }
 
 /* Información de la receta */
 .recipe-info {
   display: flex;
-  justify-content: space-between;
-  margin-bottom: 20px;
-  padding: 15px;
-  background: #f8f9fa;
-  border-radius: 12px;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0;
+  background: transparent;
 }
 
 .info-item {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  gap: 5px;
+  justify-content: flex-start;
+  gap: 8px;
   font-size: 0.9rem;
-  color: #555;
+  color: #2c3e50;
+  text-align: left;
+  font-weight: 500;
 }
 
 .info-icon {
-  font-size: 1rem;
+  font-size: 1.1rem;
+  color: #7f8c8d;
 }
 
 /* Badges dietéticos */
 .dietary-badges {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 20px;
+  gap: 6px;
+  min-height: auto;
+  align-items: flex-start;
+  margin-top: 4px;
 }
 
 .badge {
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: white;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #2c3e50;
+  background: #ecf0f1;
+  border: 1px solid #bdc3c7;
+  white-space: nowrap;
+  box-shadow: none;
 }
 
-.badge.vegetarian {
-  background: linear-gradient(135deg, #00b894, #00a085);
-}
-
-.badge.vegan {
-  background: linear-gradient(135deg, #55a3ff, #003d82);
-}
-
-.badge.gluten-free {
-  background: linear-gradient(135deg, #fdcb6e, #e17055);
-}
-
-.badge.lactose-free {
-  background: linear-gradient(135deg, #fd79a8, #e84393);
-}
-
+.badge.vegetarian,
+.badge.vegan,
+.badge.gluten-free,
+.badge.lactose-free,
 .badge.healthy {
-  background: linear-gradient(135deg, #00b894, #55efc4);
+  background: #ecf0f1;
+  color: #2c3e50;
+  border: 1px solid #bdc3c7;
 }
 
 /* Acciones de la receta */
@@ -449,17 +469,21 @@
   background: linear-gradient(135deg, #667eea, #764ba2);
   color: white;
   border: none;
-  padding: 12px 25px;
-  border-radius: 25px;
+  padding: 10px 24px;
+  border-radius: 24px;
   cursor: pointer;
-  font-size: 1rem;
-  font-weight: 600;
-  transition: transform 0.3s ease;
+  font-size: 0.9rem;
+  font-weight: 700;
+  transition: all 0.3s ease;
   width: 100%;
+  box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .view-recipe-btn:hover {
   transform: translateY(-2px);
+  box-shadow: 0 5px 16px rgba(102, 126, 234, 0.4);
 }
 
 /* Responsive */
@@ -488,20 +512,31 @@
   .favorites-grid {
     grid-template-columns: 1fr;
     gap: 20px;
+    padding: 5px;
   }
 
-  .recipe-header {
-    flex-direction: column;
-    gap: 10px;
+  .recipe-title {
+    font-size: 1.3rem;
+    min-height: 38px;
   }
 
-  .recipe-category {
-    align-self: flex-start;
+  .recipe-content {
+    padding: 20px;
+    gap: 14px;
   }
 
   .recipe-info {
-    flex-direction: column;
-    gap: 10px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    padding: 12px;
+  }
+
+  .info-item {
+    font-size: 0.8rem;
+  }
+
+  .info-icon {
+    font-size: 1.1rem;
   }
 
   .empty-content {
@@ -510,6 +545,11 @@
 
   .empty-emoji {
     font-size: 3rem;
+  }
+
+  .view-recipe-btn {
+    padding: 12px 24px;
+    font-size: 0.95rem;
   }
 }
 
@@ -525,5 +565,22 @@
 
   .categories-list {
     justify-content: center;
+  }
+
+  .recipe-title {
+    font-size: 1.2rem;
+  }
+
+  .recipe-description {
+    font-size: 0.9rem;
+  }
+
+  .dietary-badges {
+    gap: 5px;
+  }
+
+  .badge {
+    font-size: 0.7rem;
+    padding: 4px 10px;
   }
 }

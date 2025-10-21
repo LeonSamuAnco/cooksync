@@ -1,16 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import RecipeFilters from '../components/categories/RecipeFilters';
 import recipeService from '../services/recipeService';
+import favoritesService from '../services/favoritesService';
 import './CategoriesExplorer.css';
 
 const CategoriesExplorer = () => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState({});
+  const [favorites, setFavorites] = useState({});
+  const [togglingFavorite, setTogglingFavorite] = useState({});
 
   // Definición de categorías principales
   const categories = [
@@ -123,6 +128,63 @@ const CategoriesExplorer = () => {
       setResults([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Función estable para cargar favoritos
+  const loadFavoritesStatus = useCallback(async () => {
+    try {
+      const favoritesMap = {};
+      for (const recipe of results) {
+        const result = await favoritesService.checkIsFavorite('receta', recipe.id);
+        favoritesMap[recipe.id] = result;
+      }
+      setFavorites(favoritesMap);
+    } catch (error) {
+      console.error('Error cargando estado de favoritos:', error);
+    }
+  }, [results]);
+
+  // Cargar estado de favoritos cuando cambien los resultados
+  useEffect(() => {
+    if (isAuthenticated && results.length > 0) {
+      loadFavoritesStatus();
+    }
+  }, [isAuthenticated, results, loadFavoritesStatus]);
+
+  const handleToggleFavorite = async (recipeId, event) => {
+    event.stopPropagation();
+    
+    if (!isAuthenticated) {
+      if (window.confirm('👉 Primero debes iniciar sesión para poder agregar a favoritos.\n\n¿Deseas ir a la página de inicio de sesión?')) {
+        navigate('/login');
+      }
+      return;
+    }
+
+    setTogglingFavorite(prev => ({ ...prev, [recipeId]: true }));
+
+    try {
+      const currentFavorite = favorites[recipeId];
+      
+      if (currentFavorite?.isFavorite) {
+        await favoritesService.removeFromFavorites(currentFavorite.favoriteId);
+        setFavorites(prev => ({
+          ...prev,
+          [recipeId]: { isFavorite: false, favoriteId: null }
+        }));
+      } else {
+        const result = await favoritesService.addToFavorites('receta', recipeId);
+        setFavorites(prev => ({
+          ...prev,
+          [recipeId]: { isFavorite: true, favoriteId: result.id }
+        }));
+      }
+    } catch (error) {
+      console.error('Error al alternar favorito:', error);
+      alert('❌ Hubo un error al actualizar los favoritos. Por favor, intenta de nuevo.');
+    } finally {
+      setTogglingFavorite(prev => ({ ...prev, [recipeId]: false }));
     }
   };
 
@@ -379,6 +441,18 @@ const CategoriesExplorer = () => {
                           <span>🍽️</span>
                         </div>
                       )}
+                      {/* Botón de favorito */}
+                      <button
+                        onClick={(e) => handleToggleFavorite(item.id, e)}
+                        disabled={togglingFavorite[item.id]}
+                        className="favorite-button"
+                        title={isAuthenticated 
+                          ? (favorites[item.id]?.isFavorite ? "Quitar de favoritos" : "Agregar a favoritos")
+                          : "Inicia sesión para agregar a favoritos"
+                        }
+                      >
+                        {togglingFavorite[item.id] ? "⏳" : (favorites[item.id]?.isFavorite ? "❤️" : "🤍")}
+                      </button>
                     </div>
                     <div className="result-info">
                       <h4>{item.nombre}</h4>

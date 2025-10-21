@@ -335,13 +335,16 @@
   background: linear-gradient(135deg, #10b981, #059669);
   color: white;
   border-radius: 50%;
-  display: flex;
+  display: flex !important;
   align-items: center;
   justify-content: center;
   font-size: 1rem;
   font-weight: bold;
   box-shadow: 0 6px 15px rgba(16, 185, 129, 0.3);
   transition: all 0.3s ease;
+  opacity: 1 !important;
+  visibility: visible !important;
+  z-index: 1;
 }
 
 .preparation-steps p:hover::before {
@@ -543,6 +546,9 @@
     width: 2rem;
     height: 2rem;
     font-size: 0.95rem;
+    display: flex !important;
+    opacity: 1 !important;
+    visibility: visible !important;
   }
 
   .step-content {
@@ -628,6 +634,9 @@
     width: 2.25rem;
     height: 2.25rem;
     font-size: 1rem;
+    display: flex !important;
+    opacity: 1 !important;
+    visibility: visible !important;
   }
 
   .step-content {
@@ -776,13 +785,16 @@
   width: 2.5rem;
   height: 2.5rem;
   border-radius: 50%;
-  display: flex;
+  display: flex !important;
   align-items: center;
   justify-content: center;
   font-weight: bold;
   font-size: 1.1rem;
   flex-shrink: 0;
   box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+  opacity: 1 !important;
+  visibility: visible !important;
+  z-index: 1;
 }
 
 .step-content {

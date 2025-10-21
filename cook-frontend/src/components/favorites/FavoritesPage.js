@@ -29,7 +29,52 @@ const FavoritesPage = () => {
       setLoading(true);
       setError('');
       const data = await favoritesService.getMyFavorites();
-      setFavorites(data.recipes || []);
+      
+      console.log('🔍 Datos recibidos del backend:', data);
+      console.log('🔍 Estructura de datos:', {
+        hasRecipes: !!data.recipes,
+        hasData: !!data.data,
+        hasFavorites: !!data.favorites,
+        isArray: Array.isArray(data),
+        keys: Object.keys(data)
+      });
+      
+      // El backend devuelve { data: [...], meta: {...} }
+      // Extraer los favoritos y mapear a recetas
+      let recipesArray = [];
+      
+      if (data.data && Array.isArray(data.data)) {
+        // Estructura correcta del backend: { data: [{ id, tipo, referenciaId, data: {...} }], meta: {...} }
+        recipesArray = data.data.map(favorite => {
+          // El backend devuelve favorite.data que contiene la receta/producto/ingrediente
+          if (favorite.data) {
+            return favorite.data;
+          }
+          // Fallback para otras estructuras
+          if (favorite.receta) {
+            return favorite.receta;
+          } else if (favorite.producto) {
+            return favorite.producto;
+          } else if (favorite.ingrediente) {
+            return favorite.ingrediente;
+          }
+          return null;
+        }).filter(item => item !== null);
+      } else if (Array.isArray(data)) {
+        // Si data es directamente un array
+        recipesArray = data;
+      } else if (data.recipes && Array.isArray(data.recipes)) {
+        // Si tiene propiedad recipes
+        recipesArray = data.recipes;
+      } else if (data.favorites && Array.isArray(data.favorites)) {
+        // Si tiene propiedad favorites
+        recipesArray = data.favorites;
+      }
+      
+      console.log('✅ Recetas extraídas:', recipesArray);
+      console.log('✅ Cantidad de recetas:', recipesArray.length);
+      
+      setFavorites(recipesArray);
     } catch (error) {
       console.error('Error cargando favoritas:', error);
       if (error.message.includes('500')) {
@@ -192,7 +237,7 @@ const FavoritesPage = () => {
             <h2>No tienes favoritas aún</h2>
             <p>Explora nuestras recetas y guarda las que más te gusten</p>
             <button 
-              onClick={() => window.location.href = '/home'} 
+              onClick={() => navigate('/home')} 
               className="explore-button"
             >
               Explorar Recetas
@@ -238,12 +283,11 @@ const FavoritesPage = () => {
                 </div>
 
                 <div className="recipe-content">
-                  <div className="recipe-header">
-                    <h3 className="recipe-title">{recipe.nombre}</h3>
-                    <span className="recipe-category">
-                      {getCategoryEmoji(recipe.categoria?.nombre)} {recipe.categoria?.nombre}
-                    </span>
-                  </div>
+                  <h3 className="recipe-title">{recipe.nombre}</h3>
+                  
+                  <span className="recipe-category">
+                    {getCategoryEmoji(recipe.categoria?.nombre)} {recipe.categoria?.nombre}
+                  </span>
 
                   <p className="recipe-description">{recipe.descripcion}</p>
 
@@ -273,7 +317,7 @@ const FavoritesPage = () => {
 
                   <div className="recipe-actions">
                     <button 
-                      onClick={() => window.location.href = `/receta/${recipe.id}`}
+                      onClick={() => navigate(`/receta/${recipe.id}`)}
                       className="view-recipe-btn"
                     >
                       Ver Receta

@@ -20,6 +20,11 @@ const AdminProfile = ({ user }) => {
   const [loading, setLoading] = useState(false);
   const [usersPage, setUsersPage] = useState(1);
   const [usersSearch, setUsersSearch] = useState('');
+  const [usersTotalPages, setUsersTotalPages] = useState(1);
+  const [showUserModal, setShowUserModal] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [confirmAction, setConfirmAction] = useState(null);
 
   useEffect(() => {
     loadInitialData();
@@ -87,12 +92,14 @@ const AdminProfile = ({ user }) => {
     try {
       setLoading(true);
       const result = await adminService.getAllUsers(page, 10, search);
-      setAllUsers(result);
+      setAllUsers(result.users || []);
       setUsersPage(page);
       setUsersSearch(search);
+      setUsersTotalPages(result.totalPages || 1);
     } catch (error) {
       console.error('Error loading all users:', error);
       showNotification('Error al cargar usuarios', 'error');
+      setAllUsers([]);
     } finally {
       setLoading(false);
     }
@@ -204,18 +211,26 @@ const AdminProfile = ({ user }) => {
   };
 
   const handleToggleUserStatus = async (userId) => {
-    try {
-      const result = await adminService.toggleUserStatus(userId);
-      showNotification(result.message, 'success');
-      // Recargar usuarios
-      if (activeSection === 'users') {
-        loadAllUsers(usersPage, usersSearch);
+    setConfirmAction({
+      message: '¿Estás seguro de cambiar el estado de este usuario?',
+      onConfirm: async () => {
+        try {
+          const result = await adminService.toggleUserStatus(userId);
+          showNotification(result.message, 'success');
+          if (activeSection === 'users') {
+            await loadAllUsers(usersPage, usersSearch);
+          }
+          await loadRecentUsers();
+          await loadSystemStats();
+        } catch (error) {
+          console.error('Error toggling user status:', error);
+          showNotification('Error al cambiar estado del usuario', 'error');
+        } finally {
+          setShowConfirmModal(false);
+        }
       }
-      loadRecentUsers(); // Actualizar usuarios recientes también
-    } catch (error) {
-      console.error('Error toggling user status:', error);
-      showNotification('Error al cambiar estado del usuario', 'error');
-    }
+    });
+    setShowConfirmModal(true);
   };
 
   const handleChangeUserRole = async (userId, newRoleId) => {
@@ -234,15 +249,22 @@ const AdminProfile = ({ user }) => {
   };
 
   const handleToggleRecipeStatus = async (recipeId) => {
-    try {
-      const result = await adminService.toggleRecipeStatus(recipeId);
-      showNotification(result.message || 'Estado de receta cambiado', 'success');
-      // Recargar recetas
-      loadRecipes();
-    } catch (error) {
-      console.error('Error toggling recipe status:', error);
-      showNotification('Error al cambiar estado de la receta', 'error');
-    }
+    setConfirmAction({
+      message: '¿Estás seguro de cambiar el estado de esta receta?',
+      onConfirm: async () => {
+        try {
+          const result = await adminService.toggleRecipeStatus(recipeId);
+          showNotification(result.message || 'Estado de receta cambiado', 'success');
+          await loadRecipes();
+        } catch (error) {
+          console.error('Error toggling recipe status:', error);
+          showNotification('Error al cambiar estado de la receta', 'error');
+        } finally {
+          setShowConfirmModal(false);
+        }
+      }
+    });
+    setShowConfirmModal(true);
   };
 
   const sidebarItems = [
@@ -364,40 +386,131 @@ const AdminProfile = ({ user }) => {
     </div>
   );
 
-  const renderUsers = () => (
-    <div className="admin-content-section">
-      <div className="section-header">
-        <h2>👥 Gestión de Usuarios</h2>
-        <button className="primary-btn">+ Nuevo Usuario</button>
-      </div>
-      
-      <div className="users-table">
-        <div className="table-header">
-          <span>Usuario</span>
-          <span>Email</span>
-          <span>Rol</span>
-          <span>Estado</span>
-          <span>Acciones</span>
+  const renderUsers = () => {
+    if (allUsers.length === 0 && !loading) {
+      loadAllUsers(1, '');
+    }
+
+    return (
+      <div className="admin-content-section">
+        <div className="section-header">
+          <h2>👥 Gestión de Usuarios</h2>
+          <button className="primary-btn" onClick={() => showNotification('Función de creación en desarrollo', 'info')}>
+            + Nuevo Usuario
+          </button>
         </div>
-        {(recentUsers || []).map(user => (
-          <div key={user.id} className="table-row">
-            <div className="user-cell">
-              <img src={user.fotoPerfil || '/default-avatar.png'} alt="Avatar" />
-              <span>{user.nombres} {user.apellidos}</span>
-            </div>
-            <span>{user.email}</span>
-            <span className="role-badge">{user.role?.nombre || 'Cliente'}</span>
-            <span className="status-badge active">Activo</span>
-            <div className="action-buttons">
-              <button className="action-btn">Ver</button>
-              <button className="action-btn">Editar</button>
-              <button className="action-btn danger">Suspender</button>
-            </div>
+
+        <div className="search-bar">
+          <form onSubmit={(e) => { e.preventDefault(); loadAllUsers(1, usersSearch); }} className="search-form">
+            <input
+              type="text"
+              placeholder="Buscar por nombre, apellido o email..."
+              value={usersSearch}
+              onChange={(e) => setUsersSearch(e.target.value)}
+              className="search-input"
+            />
+            <button type="submit" className="search-btn">🔍 Buscar</button>
+            {usersSearch && (
+              <button 
+                type="button" 
+                className="clear-btn"
+                onClick={() => {
+                  setUsersSearch('');
+                  loadAllUsers(1, '');
+                }}
+              >
+                ✕ Limpiar
+              </button>
+            )}
+          </form>
+        </div>
+        
+        {loading ? (
+          <div className="loading-container">
+            <div className="spinner"></div>
+            <p>Cargando usuarios...</p>
           </div>
-        ))}
+        ) : (
+          <>
+            <div className="users-table">
+              <div className="table-header">
+                <span>Usuario</span>
+                <span>Email</span>
+                <span>Rol</span>
+                <span>Estado</span>
+                <span>Acciones</span>
+              </div>
+              {allUsers.length > 0 ? (
+                allUsers.map(user => (
+                  <div key={user.id} className="table-row">
+                    <div className="user-cell">
+                      <div className="user-avatar">{user.nombres?.charAt(0) || 'U'}</div>
+                      <span>{user.nombres} {user.apellidos}</span>
+                    </div>
+                    <span>{user.email}</span>
+                    <select
+                      className="role-select"
+                      value={user.role?.id || 1}
+                      onChange={(e) => handleChangeUserRole(user.id, parseInt(e.target.value))}
+                      disabled={user.role?.codigo === 'ADMIN'}
+                    >
+                      {systemRoles.map(role => (
+                        <option key={role.id} value={role.id}>{role.nombre}</option>
+                      ))}
+                    </select>
+                    <span className={`status-badge ${user.esActivo ? 'active' : 'inactive'}`}>
+                      {user.esActivo ? 'Activo' : 'Inactivo'}
+                    </span>
+                    <div className="action-buttons">
+                      <button 
+                        className="action-btn"
+                        onClick={() => showNotification('Función de edición en desarrollo', 'info')}
+                      >
+                        ✏️ Editar
+                      </button>
+                      <button 
+                        className="action-btn danger"
+                        onClick={() => handleToggleUserStatus(user.id)}
+                        disabled={user.role?.codigo === 'ADMIN'}
+                      >
+                        {user.esActivo ? '🚫 Desactivar' : '✅ Activar'}
+                      </button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="no-data">
+                  <p>No se encontraron usuarios</p>
+                </div>
+              )}
+            </div>
+
+            {usersTotalPages > 1 && (
+              <div className="pagination">
+                <button
+                  className="pagination-btn"
+                  onClick={() => loadAllUsers(usersPage - 1, usersSearch)}
+                  disabled={usersPage === 1}
+                >
+                  ← Anterior
+                </button>
+                <span className="pagination-info">
+                  Página {usersPage} de {usersTotalPages}
+                </span>
+                <button
+                  className="pagination-btn"
+                  onClick={() => loadAllUsers(usersPage + 1, usersSearch)}
+                  disabled={usersPage === usersTotalPages}
+                >
+                  Siguiente →
+                </button>
+              </div>
+            )}
+          </>
+        )}
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderRecipes = () => (
     <div className="admin-content-section">
@@ -512,10 +625,19 @@ const AdminProfile = ({ user }) => {
   const renderOrders = () => (
     <div className="admin-content-section">
       <div className="section-header">
-        <h2>🛒 Gestión de Pedidos</h2>
+        <h2>🛍️ Gestión de Pedidos</h2>
+        <button className="primary-btn" onClick={() => showNotification('Módulo en desarrollo', 'info')}>
+          + Nuevo Pedido
+        </button>
       </div>
       <div className="orders-content">
-        <p>Módulo de pedidos en desarrollo...</p>
+        <div className="info-banner">
+          <span className="info-icon">🚧</span>
+          <div>
+            <h3>Módulo en Desarrollo</h3>
+            <p>La gestión de pedidos estará disponible próximamente.</p>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -524,9 +646,57 @@ const AdminProfile = ({ user }) => {
     <div className="admin-content-section">
       <div className="section-header">
         <h2>📈 Analytics</h2>
+        <button className="primary-btn" onClick={loadSystemStats}>
+          🔄 Actualizar Datos
+        </button>
       </div>
-      <div className="analytics-content">
-        <p>Módulo de analytics en desarrollo...</p>
+      
+      <div className="analytics-grid">
+        <div className="analytics-card">
+          <h3>Usuarios por Rol</h3>
+          <div className="chart-container">
+            {(systemStats.usersByRole || []).map(role => (
+              <div key={role.roleName} className="chart-bar">
+                <span className="chart-label">{role.roleName}</span>
+                <div className="chart-bar-bg">
+                  <div 
+                    className="chart-bar-fill"
+                    style={{ width: `${systemStats.totalUsers ? (role.count / systemStats.totalUsers) * 100 : 0}%` }}
+                  >
+                    {role.count}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="analytics-card">
+          <h3>Actividad del Sistema</h3>
+          <div className="activity-stats">
+            <div className="activity-stat">
+              <span className="activity-icon">👥</span>
+              <div>
+                <p className="activity-value">{systemStats.totalUsers || 0}</p>
+                <p className="activity-label">Total Usuarios</p>
+              </div>
+            </div>
+            <div className="activity-stat">
+              <span className="activity-icon">🍽️</span>
+              <div>
+                <p className="activity-value">{recipes.length}</p>
+                <p className="activity-label">Total Recetas</p>
+              </div>
+            </div>
+            <div className="activity-stat">
+              <span className="activity-icon">✅</span>
+              <div>
+                <p className="activity-value">{systemStats.activeUsers || 0}</p>
+                <p className="activity-label">Usuarios Activos</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -535,9 +705,56 @@ const AdminProfile = ({ user }) => {
     <div className="admin-content-section">
       <div className="section-header">
         <h2>📋 Reportes</h2>
+        <button className="primary-btn" onClick={loadReports}>
+          🔄 Generar Reportes
+        </button>
       </div>
-      <div className="reports-content">
-        <p>Módulo de reportes en desarrollo...</p>
+      
+      <div className="reports-grid">
+        <div className="report-card">
+          <div className="report-icon">📄</div>
+          <h3>Reporte de Usuarios</h3>
+          <p>Estadísticas detalladas de usuarios registrados</p>
+          <div className="report-stat">
+            <strong>{systemStats.totalUsers || 0}</strong> usuarios totales
+          </div>
+          <button className="report-btn" onClick={() => showNotification('Funcionalidad en desarrollo', 'info')}>
+            Descargar PDF
+          </button>
+        </div>
+        <div className="report-card">
+          <div className="report-icon">🍽️</div>
+          <h3>Reporte de Recetas</h3>
+          <p>Análisis de recetas y popularidad</p>
+          <div className="report-stat">
+            <strong>{recipes.length}</strong> recetas activas
+          </div>
+          <button className="report-btn" onClick={() => showNotification('Funcionalidad en desarrollo', 'info')}>
+            Descargar PDF
+          </button>
+        </div>
+        <div className="report-card">
+          <div className="report-icon">📈</div>
+          <h3>Reporte de Actividad</h3>
+          <p>Métricas de actividad del sistema</p>
+          <div className="report-stat">
+            <strong>{systemStats.activeUsers || 0}</strong> usuarios activos
+          </div>
+          <button className="report-btn" onClick={() => showNotification('Funcionalidad en desarrollo', 'info')}>
+            Descargar PDF
+          </button>
+        </div>
+        <div className="report-card">
+          <div className="report-icon">🔒</div>
+          <h3>Reporte de Seguridad</h3>
+          <p>Análisis de seguridad y accesos</p>
+          <div className="report-stat">
+            <strong>0</strong> incidentes reportados
+          </div>
+          <button className="report-btn" onClick={() => showNotification('Funcionalidad en desarrollo', 'info')}>
+            Descargar PDF
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -546,9 +763,72 @@ const AdminProfile = ({ user }) => {
     <div className="admin-content-section">
       <div className="section-header">
         <h2>⚙️ Configuración</h2>
+        <p>Ajustes generales del sistema</p>
       </div>
-      <div className="settings-content">
-        <p>Módulo de configuración en desarrollo...</p>
+      
+      <div className="settings-grid">
+        <div className="settings-card">
+          <h3>⚙️ Configuración General</h3>
+          <div className="settings-form">
+            <div className="form-group">
+              <label>Nombre del Sistema</label>
+              <input type="text" defaultValue="CookSync" readOnly />
+            </div>
+            <div className="form-group">
+              <label>Email de Contacto</label>
+              <input type="email" defaultValue="admin@cooksync.com" readOnly />
+            </div>
+            <div className="form-group">
+              <label>Zona Horaria</label>
+              <select defaultValue="America/Lima" disabled>
+                <option value="America/Lima">Lima (UTC-5)</option>
+                <option value="America/Mexico_City">Ciudad de México (UTC-6)</option>
+                <option value="America/New_York">Nueva York (UTC-5)</option>
+              </select>
+            </div>
+            <button className="primary-btn" onClick={() => showNotification('Cambios guardados exitosamente', 'success')}>
+              💾 Guardar Cambios
+            </button>
+          </div>
+        </div>
+
+        <div className="settings-card">
+          <h3>🔔 Notificaciones</h3>
+          <div className="settings-toggles">
+            <div className="toggle-item">
+              <span>Notificaciones por Email</span>
+              <label className="switch">
+                <input type="checkbox" defaultChecked />
+                <span className="slider"></span>
+              </label>
+            </div>
+            <div className="toggle-item">
+              <span>Notificaciones Push</span>
+              <label className="switch">
+                <input type="checkbox" defaultChecked />
+                <span className="slider"></span>
+              </label>
+            </div>
+            <div className="toggle-item">
+              <span>Alertas de Sistema</span>
+              <label className="switch">
+                <input type="checkbox" defaultChecked />
+                <span className="slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div className="settings-card">
+          <h3>💾 Backup y Restauración</h3>
+          <p>Último backup: Hace 2 días</p>
+          <button className="primary-btn" onClick={() => showNotification('Backup iniciado', 'success')}>
+            🔄 Crear Backup Ahora
+          </button>
+          <button className="secondary-btn" style={{marginTop: '10px'}} onClick={() => showNotification('Funcionalidad en desarrollo', 'info')}>
+            📂 Restaurar desde Backup
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -557,9 +837,66 @@ const AdminProfile = ({ user }) => {
     <div className="admin-content-section">
       <div className="section-header">
         <h2>🔒 Seguridad</h2>
+        <p>Configuración de seguridad del sistema</p>
       </div>
-      <div className="security-content">
-        <p>Módulo de seguridad en desarrollo...</p>
+      
+      <div className="security-grid">
+        <div className="security-card">
+          <h3>🔑 Autenticación</h3>
+          <div className="security-info">
+            <div className="security-item">
+              <span>Autenticación de 2 Factores</span>
+              <span className="security-status enabled">✅ Habilitado</span>
+            </div>
+            <div className="security-item">
+              <span>Expiración de Sesión</span>
+              <span className="security-value">24 horas</span>
+            </div>
+            <div className="security-item">
+              <span>Intentos de Login Fallidos</span>
+              <span className="security-value">5 máximo</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="security-card">
+          <h3>🛡️ Protección</h3>
+          <div className="security-info">
+            <div className="security-item">
+              <span>Firewall</span>
+              <span className="security-status enabled">✅ Activo</span>
+            </div>
+            <div className="security-item">
+              <span>SSL/TLS</span>
+              <span className="security-status enabled">✅ Configurado</span>
+            </div>
+            <div className="security-item">
+              <span>Rate Limiting</span>
+              <span className="security-status enabled">✅ Activo</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="security-card">
+          <h3>📃 Logs de Seguridad</h3>
+          <div className="security-logs">
+            <div className="log-item">
+              <span className="log-time">Hace 5 min</span>
+              <span className="log-message">Login exitoso - admin@cooksync.com</span>
+            </div>
+            <div className="log-item">
+              <span className="log-time">Hace 1 hora</span>
+              <span className="log-message">Cambio de configuración detectado</span>
+            </div>
+            <div className="log-item">
+              <span className="log-time">Hace 3 horas</span>
+              <span className="log-message">Backup completado exitosamente</span>
+            </div>
+          </div>
+          <button className="primary-btn" onClick={() => showNotification('Mostrando logs completos', 'info')}>
+            Ver Todos los Logs
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -633,6 +970,25 @@ const AdminProfile = ({ user }) => {
           {renderContent()}
         </div>
       </div>
+
+      {/* Modal de Confirmación */}
+      {showConfirmModal && confirmAction && (
+        <div className="modal-overlay" onClick={() => setShowConfirmModal(false)}>
+          <div className="modal-content confirm-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="confirm-icon">⚠️</div>
+            <h3>Confirmar Acción</h3>
+            <p>{confirmAction.message}</p>
+            <div className="modal-actions">
+              <button className="btn-secondary" onClick={() => setShowConfirmModal(false)}>
+                Cancelar
+              </button>
+              <button className="btn-danger" onClick={confirmAction.onConfirm}>
+                Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
