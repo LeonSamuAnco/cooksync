@@ -540,46 +540,271 @@ model UserActivity {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model celulares {
-  id                        Int       @id @default(autoincrement())
-  item_id                   Int       @unique(map: "idx_item_id_unique")
-  marca                     String    @db.VarChar(100)
-  modelo                    String    @db.VarChar(100)
-  sku                       String?   @unique(map: "sku") @db.VarChar(50)
-  precio_usd                Decimal?  @db.Decimal(10, 2)
-  fecha_lanzamiento         DateTime? @db.Date
-  color                     String?   @db.VarChar(50)
-  pantalla_tamano_pulgadas  Decimal?  @db.Decimal(3, 1)
-  pantalla_tipo             String?   @db.VarChar(50)
-  pantalla_resolucion       String?   @db.VarChar(50)
-  pantalla_tasa_refresco_hz Int?
-  sistema_operativo         String?   @db.VarChar(50)
-  procesador_nombre         String?   @db.VarChar(100)
-  memoria_ram_gb            Int?
-  almacenamiento_interno_gb Int?
-  soporta_sd                Boolean?  @default(false)
-  bateria_capacidad_mah     Int?
-  carga_rapida_watts        Int?
-  camara_principal_mp       Int?
-  camara_frontal_mp         Int?
-  grabacion_video_max       String?   @db.VarChar(50)
-  conectividad_5g           Boolean?  @default(false)
-  resistencia_agua_ip       String?   @db.VarChar(10)
-  peso_gramos               Int?
-  dimensiones_mm            String?   @db.VarChar(100)
-  items                     items     @relation(fields: [item_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_celulares_item")
+  id                          Int                         @id @default(autoincrement())
+  item_id                     Int                         @unique(map: "item_id")
+  marca_id                    Int
+  sistema_operativo_id        Int
+  gama_id                     Int
+  modelo                      String                      @db.VarChar(100)
+  fecha_lanzamiento           DateTime?                   @db.Date
+  pantalla_tamano_pulgadas    Decimal                     @db.Decimal(3, 1)
+  pantalla_tipo               String?                     @db.VarChar(50)
+  pantalla_resolucion         String?                     @db.VarChar(50)
+  procesador_nombre           String?                     @db.VarChar(100)
+  memoria_ram_gb              Int
+  almacenamiento_interno_gb   Int
+  bateria_capacidad_mah       Int
+  carga_rapida_watts          Int?
+  peso_gramos                 Int?
+  conectividad_5g             Boolean?                    @default(false)
+  resistencia_agua_ip         String?                     @db.VarChar(10)
+  celular_gamas               celular_gamas               @relation(fields: [gama_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_celular_gama")
+  items                       items                       @relation(fields: [item_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_celulares_item")
+  celular_marcas              celular_marcas              @relation(fields: [marca_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_celular_marca")
+  celular_sistemas_operativos celular_sistemas_operativos @relation(fields: [sistema_operativo_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_celular_so")
+
+  @@index([gama_id], map: "fk_celular_gama")
+  @@index([marca_id], map: "fk_celular_marca")
+  @@index([sistema_operativo_id], map: "fk_celular_so")
 }
 
 model items {
-  id                   Int        @id @default(autoincrement())
-  nombre               String     @db.VarChar(255)
-  descripcion          String?    @db.Text
-  imagen_principal_url String?    @db.VarChar(500)
-  es_activo            Boolean    @default(true)
-  fecha_creacion       DateTime   @default(now()) @db.Timestamp(0)
-  fecha_actualizacion  DateTime   @default(now()) @db.Timestamp(0)
-  celulares            celulares?
+  id                    Int                     @id @default(autoincrement())
+  nombre                String                  @db.VarChar(255)
+  descripcion           String?                 @db.Text
+  imagen_principal_url  String?                 @db.VarChar(500)
+  es_activo             Boolean                 @default(true)
+  fecha_creacion        DateTime                @default(now()) @db.Timestamp(0)
+  fecha_actualizacion   DateTime                @default(now()) @db.Timestamp(0)
+  celular_camaras       celular_camaras[]
+  celulares             celulares?
+  deporte_variaciones   deporte_variaciones[]
+  deportes_equipamiento deportes_equipamiento?
+  lugar_horarios        lugar_horarios[]
+  lugar_tiene_servicios lugar_tiene_servicios[]
+  lugares               lugares?
+  torta_variaciones     torta_variaciones[]
+  tortas                tortas?
 
   @@index([nombre], map: "idx_nombre")
+}
+
+model celular_camaras {
+  id                    Int                 @id @default(autoincrement())
+  celular_item_id       Int
+  tipo_lente_id         Int
+  megapixeles           Decimal             @db.Decimal(5, 1)
+  apertura              Decimal?            @db.Decimal(3, 1)
+  estabilizacion_optica Boolean?            @default(false)
+  items                 items               @relation(fields: [celular_item_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_camara_celular_item")
+  celular_tipos_lente   celular_tipos_lente @relation(fields: [tipo_lente_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_camara_tipo_lente")
+
+  @@unique([celular_item_id, tipo_lente_id], map: "idx_celular_lente_unico")
+  @@index([tipo_lente_id], map: "fk_camara_tipo_lente")
+}
+
+model celular_gamas {
+  id          Int         @id @default(autoincrement())
+  gama        String      @unique(map: "gama") @db.VarChar(50)
+  descripcion String?     @db.VarChar(255)
+  celulares   celulares[]
+}
+
+model celular_marcas {
+  id          Int         @id @default(autoincrement())
+  nombre      String      @unique(map: "nombre") @db.VarChar(100)
+  pais_origen String?     @db.VarChar(100)
+  logo_url    String?     @db.VarChar(500)
+  celulares   celulares[]
+}
+
+model celular_sistemas_operativos {
+  id             Int         @id @default(autoincrement())
+  nombre         String      @unique(map: "nombre") @db.VarChar(100)
+  version_actual String?     @db.VarChar(20)
+  celulares      celulares[]
+}
+
+model celular_tipos_lente {
+  id              Int               @id @default(autoincrement())
+  tipo            String            @unique(map: "tipo") @db.VarChar(50)
+  celular_camaras celular_camaras[]
+}
+
+model torta_coberturas {
+  id     Int      @id @default(autoincrement())
+  nombre String   @unique(map: "nombre") @db.VarChar(100)
+  tortas tortas[]
+}
+
+model torta_ocasiones {
+  id     Int      @id @default(autoincrement())
+  nombre String   @unique(map: "nombre") @db.VarChar(100)
+  tortas tortas[]
+}
+
+model torta_rellenos {
+  id     Int      @id @default(autoincrement())
+  nombre String   @unique(map: "nombre") @db.VarChar(100)
+  tortas tortas[]
+}
+
+model torta_sabores {
+  id     Int      @id @default(autoincrement())
+  nombre String   @unique(map: "nombre") @db.VarChar(100)
+  tortas tortas[]
+}
+
+model torta_variaciones {
+  id                 Int     @id @default(autoincrement())
+  torta_item_id      Int
+  descripcion_tamano String  @db.VarChar(100)
+  porciones_aprox    Int
+  precio_usd         Decimal @db.Decimal(10, 2)
+  items              items   @relation(fields: [torta_item_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_variacion_torta_item")
+
+  @@unique([torta_item_id, descripcion_tamano], map: "idx_torta_tamano_unico")
+}
+
+model tortas {
+  id                       Int              @id @default(autoincrement())
+  item_id                  Int              @unique(map: "item_id")
+  sabor_principal_id       Int
+  relleno_principal_id     Int
+  cobertura_id             Int
+  ocasion_sugerida_id      Int?
+  vendedor_o_pasteleria    String?          @db.VarChar(150)
+  es_personalizable        Boolean?         @default(false)
+  tiempo_preparacion_horas Int?             @default(24)
+  alergenos                String?          @db.VarChar(255)
+  torta_coberturas         torta_coberturas @relation(fields: [cobertura_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_torta_cobertura")
+  items                    items            @relation(fields: [item_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_torta_item")
+  torta_ocasiones          torta_ocasiones? @relation(fields: [ocasion_sugerida_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_torta_ocasion")
+  torta_rellenos           torta_rellenos   @relation(fields: [relleno_principal_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_torta_relleno")
+  torta_sabores            torta_sabores    @relation(fields: [sabor_principal_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_torta_sabor")
+
+  @@index([cobertura_id], map: "fk_torta_cobertura")
+  @@index([ocasion_sugerida_id], map: "fk_torta_ocasion")
+  @@index([relleno_principal_id], map: "fk_torta_relleno")
+  @@index([sabor_principal_id], map: "fk_torta_sabor")
+}
+
+model lugar_horarios {
+  id            Int                       @id @default(autoincrement())
+  lugar_item_id Int
+  dia_semana    lugar_horarios_dia_semana
+  hora_apertura DateTime                  @db.Time(0)
+  hora_cierre   DateTime                  @db.Time(0)
+  items         items                     @relation(fields: [lugar_item_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_horario_lugar_item")
+
+  @@unique([lugar_item_id, dia_semana], map: "idx_lugar_dia_unico")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model lugar_rangos_precio {
+  id          Int       @id @default(autoincrement())
+  simbolo     String    @unique(map: "simbolo") @db.VarChar(5)
+  descripcion String    @db.VarChar(100)
+  lugares     lugares[]
+}
+
+model lugar_servicios {
+  id                    Int                     @id @default(autoincrement())
+  nombre                String                  @unique(map: "nombre") @db.VarChar(100)
+  icono                 String?                 @db.VarChar(50)
+  lugar_tiene_servicios lugar_tiene_servicios[]
+}
+
+model lugar_tiene_servicios {
+  lugar_item_id   Int
+  servicio_id     Int
+  items           items           @relation(fields: [lugar_item_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_lts_lugar_item")
+  lugar_servicios lugar_servicios @relation(fields: [servicio_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_lts_servicio")
+
+  @@id([lugar_item_id, servicio_id])
+  @@index([servicio_id], map: "fk_lts_servicio")
+}
+
+model lugar_tipos {
+  id      Int       @id @default(autoincrement())
+  nombre  String    @unique(map: "nombre") @db.VarChar(100)
+  icono   String?   @db.VarChar(50)
+  lugares lugares[]
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model lugares {
+  id                  Int                  @id @default(autoincrement())
+  item_id             Int                  @unique(map: "item_id")
+  lugar_tipo_id       Int
+  rango_precio_id     Int?
+  direccion           String               @db.VarChar(255)
+  ciudad              String               @db.VarChar(100)
+  pais                String               @db.VarChar(100)
+  latitud             Decimal              @db.Decimal(10, 8)
+  longitud            Decimal              @db.Decimal(11, 8)
+  telefono            String?              @db.VarChar(20)
+  sitio_web           String?              @db.VarChar(255)
+  items               items                @relation(fields: [item_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_lugar_item")
+  lugar_rangos_precio lugar_rangos_precio? @relation(fields: [rango_precio_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_lugar_rango_precio")
+  lugar_tipos         lugar_tipos          @relation(fields: [lugar_tipo_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_lugar_tipo")
+
+  @@index([rango_precio_id], map: "fk_lugar_rango_precio")
+  @@index([lugar_tipo_id], map: "fk_lugar_tipo")
+}
+
+model deporte_equipamiento_tipos {
+  id                    Int                     @id @default(autoincrement())
+  nombre                String                  @unique(map: "nombre") @db.VarChar(100)
+  deportes_equipamiento deportes_equipamiento[]
+}
+
+model deporte_marcas {
+  id                    Int                     @id @default(autoincrement())
+  nombre                String                  @unique(map: "nombre") @db.VarChar(100)
+  logo_url              String?                 @db.VarChar(500)
+  deportes_equipamiento deportes_equipamiento[]
+}
+
+model deporte_tipos {
+  id                    Int                     @id @default(autoincrement())
+  nombre                String                  @unique(map: "nombre") @db.VarChar(100)
+  icono                 String?                 @db.VarChar(50)
+  deportes_equipamiento deportes_equipamiento[]
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model deporte_variaciones {
+  id                   Int     @id @default(autoincrement())
+  equipamiento_item_id Int
+  talla                String  @db.VarChar(20)
+  color                String  @db.VarChar(50)
+  precio_usd           Decimal @db.Decimal(10, 2)
+  sku                  String? @unique(map: "sku") @db.VarChar(50)
+  stock                Int?    @default(0)
+  items                items   @relation(fields: [equipamiento_item_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_variacion_deporte_item")
+
+  @@unique([equipamiento_item_id, talla, color], map: "idx_deporte_variacion_unica")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model deportes_equipamiento {
+  id                         Int                          @id @default(autoincrement())
+  item_id                    Int                          @unique(map: "item_id")
+  marca_id                   Int
+  deporte_tipo_id            Int
+  equipamiento_tipo_id       Int
+  genero                     deportes_equipamiento_genero
+  material_principal         String?                      @db.VarChar(100)
+  coleccion                  String?                      @db.VarChar(100)
+  deporte_equipamiento_tipos deporte_equipamiento_tipos   @relation(fields: [equipamiento_tipo_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_deporte_equip_tipo")
+  items                      items                        @relation(fields: [item_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_deporte_item")
+  deporte_marcas             deporte_marcas               @relation(fields: [marca_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_deporte_marca")
+  deporte_tipos              deporte_tipos                @relation(fields: [deporte_tipo_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_deporte_tipo")
+
+  @@index([equipamiento_tipo_id], map: "fk_deporte_equip_tipo")
+  @@index([marca_id], map: "fk_deporte_marca")
+  @@index([deporte_tipo_id], map: "fk_deporte_tipo")
 }
 
 enum Gender {
@@ -666,4 +891,21 @@ enum ActivityType {
   LOGOUT
   PERFIL_ACTUALIZADO
   LISTA_CREADA
+}
+
+enum lugar_horarios_dia_semana {
+  LUNES
+  MARTES
+  MIERCOLES
+  JUEVES
+  VIERNES
+  SABADO
+  DOMINGO
+}
+
+enum deportes_equipamiento_genero {
+  HOMBRE
+  MUJER
+  UNISEX
+  NI_OS  @map("NIÑOS")
 }

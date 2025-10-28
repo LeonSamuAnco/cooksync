@@ -1,0 +1,285 @@
+@startuml CookSync_Deployment_Diagram
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+
+title Diagrama de Despliegue - Sistema CookSync\n(Actualizado 2025)
+
+' ===== CLIENTE WEB =====
+node "Cliente Web (Navegador)" as WebClient {
+  artifact "React App" as ReactApp {
+    component "AuthContext" as AuthCtx
+    component "Components" as Components
+    component "Services" as Services
+    component "Routes" as Routes
+    component "Hooks" as Hooks
+  }
+  
+  note right of ReactApp
+    **Frontend Stack:**
+    - React 18
+    - React Router v6
+    - Context API
+    - Axios/Fetch
+    - CSS Modules
+    - Port: 3000 (dev)
+  end note
+}
+
+' ===== SERVIDOR WEB =====
+node "Servidor Web" as WebServer {
+  artifact "Nginx / Apache" as Nginx {
+    component "Static Files" as StaticFiles
+    component "SSL/TLS" as SSL
+    component "Load Balancer" as LoadBalancer
+  }
+  
+  note right of Nginx
+    **Configuración:**
+    - Reverse Proxy
+    - Certificado SSL
+    - Compresión GZIP
+    - Cache estático
+    - Rate Limiting
+  end note
+}
+
+' ===== SERVIDOR DE APLICACIONES =====
+node "Servidor de Aplicaciones" as AppServer {
+  artifact "NestJS Application" as NestApp {
+    package "Módulos Core" {
+      component "AuthModule" as AuthModule
+      component "RecipesModule" as RecipesModule
+      component "ClientsModule" as ClientsModule
+      component "CelularesModule" as CelularesModule
+      component "AdminModule" as AdminModule
+    }
+    
+    package "Servicios" {
+      component "AuthService" as AuthService
+      component "RecipesService" as RecipesService
+      component "CelularesService" as CelularesService
+      component "ActivityService" as ActivityService
+      component "FavoritesService" as FavoritesService
+    }
+    
+    package "Middleware" {
+      component "JWT Validation" as JWTMiddleware
+      component "Rate Limiter" as RateLimiter
+      component "CORS Handler" as CORSMiddleware
+      component "Logger" as Logger
+    }
+  }
+  
+  note right of NestApp
+    **Backend Stack:**
+    - NestJS Framework
+    - Prisma ORM
+    - JWT Authentication
+    - Validation Pipes
+    - Guards (Roles)
+    - Port: 3002
+    - Rate Limit: 10,000/min
+  end note
+}
+
+' ===== BASE DE DATOS =====
+database "MySQL Database" as DB {
+  frame "Base de Datos" {
+    storage "Tablas Principales" as MainTables {
+      card "users" as users
+      card "roles" as roles
+      card "recipes" as recipes
+      card "celulares" as celulares
+      card "items" as items
+    }
+    
+    storage "Tablas Relacionales" as RelTables {
+      card "recipe_ingredients" as recipe_ingredients
+      card "user_activity" as user_activity
+      card "favorites" as favorites
+      card "recipe_reviews" as recipe_reviews
+    }
+    
+    storage "Tablas Catálogo" as CatalogTables {
+      card "ingredient_masters" as ingredient_masters
+      card "celular_marcas" as celular_marcas
+      card "celular_gamas" as celular_gamas
+      card "sistemas_operativos" as sistemas_operativos
+    }
+  }
+  
+  note right of DB
+    **Características:**
+    - MySQL 8.0+
+    - 15+ tablas relacionadas
+    - Índices optimizados
+    - Soft deletes (es_activo)
+    - Audit logs
+    - Stored procedures
+    - Triggers para auditoría
+    - Port: 3306
+  end note
+}
+
+' ===== SERVIDOR DE ARCHIVOS =====
+node "Servidor de Archivos" as FileServer {
+  artifact "File Storage" as FileStorage {
+    folder "Imágenes de Recetas" as RecipeImages
+    folder "Imágenes de Celulares" as CelularImages
+    folder "Fotos de Perfil" as ProfileImages
+    folder "Archivos Temporales" as TempFiles
+  }
+  
+  note right of FileStorage
+    **Almacenamiento:**
+    - Cloudinary / AWS S3
+    - CDN Integrado
+    - Optimización automática
+    - Formatos: JPG, PNG, WebP
+    - Límite: 5MB por archivo
+  end note
+}
+
+' ===== SERVICIOS EXTERNOS =====
+cloud "Servicios Externos" as ExternalServices {
+  component "Email Service" as EmailService
+  component "SMS Service" as SMSService
+  component "Payment Gateway" as PaymentGateway
+  component "Analytics" as Analytics
+  
+  note right of ExternalServices
+    **APIs Externas:**
+    - SendGrid (Email)
+    - Twilio (SMS)
+    - Stripe (Pagos)
+    - Google Analytics
+  end note
+}
+
+' ===== SISTEMA DE CACHE =====
+database "Redis Cache" as RedisCache {
+  storage "Cache Storage" {
+    card "Session Data" as SessionData
+    card "API Responses" as APICache
+    card "User Preferences" as UserPrefs
+    card "Rate Limit Data" as RateLimitData
+  }
+  
+  note right of RedisCache
+    **Configuración:**
+    - Redis 7.0+
+    - TTL: 1 hora (default)
+    - Max Memory: 2GB
+    - Eviction: LRU
+    - Port: 6379
+    - Uso: Cache + Sessions
+  end note
+}
+
+' ===== SERVIDOR DE LOGS =====
+node "Servidor de Logs" as LogServer {
+  artifact "Log Management" as LogMgmt {
+    component "Application Logs" as AppLogs
+    component "Error Logs" as ErrorLogs
+    component "Audit Logs" as AuditLogs
+    component "Performance Logs" as PerfLogs
+  }
+  
+  note right of LogMgmt
+    **Logging:**
+    - Winston Logger
+    - Formato JSON
+    - Rotación diaria
+    - Retención: 30 días
+    - Niveles: error, warn, info, debug
+  end note
+}
+
+' ===== RELACIONES =====
+WebClient --> WebServer : HTTPS\n(Port 443)
+WebServer --> AppServer : HTTP\n(Port 3002)
+AppServer --> DB : MySQL Protocol\n(Port 3306)
+AppServer --> RedisCache : Redis Protocol\n(Port 6379)
+AppServer --> FileServer : HTTP/S3 API
+AppServer --> ExternalServices : REST API
+AppServer --> LogServer : Winston\nTransport
+
+ReactApp --> Services : API Calls
+Services ..> AuthModule : /auth/*
+Services ..> RecipesModule : /recipes/*
+Services ..> CelularesModule : /celulares/*
+Services ..> AdminModule : /admin/*
+
+AuthService --> DB : Query Users
+RecipesService --> DB : Query Recipes
+CelularesService --> DB : Query Celulares
+ActivityService --> DB : Log Activities
+FavoritesService --> DB : Manage Favorites
+
+JWTMiddleware --> AuthService : Validate Token
+RateLimiter --> RedisCache : Check Limits
+Logger --> LogServer : Send Logs
+
+' ===== NOTAS DE ARQUITECTURA =====
+note bottom of AppServer
+  **Arquitectura del Sistema:**
+  
+  **Patrón:** Arquitectura en capas (Layered Architecture)
+  - Capa de Presentación: React (Frontend)
+  - Capa de Aplicación: NestJS (Backend)
+  - Capa de Datos: MySQL + Prisma
+  - Capa de Cache: Redis
+  
+  **Comunicación:**
+  - REST API (JSON)
+  - JWT para autenticación
+  - CORS habilitado
+  - Rate limiting activo
+  
+  **Escalabilidad:**
+  - Load balancer en Nginx
+  - Instancias horizontales (futura)
+  - Cache distribuido con Redis
+  - CDN para archivos estáticos
+  
+  **Seguridad:**
+  - HTTPS obligatorio en producción
+  - JWT con expiración (7 días)
+  - Validación en todos los endpoints
+  - Guards por roles
+  - Rate limiting por IP
+  - Sanitización de inputs
+  - SQL Injection protegido (Prisma)
+  
+  **Monitoreo:**
+  - Logs centralizados
+  - Métricas de performance
+  - Error tracking
+  - Uptime monitoring
+end note
+
+note bottom of DB
+  **Datos Importantes:**
+  
+  **Contenido Actual:**
+  - 45+ recetas peruanas
+  - 50 celulares con especificaciones
+  - Múltiples usuarios de prueba
+  - Categorías y filtros completos
+  
+  **Relaciones Clave:**
+  - User → UserActivity (1:N)
+  - User → Favorites (1:N)
+  - Recipe → RecipeIngredients (1:N)
+  - Recipe → RecipeReviews (1:N)
+  - Celular → Items (1:1)
+  - Celular → Marca/Gama/SO (N:1)
+  
+  **Optimizaciones:**
+  - Índices en campos de búsqueda
+  - Foreign keys con ON DELETE CASCADE
+  - Campos de fecha indexados
+  - Soft deletes (es_activo)
+end note
+
+@enduml

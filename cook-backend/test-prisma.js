@@ -6,6 +6,11 @@ async function testConnection() {
   try {
     console.log('🔍 Probando conexión a Prisma...');
     
+    console.log('✓ prisma.recipes:', typeof prisma.recipes);
+    console.log('✓ prisma.celulares:', typeof prisma.celulares);
+    console.log('✓ prisma.tortas:', typeof prisma.tortas);
+    console.log('✓ prisma.torta_sabores:', typeof prisma.torta_sabores);
+    
     // Probar conexión básica
     const roles = await prisma.role.findMany();
     console.log('✅ Roles encontrados:', roles.length);

@@ -1,7 +1,9 @@
 @startuml CookSync_Activity_Diagram
-!define SWIMLANE_WIDTH 200
+!define SWIMLANE_WIDTH 250
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
 
-title Diagrama de Actividades - Sistema CookSync
+title Diagrama de Actividades Completo - Sistema CookSync\n(Actualizado 2025)
 
 |#LightBlue|Usuario|
 start
@@ -69,7 +71,7 @@ endif
 |Usuario|
 :Navegar en el sistema;
 
-if (¿Qué acción realizar?) then (Buscar Recetas)
+if (¿Qué acción realizar?) then (Buscar Recetas por Ingredientes)
   
   |#LightYellow|Módulo de Búsqueda|
   :Mostrar página de búsqueda;
@@ -171,6 +173,66 @@ if (¿Qué acción realizar?) then (Buscar Recetas)
       :Mostrar notificación;
     endif
   endif
+
+elseif (Buscar Celulares) then
+  
+  |#LightSkyBlue|Módulo de Celulares|
+  :Mostrar página celulares;
+  :Cargar 50 celulares disponibles;
+  
+  |Usuario|
+  :Aplicar filtros;
+  note right
+    Filtros disponibles:
+    - Marca (Xiaomi, Samsung, Apple, etc.)
+    - Gama (Alta, Media, Baja)
+    - Sistema Operativo (Android, iOS)
+    - Precio (Min-Max)
+    - RAM mínima (GB)
+    - Almacenamiento mínimo (GB)
+    - Solo 5G (checkbox)
+  end note
+  
+  |Módulo de Celulares|
+  :Validar filtros;
+  
+  |Backend - Celulares|
+  :Convertir tipos de datos;
+  note right
+    Conversiones:
+    - marcaId/gamaId/sistemaOperativoId → parseInt()
+    - precioMin/precioMax → parseFloat()
+    - conectividad5g → boolean
+    - page/limit → parseInt()
+  end note
+  
+  :Ejecutar query Prisma;
+  :Aplicar WHERE conditions;
+  :Ordenar resultados;
+  :Retornar con paginación;
+  
+  |Módulo de Celulares|
+  :Mostrar grid con scroll;
+  :Mostrar contador (X encontrados);
+  
+  |Usuario|
+  :Seleccionar celular;
+  
+  |Backend - Celulares|
+  :Obtener detalles completos;
+  :Incluir especificaciones;
+  :Incluir precio del vendedor;
+  
+  |Módulo de Celulares|
+  :Mostrar ficha técnica completa;
+  note right
+    Información mostrada:
+    - Marca y modelo
+    - Especificaciones técnicas
+    - Precio actual
+    - Vendedor
+    - Stock disponible
+  end note
 
 elseif (Gestionar Despensa) then
   
@@ -293,14 +355,35 @@ endif
 :Continuar navegando;
 
 note bottom
-  **Características del Sistema:**
+  **Características Técnicas del Sistema:**
+  
+  **Frontend (React):**
   - Debounce en búsquedas (500ms)
   - Fallbacks robustos si backend falla
+  - Context API para estado global
+  - Protected Routes por rol
+  - Lazy loading de componentes
+  
+  **Backend (NestJS + Prisma):**
+  - JWT Authentication
   - Rate limiting: 10,000 req/min (dev)
-  - Algoritmo de recomendaciones inteligentes
-  - Sistema de roles granular
+  - Validation Pipes
+  - Guards por roles
+  - Algoritmo scoring (7 factores)
+  
+  **Base de Datos (MySQL + Prisma):**
+  - 15+ tablas relacionadas
+  - Índices optimizados
+  - Soft deletes
+  - Audit logs
+  
+  **Funcionalidades Clave:**
+  - Sistema de recomendaciones inteligentes
   - Búsqueda combinada (ingredientes + filtros)
   - Gestión completa de despensa virtual
+  - Catálogo de celulares con 50+ productos
+  - Sistema de favoritos unificado
+  - 4 tipos de dashboards (Cliente, Vendedor, Moderador, Admin)
 end note
 
 stop

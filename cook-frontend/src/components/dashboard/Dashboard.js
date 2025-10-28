@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import ClientProfile from '../profiles/ClientProfile';
+import UserProfileUnified from '../profiles/UserProfileUnified';
 import VendorProfile from '../profiles/VendorProfile';
 import AdminProfile from '../profiles/AdminProfile';
 import ModeratorProfile from '../profiles/ModeratorProfile';
@@ -21,6 +21,8 @@ const Dashboard = () => {
     console.log('🔍 user.rol:', user?.rol);
     console.log('🔍 user.role:', user?.role);
     console.log('🔍 user.rolId:', user?.rolId);
+    console.log('🔍 typeof user:', typeof user);
+    console.log('🔍 JSON.stringify(user):', JSON.stringify(user));
     
     if (!user) {
       return (
@@ -33,12 +35,35 @@ const Dashboard = () => {
     }
 
     // Verificar si el rol viene como 'rol' o 'role'
-    const userRole = user.rol || user.role;
+    // IMPORTANTE: Verificar también si el user es un objeto con propiedad 'user' anidada
+    let userRole = user.rol || user.role;
+    
+    // Si no encontramos el rol directamente, buscar en user.user (por si viene anidado del backend)
+    if (!userRole && user.user) {
+      console.log('⚠️ Usuario anidado detectado, extrayendo...');
+      userRole = user.user.rol || user.user.role;
+    }
     
     console.log('🔍 userRole detectado:', userRole);
     console.log('🔍 userRole.codigo:', userRole?.codigo);
     
-    if (!userRole) {
+    // Si aún no hay rol, intentar por rolId como último recurso
+    if (!userRole && user.rolId) {
+      console.log('⚠️ No se encontró objeto rol, pero hay rolId. Asumiendo CLIENTE por defecto.');
+      // Por defecto, si tiene rolId=1, es CLIENTE
+      if (user.rolId === 1) {
+        userRole = { codigo: 'CLIENTE', nombre: 'Cliente' };
+      }
+    }
+    
+    if (!userRole || !userRole.codigo) {
+      console.error('❌ No se pudo determinar el rol del usuario');
+      console.error('❌ user:', user);
+      console.error('❌ user.rol:', user.rol);
+      console.error('❌ user.role:', user.role);
+      console.error('❌ user.user:', user.user);
+      console.error('❌ user.rolId:', user.rolId);
+      
       return (
         <div className="error-message">
           <h2>Error de Configuración</h2>
@@ -55,10 +80,11 @@ const Dashboard = () => {
               maxHeight: '400px',
               fontSize: '12px'
             }}>
-              {JSON.stringify(user, null, 2)}
+              {JSON.stringify({ success: true, user }, null, 2)}
             </pre>
           </details>
           <button onClick={handleLogout} style={{ marginTop: '20px' }}>Cerrar Sesión</button>
+          <button onClick={() => window.location.reload()} style={{ marginTop: '20px', marginLeft: '10px' }}>Recargar Página</button>
         </div>
       );
     }
@@ -67,7 +93,7 @@ const Dashboard = () => {
 
     switch (roleCode) {
       case 'CLIENTE':
-        return <ClientProfile user={user} />;
+        return <UserProfileUnified user={user} />;
       case 'VENDEDOR':
         return <VendorProfile user={user} />;
       case 'ADMIN':

@@ -100,6 +100,30 @@ const CategoriesExplorer = () => {
   ];
 
   const handleCategorySelect = (category) => {
+    // Si es la categoría de celulares, navegar a la página dedicada
+    if (category.id === 'phones') {
+      navigate('/celulares');
+      return;
+    }
+    
+    // Si es la categoría de tortas, navegar a la página dedicada
+    if (category.id === 'cakes') {
+      navigate('/tortas');
+      return;
+    }
+    
+    // Si es la categoría de lugares, navegar a la página dedicada
+    if (category.id === 'places') {
+      navigate('/lugares');
+      return;
+    }
+    
+    // Si es la categoría de deportes, navegar a la página dedicada
+    if (category.id === 'sports') {
+      navigate('/deportes');
+      return;
+    }
+    
     setSelectedCategory(category);
     setFilters({});
     setResults([]); // Limpiar resultados al cambiar de categoría

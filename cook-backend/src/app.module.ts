@@ -1,4 +1,4 @@
-import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
+import { Module, MiddlewareConsumer, NestModule, Logger } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
@@ -10,7 +10,13 @@ import { AdminModule } from './admin/admin.module';
 import { ProductsModule } from './products/products.module';
 import { VendorsModule } from './vendors/vendors.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { CelularesModule } from './celulares/celulares.module';
+import { TortasModule } from './tortas/tortas.module';
+import { LugaresModule } from './lugares/lugares.module';
 import { SecurityMiddleware } from './common/middleware/security.middleware';
+
+const logger = new Logger('AppModule');
+logger.log('🔍 Importando CelularesModule, TortasModule y LugaresModule...');
 
 @Module({
   imports: [
@@ -36,11 +42,18 @@ import { SecurityMiddleware } from './common/middleware/security.middleware';
     AdminModule,
     ProductsModule,
     VendorsModule,
+    CelularesModule,
+    TortasModule,
+    LugaresModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule implements NestModule {
+  constructor() {
+    logger.log('✅ AppModule constructor - CelularesModule debería estar cargado');
+  }
+
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(SecurityMiddleware).forRoutes('*');
   }

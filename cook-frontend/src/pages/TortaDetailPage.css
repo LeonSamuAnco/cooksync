@@ -1,0 +1,365 @@
+/* Torta Detail Page */
+.torta-detail-page {
+  min-height: 100vh;
+  background-color: #FFFFFF;
+  padding: 2rem;
+  color: #000000;
+}
+
+.torta-detail-loading,
+.torta-detail-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  color: #000000;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #E9ECEF;
+  border-top: 4px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.back-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 2rem;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.back-button:hover {
+  transform: translateX(-5px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.torta-detail-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 400px 1fr;
+  gap: 3rem;
+  background-color: #FFFFFF;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.torta-detail-image {
+  background-color: #F8F9FA;
+  border-radius: 12px;
+  padding: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 500px;
+  position: sticky;
+  top: 2rem;
+}
+
+.torta-detail-image img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.image-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #6C757D;
+  text-align: center;
+}
+
+.placeholder-icon {
+  font-size: 6rem;
+  opacity: 0.3;
+  margin-bottom: 1rem;
+}
+
+.image-placeholder p {
+  font-size: 1rem;
+  opacity: 0.5;
+  margin: 0;
+}
+
+.torta-detail-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.torta-header-info {
+  margin-bottom: 0.5rem;
+}
+
+.torta-sabor-label {
+  color: #667eea;
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.torta-title {
+  margin: 0.5rem 0 0 0;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #000000;
+  line-height: 1.2;
+}
+
+.torta-badges {
+  display: flex;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.badge {
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.badge.ocasion {
+  background-color: #FFF3E0;
+  color: #E65100;
+}
+
+.badge.personalizable {
+  background: linear-gradient(135deg, #FF6B9D 0%, #C06C84 100%);
+  color: white;
+}
+
+.buy-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  width: 100%;
+}
+
+.buy-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+}
+
+.buy-button:active {
+  transform: translateY(0);
+}
+
+.torta-characteristics {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.characteristic-card {
+  background-color: #F8F9FA;
+  border: 1px solid #E9ECEF;
+  border-radius: 12px;
+  padding: 1.2rem;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.characteristic-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: #667eea;
+}
+
+.char-icon {
+  font-size: 1.8rem;
+  color: #667eea;
+  margin-bottom: 0.5rem;
+}
+
+.char-label {
+  font-size: 0.85rem;
+  color: #6C757D;
+  margin-bottom: 0.3rem;
+  font-weight: 500;
+}
+
+.char-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #000000;
+}
+
+/* Variaciones */
+.variaciones-section {
+  padding-top: 1.5rem;
+  border-top: 2px solid #E9ECEF;
+}
+
+.variaciones-section h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1.5rem;
+  color: #000000;
+}
+
+.variaciones-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.variacion-card {
+  background-color: #F8F9FA;
+  border: 2px solid #E9ECEF;
+  border-radius: 12px;
+  padding: 1.2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.variacion-card:hover {
+  border-color: #667eea;
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+}
+
+.variacion-card.selected {
+  border-color: #667eea;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.variacion-tamano {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #000000;
+  margin-bottom: 0.5rem;
+}
+
+.variacion-porciones {
+  font-size: 0.85rem;
+  color: #6C757D;
+  margin-bottom: 0.8rem;
+}
+
+.variacion-precio {
+  font-size: 1.6rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Alérgenos */
+.alergenos-section {
+  padding: 1.2rem;
+  background-color: #FFF3E0;
+  border: 2px solid #FFE082;
+  border-radius: 12px;
+}
+
+.alergenos-section h3 {
+  margin: 0 0 0.8rem 0;
+  font-size: 1.2rem;
+  color: #E65100;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.alergenos-text {
+  font-size: 1rem;
+  color: #E65100;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* Descripción */
+.torta-description {
+  padding-top: 1.5rem;
+  border-top: 2px solid #E9ECEF;
+}
+
+.torta-description h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1.5rem;
+  color: #000000;
+}
+
+.torta-description p {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: #495057;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .torta-detail-container {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .torta-detail-image {
+    height: 400px;
+    position: static;
+  }
+
+  .torta-characteristics {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .torta-detail-page {
+    padding: 1rem;
+  }
+
+  .torta-detail-image {
+    height: 300px;
+  }
+
+  .torta-title {
+    font-size: 2rem;
+  }
+
+  .buy-button {
+    font-size: 1rem;
+    padding: 0.9rem 1.5rem;
+  }
+
+  .variaciones-grid {
+    grid-template-columns: 1fr;
+  }
+}

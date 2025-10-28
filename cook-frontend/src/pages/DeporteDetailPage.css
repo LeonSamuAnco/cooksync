@@ -1,0 +1,50 @@
+/* Deporte Detail Page */
+.deporte-detail-page { max-width: 1400px; margin: 0 auto; padding: 2rem 1rem; }
+.deporte-detail-header { margin-bottom: 1.5rem; }
+.btn-back { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; background: white; color: #f59e0b; border: 2px solid #f59e0b; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+.btn-back:hover { background: #f59e0b; color: white; transform: translateX(-4px); }
+.deporte-detail-container { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+.deporte-detail-image { position: relative; }
+.deporte-detail-image img { width: 100%; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+.image-badge { position: absolute; top: 1rem; left: 1rem; }
+.badge-marca { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; padding: 0.5rem 1rem; border-radius: 20px; font-weight: 700; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+.deporte-detail-info { display: flex; flex-direction: column; gap: 1.5rem; }
+.breadcrumb { display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: #718096; }
+.breadcrumb i { font-size: 0.625rem; }
+.product-title { font-size: 2rem; font-weight: 700; color: #1a202c; margin: 0; line-height: 1.2; }
+.product-collection { font-size: 1rem; color: #667eea; font-weight: 600; margin: 0; display: flex; align-items: center; gap: 0.5rem; }
+.product-specs { display: flex; gap: 1rem; flex-wrap: wrap; }
+.spec-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: #f7fafc; border-radius: 8px; font-size: 0.875rem; font-weight: 600; color: #4a5568; }
+.spec-item i { color: #f59e0b; }
+.product-description { font-size: 1rem; color: #4a5568; line-height: 1.8; }
+.product-variations { border-top: 2px solid #e2e8f0; padding-top: 1.5rem; }
+.variation-group { margin-bottom: 1.5rem; }
+.variation-group label { display: block; font-weight: 700; color: #1a202c; margin-bottom: 0.75rem; font-size: 1rem; }
+.variation-options { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+.variation-btn { padding: 0.75rem 1.25rem; border: 2px solid #e2e8f0; background: white; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+.variation-btn:hover { border-color: #f59e0b; transform: translateY(-2px); }
+.variation-btn.active { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border-color: #f59e0b; }
+.variation-selected { background: linear-gradient(135deg, #f7f7f7, #fafafa); padding: 1.5rem; border-radius: 12px; margin-top: 1rem; }
+.selected-price { display: flex; align-items: baseline; gap: 1rem; margin-bottom: 0.75rem; }
+.price-label { font-size: 1rem; color: #718096; font-weight: 600; }
+.price-value { font-size: 2rem; font-weight: 700; color: #f59e0b; }
+.selected-stock { display: flex; align-items: center; gap: 0.5rem; font-weight: 600; margin-bottom: 0.5rem; }
+.selected-stock .in-stock { color: #10b981; }
+.selected-stock .out-stock { color: #ef4444; }
+.selected-sku { font-size: 0.875rem; color: #718096; }
+.btn-add-cart { width: 100%; padding: 1rem; background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border: none; border-radius: 8px; font-size: 1.125rem; font-weight: 700; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 0.75rem; margin-top: 1.5rem; }
+.btn-add-cart:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(245,158,11,0.3); }
+.btn-add-cart:disabled { background: #cbd5e0; cursor: not-allowed; }
+.variations-table { margin-top: 2rem; }
+.variations-table h3 { font-size: 1.25rem; color: #1a202c; margin-bottom: 1rem; }
+.variations-table table { width: 100%; border-collapse: collapse; }
+.variations-table th { background: #f7fafc; padding: 0.75rem; text-align: left; font-weight: 700; color: #4a5568; border-bottom: 2px solid #e2e8f0; }
+.variations-table td { padding: 0.75rem; border-bottom: 1px solid #e2e8f0; }
+.variations-table .price-cell { font-weight: 700; color: #f59e0b; }
+.variations-table .in-stock { color: #10b981; font-weight: 600; }
+.variations-table .out-stock { color: #ef4444; font-weight: 600; }
+.variations-table .selected-row { background: linear-gradient(135deg, #fef3c7, #fde68a); }
+.deporte-detail-loading, .deporte-detail-error { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; gap: 1rem; }
+.spinner { width: 50px; height: 50px; border: 4px solid #e2e8f0; border-top-color: #f59e0b; border-radius: 50%; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (max-width: 768px) { .deporte-detail-container { grid-template-columns: 1fr; } }

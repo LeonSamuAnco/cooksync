@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ClientProfile from './ClientProfile';
+import UserProfileUnified from './UserProfileUnified';
 import VendorProfile from './VendorProfile';
 import AdminProfile from './AdminProfile';
 import ModeratorProfile from './ModeratorProfile';
@@ -58,7 +59,8 @@ const ProfileManager = () => {
 
     switch (roleCode) {
       case 'CLIENTE':
-        return <ClientProfile user={user} />;
+        // Usar el nuevo perfil unificado con todas las categorías
+        return <UserProfileUnified user={user} />;
       case 'VENDEDOR':
         return <VendorProfile user={user} />;
       case 'ADMIN':

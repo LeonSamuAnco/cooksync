@@ -13,6 +13,14 @@ import { NotificationProvider, useNotification } from "./context/NotificationCon
 import RecipeDetail from "./components/RecipeDetail";
 import HomePage from "./components/home/HomePage";
 import LandingPage from "./pages/LandingPage";
+import CelularesPage from "./pages/CelularesPage";
+import CelularDetailPage from "./pages/CelularDetailPage";
+import TortasPage from "./pages/TortasPage";
+import TortaDetailPage from "./pages/TortaDetailPage";
+import LugaresPage from "./pages/LugaresPage";
+import LugarDetailPage from "./pages/LugarDetailPage";
+import DeportesPage from "./pages/DeportesPage";
+import DeporteDetailPage from "./pages/DeporteDetailPage";
 import SessionExpiredModal from "./components/SessionExpiredModal";
 import "./App.css";
 import "./utils/backendChecker";
@@ -108,6 +116,14 @@ const AppContent = () => {
         <Route path="/productos" element={<ProductsPage />} />
         <Route path="/receta/:id" element={<RecipeDetail />} />
         <Route path="/recipes/:id" element={<RecipeDetail />} />
+        <Route path="/celulares" element={<CelularesPage />} />
+        <Route path="/celulares/:id" element={<CelularDetailPage />} />
+        <Route path="/tortas" element={<TortasPage />} />
+        <Route path="/tortas/:id" element={<TortaDetailPage />} />
+        <Route path="/lugares" element={<LugaresPage />} />
+        <Route path="/lugares/:id" element={<LugarDetailPage />} />
+        <Route path="/deportes" element={<DeportesPage />} />
+        <Route path="/deportes/:id" element={<DeporteDetailPage />} />
         <Route path="/favoritas" element={<FavoritesPage />} />
         <Route path="/favorites" element={<FavoritesPage />} />
         <Route path="/activity" element={<ActivityPage />} />

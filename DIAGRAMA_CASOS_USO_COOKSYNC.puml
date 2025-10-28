@@ -1,6 +1,8 @@
 @startuml CookSync_Use_Cases_Diagram
+skinparam backgroundColor #FEFEFE
+skinparam packageStyle rectangle
 
-title Diagrama de Casos de Uso - Sistema CookSync
+title Diagrama de Casos de Uso Completo - Sistema CookSync\n(Actualizado 2025)
 
 ' ===== ACTORES =====
 actor "Usuario Anónimo" as Anonimo
@@ -13,7 +15,7 @@ actor "Administrador" as Admin
 rectangle "Sistema CookSync" {
   
   ' ===== CASOS DE USO PÚBLICOS =====
-  package "Funcionalidades Públicas" {
+  package "Funcionalidades Públicas" #LightBlue {
     usecase "Registrarse" as UC01
     usecase "Iniciar Sesión" as UC02
     usecase "Ver Recetas" as UC03
@@ -21,64 +23,75 @@ rectangle "Sistema CookSync" {
     usecase "Aplicar Filtros de Búsqueda" as UC05
     usecase "Ver Detalle de Receta" as UC06
     usecase "Ver Recomendaciones" as UC07
+    usecase "Ver Catálogo de Celulares" as UC08
+    usecase "Filtrar Celulares" as UC09
   }
   
   ' ===== CASOS DE USO DE CLIENTE =====
-  package "Funcionalidades de Cliente" {
-    usecase "Gestionar Perfil" as UC08
-    usecase "Agregar Receta a Favoritos" as UC09
-    usecase "Ver Recetas Favoritas" as UC10
-    usecase "Quitar Receta de Favoritos" as UC11
-    usecase "Gestionar Despensa Virtual" as UC12
-    usecase "Agregar Ingredientes a Despensa" as UC13
-    usecase "Editar Ingredientes de Despensa" as UC14
-    usecase "Eliminar Ingredientes de Despensa" as UC15
-    usecase "Ver Historial de Recetas" as UC16
-    usecase "Calificar Recetas" as UC17
-    usecase "Ver Dashboard Cliente" as UC18
-    usecase "Recibir Notificaciones" as UC19
+  package "Funcionalidades de Cliente" #LightGreen {
+    usecase "Gestionar Perfil" as UC10
+    usecase "Agregar Receta a Favoritos" as UC11
+    usecase "Ver Recetas Favoritas" as UC12
+    usecase "Quitar Receta de Favoritos" as UC13
+    usecase "Gestionar Despensa Virtual" as UC14
+    usecase "Agregar Ingredientes a Despensa" as UC15
+    usecase "Editar Ingredientes de Despensa" as UC16
+    usecase "Eliminar Ingredientes de Despensa" as UC17
+    usecase "Ver Historial de Recetas" as UC18
+    usecase "Calificar Recetas" as UC19
+    usecase "Ver Dashboard Cliente" as UC20
+    usecase "Recibir Notificaciones" as UC21
+    usecase "Comprar Celular" as UC22
+    usecase "Ver Detalle de Celular" as UC23
   }
   
   ' ===== CASOS DE USO DE VENDEDOR =====
-  package "Funcionalidades de Vendedor" {
-    usecase "Gestionar Productos" as UC20
-    usecase "Ver Dashboard Vendedor" as UC21
-    usecase "Gestionar Inventario" as UC22
-    usecase "Ver Estadísticas de Ventas" as UC23
-    usecase "Publicar Ofertas" as UC24
+  package "Funcionalidades de Vendedor" #LightYellow {
+    usecase "Gestionar Productos" as UC24
+    usecase "Ver Dashboard Vendedor" as UC25
+    usecase "Gestionar Inventario" as UC26
+    usecase "Ver Estadísticas de Ventas" as UC27
+    usecase "Publicar Ofertas" as UC28
+    usecase "Agregar Celulares" as UC29
+    usecase "Editar Precio Celular" as UC30
+    usecase "Gestionar Stock" as UC31
   }
   
   ' ===== CASOS DE USO DE MODERADOR =====
-  package "Funcionalidades de Moderador" {
-    usecase "Moderar Recetas" as UC25
-    usecase "Aprobar/Rechazar Recetas" as UC26
-    usecase "Ver Dashboard Moderador" as UC27
-    usecase "Gestionar Reportes" as UC28
-    usecase "Revisar Contenido" as UC29
+  package "Funcionalidades de Moderador" #LightCoral {
+    usecase "Moderar Recetas" as UC32
+    usecase "Aprobar/Rechazar Recetas" as UC33
+    usecase "Ver Dashboard Moderador" as UC34
+    usecase "Gestionar Reportes" as UC35
+    usecase "Revisar Contenido" as UC36
   }
   
   ' ===== CASOS DE USO DE ADMINISTRADOR =====
-  package "Funcionalidades de Administrador" {
-    usecase "Gestionar Usuarios" as UC30
-    usecase "Cambiar Roles de Usuario" as UC31
-    usecase "Activar/Desactivar Usuarios" as UC32
-    usecase "Ver Dashboard Admin" as UC33
-    usecase "Ver Estadísticas del Sistema" as UC34
-    usecase "Gestionar Recetas del Sistema" as UC35
-    usecase "Configurar Sistema" as UC36
-    usecase "Ver Logs de Auditoría" as UC37
-    usecase "Gestionar Categorías" as UC38
-    usecase "Gestionar Ingredientes Maestros" as UC39
+  package "Funcionalidades de Administrador" #Orange {
+    usecase "Gestionar Usuarios" as UC37
+    usecase "Cambiar Roles de Usuario" as UC38
+    usecase "Activar/Desactivar Usuarios" as UC39
+    usecase "Ver Dashboard Admin" as UC40
+    usecase "Ver Estadísticas del Sistema" as UC41
+    usecase "Gestionar Recetas del Sistema" as UC42
+    usecase "Configurar Sistema" as UC43
+    usecase "Ver Logs de Auditoría" as UC44
+    usecase "Gestionar Categorías" as UC45
+    usecase "Gestionar Ingredientes Maestros" as UC46
+    usecase "Gestionar Marcas de Celulares" as UC47
+    usecase "Gestionar Gamas" as UC48
   }
   
   ' ===== CASOS DE USO DEL SISTEMA =====
-  package "Funcionalidades del Sistema" {
-    usecase "Generar Recomendaciones Inteligentes" as UC40
-    usecase "Calcular Scoring de Recetas" as UC41
-    usecase "Aplicar Rate Limiting" as UC42
-    usecase "Validar Autenticación JWT" as UC43
-    usecase "Enviar Notificaciones" as UC44
-    usecase "Realizar Backup de Datos" as UC45
+  package "Funcionalidades del Sistema" #Lavender {
+    usecase "Generar Recomendaciones Inteligentes" as UC50
+    usecase "Calcular Scoring de Recetas" as UC51
+    usecase "Aplicar Rate Limiting" as UC52
+    usecase "Validar Autenticación JWT" as UC53
+    usecase "Enviar Notificaciones" as UC54
+    usecase "Realizar Backup de Datos" as UC55
+    usecase "Sincronizar Favoritos" as UC56
+    usecase "Normalizar Tipos de Datos" as UC57
   }
 }
 
@@ -90,10 +103,10 @@ Anonimo --> UC04
 Anonimo --> UC05
 Anonimo --> UC06
 Anonimo --> UC07
+Anonimo --> UC08
+Anonimo --> UC09
 
 ' ===== RELACIONES CLIENTE =====
-Cliente --> UC08
-Cliente --> UC09
 Cliente --> UC10
 Cliente --> UC11
 Cliente --> UC12
@@ -104,6 +117,10 @@ Cliente --> UC16
 Cliente --> UC17
 Cliente --> UC18
 Cliente --> UC19
+Cliente --> UC20
+Cliente --> UC21
+Cliente --> UC22
+Cliente --> UC23
 
 ' Herencia de funcionalidades públicas
 Cliente --> UC03
@@ -111,76 +128,88 @@ Cliente --> UC04
 Cliente --> UC05
 Cliente --> UC06
 Cliente --> UC07
+Cliente --> UC08
+Cliente --> UC09
 
 ' ===== RELACIONES VENDEDOR =====
-Vendedor --> UC20
-Vendedor --> UC21
-Vendedor --> UC22
-Vendedor --> UC23
 Vendedor --> UC24
+Vendedor --> UC25
+Vendedor --> UC26
+Vendedor --> UC27
+Vendedor --> UC28
+Vendedor --> UC29
+Vendedor --> UC30
+Vendedor --> UC31
 
 ' Herencia de funcionalidades de cliente
-Vendedor --> UC08
-Vendedor --> UC09
 Vendedor --> UC10
 Vendedor --> UC11
-Vendedor --> UC18
-Vendedor --> UC19
+Vendedor --> UC12
+Vendedor --> UC13
+Vendedor --> UC20
+Vendedor --> UC21
 
 ' ===== RELACIONES MODERADOR =====
-Moderador --> UC25
-Moderador --> UC26
-Moderador --> UC27
-Moderador --> UC28
-Moderador --> UC29
+Moderador --> UC32
+Moderador --> UC33
+Moderador --> UC34
+Moderador --> UC35
+Moderador --> UC36
 
 ' Herencia de funcionalidades de cliente
-Moderador --> UC08
-Moderador --> UC09
 Moderador --> UC10
 Moderador --> UC11
-Moderador --> UC18
-Moderador --> UC19
+Moderador --> UC12
+Moderador --> UC13
+Moderador --> UC20
+Moderador --> UC21
 
 ' ===== RELACIONES ADMINISTRADOR =====
-Admin --> UC30
-Admin --> UC31
-Admin --> UC32
-Admin --> UC33
-Admin --> UC34
-Admin --> UC35
-Admin --> UC36
 Admin --> UC37
 Admin --> UC38
 Admin --> UC39
+Admin --> UC40
+Admin --> UC41
+Admin --> UC42
+Admin --> UC43
+Admin --> UC44
+Admin --> UC45
+Admin --> UC46
+Admin --> UC47
+Admin --> UC48
 
 ' Herencia de todas las funcionalidades
-Admin --> UC08
+Admin --> UC10
+Admin --> UC32
+Admin --> UC33
+Admin --> UC24
 Admin --> UC25
-Admin --> UC26
-Admin --> UC20
-Admin --> UC21
+Admin --> UC29
 
 ' ===== RELACIONES INCLUDE =====
-UC04 .> UC40 : <<include>>
-UC07 .> UC40 : <<include>>
-UC07 .> UC41 : <<include>>
+UC04 .> UC50 : <<include>>
+UC07 .> UC50 : <<include>>
+UC07 .> UC51 : <<include>>
+UC09 .> UC57 : <<include>>
 
-UC09 .> UC43 : <<include>>
-UC10 .> UC43 : <<include>>
-UC11 .> UC43 : <<include>>
-UC12 .> UC43 : <<include>>
-UC18 .> UC43 : <<include>>
+UC11 .> UC53 : <<include>>
+UC12 .> UC53 : <<include>>
+UC13 .> UC53 : <<include>>
+UC14 .> UC53 : <<include>>
+UC20 .> UC53 : <<include>>
 
-UC30 .> UC43 : <<include>>
-UC31 .> UC43 : <<include>>
-UC32 .> UC43 : <<include>>
-UC33 .> UC43 : <<include>>
+UC37 .> UC53 : <<include>>
+UC38 .> UC53 : <<include>>
+UC39 .> UC53 : <<include>>
+UC40 .> UC53 : <<include>>
+
+UC12 .> UC56 : <<include>>
 
 ' ===== RELACIONES EXTEND =====
 UC04 <. UC05 : <<extend>>
-UC03 <. UC17 : <<extend>>
-UC12 <. UC19 : <<extend>>
+UC08 <. UC09 : <<extend>>
+UC03 <. UC19 : <<extend>>
+UC14 <. UC21 : <<extend>>
 
 ' ===== HERENCIAS DE ACTORES =====
 Cliente --|> Anonimo
@@ -190,47 +219,79 @@ Admin --|> Moderador
 Admin --|> Vendedor
 
 ' ===== NOTAS =====
+' ===== NOTAS EXPLICATIVAS =====
 note right of UC04
-  Búsqueda inteligente con:
+  **Búsqueda Inteligente:**
   - Debounce de 500ms
   - Mapeo nombre → ID
   - Algoritmo de coincidencias
+  - Cálculo % match
   - Fallbacks robustos
 end note
 
-note right of UC40
-  Algoritmo con 7 factores:
+note right of UC09
+  **Filtros de Celulares:**
+  - Marca (50 celulares)
+  - Gama (Alta, Media, Baja)
+  - Sistema Operativo
+  - Precio Min/Max
+  - RAM/Almacenamiento
+  - Conectividad 5G
+  - Normalización de tipos
+end note
+
+note right of UC50
+  **Algoritmo Scoring (7 factores):**
   - Calificación promedio (30%)
   - Popularidad (25%)
   - Veces favorita (20%)
   - Recetas destacadas (15%)
   - Recetas verificadas (10%)
-  - Bonus tiempo/salud
+  - Bonus tiempo razonable
+  - Bonus recetas saludables
 end note
 
-note right of UC12
-  Despensa virtual completa:
-  - CRUD de ingredientes
+note right of UC14
+  **Despensa Virtual:**
+  - CRUD completo
   - Fechas de vencimiento
   - Integración con búsqueda
-  - Notificaciones de vencimiento
+  - Notificaciones automáticas
+  - Sincronización en tiempo real
 end note
 
-note right of UC33
-  Dashboard con métricas:
-  - Usuarios activos
+note right of UC40
+  **Dashboard Admin:**
+  - Total usuarios activos
   - Recetas en sistema
   - Logins último mes
   - Recetas más populares
+  - Celulares disponibles
+  - Ventas del mes
 end note
 
-note bottom of UC42
-  **Características Técnicas:**
-  - Rate limiting: 10,000 req/min (dev)
-  - JWT Authentication con roles
-  - Middleware de seguridad
-  - Logging de auditoría
-  - Fallbacks automáticos
+note bottom of UC52
+  **Stack Técnico:**
+  
+  **Backend:**
+  - NestJS + Prisma
+  - MySQL Database
+  - JWT Authentication
+  - Rate limiting: 10,000 req/min
+  - Guards por roles
+  - Validation Pipes
+  
+  **Frontend:**
+  - React + Context API
+  - Protected Routes
+  - Debounce + Fallbacks
+  - Lazy Loading
+  
+  **Seguridad:**
+  - Middleware completo
+  - Audit logs
+  - Soft deletes
+  - Encriptación
 end note
 
 @enduml

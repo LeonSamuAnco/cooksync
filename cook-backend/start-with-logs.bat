@@ -1,0 +1,3 @@
+@echo off
+echo Iniciando backend y guardando logs...
+npm run start:dev > backend-logs.txt 2>&1

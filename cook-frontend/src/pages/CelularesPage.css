@@ -1,0 +1,213 @@
+/* Página de Celulares - Fondo blanco, texto negro */
+.celulares-page {
+  min-height: 100vh;
+  background-color: #FFFFFF;
+  color: #000000;
+}
+
+.celulares-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 2rem;
+  color: white;
+}
+
+.back-button {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  transition: all 0.3s ease;
+}
+
+.back-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateX(-5px);
+}
+
+.celulares-title-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.celulares-icon {
+  font-size: 3rem;
+}
+
+.celulares-title-section h1 {
+  margin: 0;
+  font-size: 2.5rem;
+  font-weight: 700;
+}
+
+.celulares-title-section p {
+  margin: 0.5rem 0 0 0;
+  opacity: 0.9;
+  font-size: 1.1rem;
+}
+
+.celulares-content {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 2rem;
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.celulares-sidebar {
+  background-color: #F8F9FA;
+  border-radius: 12px;
+  padding: 1.5rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  position: sticky;
+  top: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.celulares-main {
+  background-color: #FFFFFF;
+  max-height: calc(100vh - 16rem);
+  overflow-y: auto;
+  padding-right: 0.5rem;
+  scroll-behavior: smooth;
+}
+
+/* Estilo personalizado para el scrollbar */
+.celulares-main::-webkit-scrollbar {
+  width: 8px;
+}
+
+.celulares-main::-webkit-scrollbar-track {
+  background: #F8F9FA;
+  border-radius: 10px;
+}
+
+.celulares-main::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 10px;
+}
+
+.celulares-main::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
+
+.celulares-results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #E9ECEF;
+}
+
+.celulares-results-header h2 {
+  margin: 0;
+  font-size: 1.8rem;
+  color: #000000;
+  font-weight: 600;
+}
+
+.results-count {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  color: #000000;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #E9ECEF;
+  border-top: 4px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-state p {
+  font-size: 1.1rem;
+  color: #6C757D;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  background-color: #F8F9FA;
+  border-radius: 12px;
+  border: 2px dashed #DEE2E6;
+}
+
+.empty-icon {
+  font-size: 5rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.empty-state p {
+  font-size: 1.2rem;
+  color: #6C757D;
+  max-width: 500px;
+  line-height: 1.6;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .celulares-content {
+    grid-template-columns: 1fr;
+  }
+
+  .celulares-sidebar {
+    position: static;
+  }
+}
+
+@media (max-width: 768px) {
+  .celulares-header {
+    padding: 1.5rem;
+  }
+
+  .celulares-title-section h1 {
+    font-size: 2rem;
+  }
+
+  .celulares-content {
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  .celulares-main {
+    max-height: calc(100vh - 12rem);
+  }
+
+  .celulares-results-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+}

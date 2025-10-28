@@ -1,0 +1,100 @@
+/* ===== LUGAR GRID ===== */
+.lugar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+  padding: 0;
+  animation: fadeIn 0.5s ease;
+}
+
+/* Loading */
+.lugar-grid-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  gap: 1rem;
+}
+
+.lugar-grid-loading .spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #E2E8F0;
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.lugar-grid-loading p {
+  color: #718096;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+/* Empty State */
+.lugar-grid-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  gap: 1rem;
+}
+
+.lugar-grid-empty i {
+  font-size: 4rem;
+  color: #CBD5E0;
+}
+
+.lugar-grid-empty h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2D3748;
+  margin: 0;
+}
+
+.lugar-grid-empty p {
+  font-size: 1rem;
+  color: #718096;
+  margin: 0;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .lugar-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.25rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .lugar-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .lugar-grid-loading,
+  .lugar-grid-empty {
+    padding: 3rem 1.5rem;
+  }
+}

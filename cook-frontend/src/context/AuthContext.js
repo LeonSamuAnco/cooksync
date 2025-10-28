@@ -93,19 +93,33 @@ export const AuthProvider = ({ children }) => {
           const parsedUser = JSON.parse(savedUser);
           console.log('📦 Usuario en localStorage (raw):', savedUser.substring(0, 200) + '...');
           console.log('✅ Usuario parseado:', parsedUser);
-          console.log('✅ Estructura del usuario:', {
-            tieneRol: !!parsedUser.rol,
-            tieneRole: !!parsedUser.role,
-            codigoRol: parsedUser.rol?.codigo,
-            codigoRole: parsedUser.role?.codigo
-          });
+          
+          // Verificar estructura del rol
+          const userRole = parsedUser.rol || parsedUser.role;
+          console.log('🔍 Verificando estructura del rol:');
+          console.log('  - tiene "rol":', !!parsedUser.rol);
+          console.log('  - tiene "role":', !!parsedUser.role);
+          console.log('  - objeto rol/role:', userRole);
+          console.log('  - código del rol:', userRole?.codigo);
+          console.log('  - nombre del rol:', userRole?.nombre);
+          
+          // CRÍTICO: Verificar que el usuario tiene rol antes de establecerlo
+          if (!userRole || !userRole.codigo) {
+            console.error('❌ Usuario sin rol válido en localStorage');
+            console.error('❌ Usuario completo:', parsedUser);
+            localStorage.removeItem('user');
+            logout(false);
+            setLoading(false);
+            return;
+          }
           
           // Establecer usuario INMEDIATAMENTE
           setUser(parsedUser);
           setIsAuthenticated(true);
           setSessionExpired(false);
           
-          console.log('✅ Sesión restaurada exitosamente - Usuario establecido en estado');
+          console.log(`✅ Sesión restaurada exitosamente con rol: ${userRole.codigo}`);
+          console.log('✅ Usuario establecido en estado:', parsedUser.nombres || parsedUser.email);
         } catch (e) {
           console.error('❌ Error parseando usuario guardado:', e);
           console.error('❌ Contenido de localStorage:', savedUser);
@@ -202,29 +216,53 @@ export const AuthProvider = ({ children }) => {
       if (response.ok) {
         const data = await response.json();
         
-        console.log('✅ Login exitoso - Datos recibidos:', data);
-        console.log('✅ Usuario recibido:', data.user);
-        console.log('✅ Rol del usuario:', data.user?.rol || data.user?.role);
+        console.log('✅ Login exitoso - Datos recibidos completos:', data);
+        
+        // El backend puede devolver: { access_token, user } o { success: true, user }
+        // Extraer el usuario de manera robusta
+        let userToSave = data.user || data;
+        
+        console.log('✅ Usuario extraído:', userToSave);
+        console.log('✅ Tiene rol:', !!userToSave.rol);
+        console.log('✅ Tiene role:', !!userToSave.role);
+        console.log('✅ rolId:', userToSave.rolId);
+        
+        // CRÍTICO: Verificar que el usuario tenga rol
+        const userRole = userToSave.rol || userToSave.role;
+        if (!userRole && userToSave.rolId) {
+          console.warn('⚠️ Usuario sin objeto rol, pero tiene rolId. Esto puede causar problemas.');
+          console.warn('⚠️ Se recomienda que el backend incluya el objeto rol completo.');
+        }
         
         // Guardar token (el backend devuelve access_token)
         const token = data.access_token || data.token;
         if (token) {
           localStorage.setItem('authToken', token);
           console.log('✅ Token guardado en localStorage');
+        } else {
+          console.warn('⚠️ No se encontró token en la respuesta del backend');
         }
         
         // Guardar usuario en localStorage
-        if (data.user) {
-          localStorage.setItem('user', JSON.stringify(data.user));
+        if (userToSave && userToSave.id) {
+          const userStr = JSON.stringify(userToSave);
+          localStorage.setItem('user', userStr);
           console.log('✅ Usuario guardado en localStorage');
+          console.log('✅ Contenido guardado (primeros 300 chars):', userStr.substring(0, 300));
+        } else {
+          console.error('❌ Usuario inválido, no se puede guardar en localStorage');
+          return { success: false, error: 'Usuario inválido recibido del servidor' };
         }
         
-        // Establecer usuario
-        setUser(data.user);
+        // Establecer usuario en el estado
+        setUser(userToSave);
         setIsAuthenticated(true);
         setSessionExpired(false);
         
-        console.log('✅ Usuario establecido en estado:', data.user);
+        console.log('✅ Usuario establecido en estado');
+        console.log('✅ Nombre:', userToSave.nombres);
+        console.log('✅ Email:', userToSave.email);
+        console.log('✅ Rol código:', userRole?.codigo);
         
         return { success: true, user: data.user };
       } else {

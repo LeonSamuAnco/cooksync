@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Lugares API</title>
+</head>
+<body>
+    <h1>Test Lugares API</h1>
+    <button onclick="testLugares()">Test /lugares/test</button>
+    <button onclick="testTipos()">Test /lugares/tipos</button>
+    <button onclick="testLugares2()">Test /lugares</button>
+    <pre id="result"></pre>
+
+    <script>
+        async function testLugares() {
+            try {
+                const response = await fetch('http://localhost:3002/lugares/test');
+                const data = await response.json();
+                document.getElementById('result').textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('result').textContent = 'Error: ' + error.message;
+            }
+        }
+
+        async function testTipos() {
+            try {
+                const response = await fetch('http://localhost:3002/lugares/tipos');
+                const data = await response.json();
+                document.getElementById('result').textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('result').textContent = 'Error: ' + error.message;
+            }
+        }
+
+        async function testLugares2() {
+            try {
+                const response = await fetch('http://localhost:3002/lugares');
+                const data = await response.json();
+                document.getElementById('result').textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('result').textContent = 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>

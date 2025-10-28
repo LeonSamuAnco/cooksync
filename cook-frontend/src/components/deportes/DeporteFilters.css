@@ -1,0 +1,10 @@
+/* Deporte Filters */
+.deporte-filters { background: white; padding: 1.5rem; margin: 2rem auto; max-width: 1400px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+.filters-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; align-items: end; }
+.filter-group { display: flex; flex-direction: column; gap: 0.5rem; }
+.filter-group label { font-weight: 600; color: #4a5568; font-size: 0.875rem; display: flex; align-items: center; gap: 0.5rem; }
+.filter-group select { padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 0.875rem; transition: all 0.3s; }
+.filter-group select:focus { outline: none; border-color: #f59e0b; box-shadow: 0 0 0 3px rgba(245,158,11,0.1); }
+.filter-actions { display: flex; align-items: flex-end; }
+.btn-reset { padding: 0.75rem 1.5rem; background: #ef4444; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; gap: 0.5rem; }
+.btn-reset:hover { background: #dc2626; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(239,68,68,0.3); }

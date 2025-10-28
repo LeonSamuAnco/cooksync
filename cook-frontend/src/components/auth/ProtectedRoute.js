@@ -12,25 +12,37 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
 
   // Memoizar la verificación de autorización
   const isAuthorized = useMemo(() => {
-    // Durante la carga, consideramos no autorizado pero no mostramos error
-    if (loading) return null;
+    // Durante la carga, NO hacer NADA (evitar logs prematuros)
+    if (loading) {
+      console.log('⏳ ProtectedRoute - Aún cargando, esperando...');
+      return null;
+    }
     
-    if (!user || !isAuthenticated) return false;
-    
-    // Si no hay roles específicos requeridos, permitir acceso a usuarios autenticados
-    if (allowedRoles.length === 0) return true;
-    
-    // Verificar si el usuario tiene uno de los roles permitidos
-    const userRole = user.rol || user.role;
-    console.log('🔒 ProtectedRoute - UserRole:', userRole);
-    
-    if (!userRole) {
-      console.error('❌ ProtectedRoute - Usuario no tiene rol definido');
+    // Si no está autenticado, denegar acceso
+    if (!user || !isAuthenticated) {
+      console.log('🚫 ProtectedRoute - No autenticado');
       return false;
     }
     
-    const hasPermission = allowedRoles.includes(userRole.codigo);
-    console.log('🔒 ProtectedRoute - HasPermission:', hasPermission);
+    // Si no hay roles específicos requeridos, permitir acceso a usuarios autenticados
+    if (allowedRoles.length === 0) {
+      console.log('✅ ProtectedRoute - Acceso permitido (sin restricción de roles)');
+      return true;
+    }
+    
+    // Verificar si el usuario tiene uno de los roles permitidos
+    const userRole = user.rol || user.role;
+    console.log('🔒 ProtectedRoute - Verificando rol del usuario:', userRole);
+    
+    if (!userRole) {
+      console.error('❌ ProtectedRoute - Usuario autenticado pero sin rol definido');
+      console.error('🔍 User completo:', user);
+      return false;
+    }
+    
+    const roleCode = userRole.codigo;
+    const hasPermission = allowedRoles.includes(roleCode);
+    console.log(`🔒 ProtectedRoute - Rol: ${roleCode}, Permitidos: [${allowedRoles}], Acceso: ${hasPermission ? '✅' : '❌'}`);
     return hasPermission;
   }, [user, isAuthenticated, allowedRoles, loading]);
 

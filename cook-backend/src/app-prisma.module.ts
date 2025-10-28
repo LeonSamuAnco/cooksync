@@ -13,6 +13,10 @@ import { ShoppingListModule } from './shopping-list/shopping-list.module';
 import { FavoritesModule } from './favorites/favorites.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { ActivityModule } from './activity/activity.module';
+import { CelularesModule } from './celulares/celulares.module';
+import { TortasModule } from './tortas/tortas.module';
+import { LugaresModule } from './lugares/lugares.module';
+import { DeportesModule } from './deportes/deportes.module';
 
 @Module({
   imports: [
@@ -30,6 +34,10 @@ import { ActivityModule } from './activity/activity.module';
     FavoritesModule,
     NotificationsModule,
     ActivityModule,
+    CelularesModule,
+    TortasModule,
+    LugaresModule,
+    DeportesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
