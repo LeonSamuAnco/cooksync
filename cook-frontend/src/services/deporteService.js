@@ -87,6 +87,11 @@ const deporteService = {
       throw error;
     }
   },
+
+  // Alias para consistencia con otros servicios
+  getAll: function(filters = {}) {
+    return this.getDeportes(filters);
+  }
 };
 
 export default deporteService;

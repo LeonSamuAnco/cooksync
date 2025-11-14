@@ -1,9 +1,12 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import RecommendationsWidget from '../RecommendationsWidget';
 import './HomePage.css';
 
 const HomePage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   return (
     <div className="home-page">
@@ -29,6 +32,13 @@ const HomePage = () => {
           <p>Guarda y organiza todos tus productos y recetas favoritas en un solo lugar.</p>
         </div>
       </section>
+
+      {/* Sección de Recomendaciones Personalizadas - Solo para usuarios autenticados */}
+      {user && (
+        <section className="recommendations-section">
+          <RecommendationsWidget limit={8} />
+        </section>
+      )}
 
       {/* Sección Cómo Funciona */}
       <section className="how-it-works">

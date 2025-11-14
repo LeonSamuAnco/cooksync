@@ -7,6 +7,7 @@ import {
 } from 'react-icons/fa';
 import activityService from '../../services/activityService';
 import favoritesService from '../../services/favoritesService';
+import RecommendationsWidget from '../RecommendationsWidget';
 import EditProfileModal from './EditProfileModal';
 import './UserProfileUnified.css';
 
@@ -404,17 +405,9 @@ const UserProfileUnified = ({ user }) => {
           </div>
         </div>
 
-        {/* Recomendaciones */}
+        {/* Recomendaciones Personalizadas */}
         <div className="tab-card full-width">
-          <div className="tab-card-header">
-            <h3>🌟 Recomendaciones para ti</h3>
-          </div>
-          <div className="recommendations-grid">
-            <div className="recipe-mini-card">Receta 1</div>
-            <div className="recipe-mini-card">Receta 2</div>
-            <div className="recipe-mini-card">Receta 3</div>
-          </div>
-          <button className="btn-link" onClick={() => navigate('/recipes')}>Ver más →</button>
+          <RecommendationsWidget limit={6} />
         </div>
       </div>
     </div>

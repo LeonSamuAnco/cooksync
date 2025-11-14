@@ -122,37 +122,72 @@ const CategoriesPage = () => {
       <div className="categories-content">
         {activeTab === 'recipes' && (
           <div className="recipes-section">
-            <RecipeFilters
-              onFilterChange={handleRecipeFiltersChange}
-              userIngredients={userIngredients}
-            />
+            <div className="filters-column">
+              <RecipeFilters
+                onFilterChange={handleRecipeFiltersChange}
+                userIngredients={userIngredients}
+              />
+            </div>
             
-            <div className="results-section">
-              <h2>
-                {recipes.length > 0
-                  ? `${recipes.length} Recetas Encontradas`
-                  : 'Selecciona filtros para buscar recetas'}
-              </h2>
-              
-              {loading ? (
-                <div className="loading-state">
-                  <div className="spinner">⏳</div>
-                  <p>Buscando recetas...</p>
+            <div className="results-column">
+              <div className="results-section">
+                <h2>
+                  {recipes.length > 0
+                    ? `${recipes.length} Recetas Encontradas`
+                    : 'Selecciona filtros para buscar recetas'}
+                </h2>
+                
+                {loading ? (
+                  <div className="loading-state">
+                    <div className="spinner">⏳</div>
+                    <p>Buscando recetas...</p>
+                  </div>
+                ) : (
+                  <ProductGrid
+                    products={recipes.map(recipe => ({
+                      id: recipe.id,
+                      name: recipe.nombre || recipe.title,
+                      description: recipe.descripcion || recipe.description,
+                      imageUrl: recipe.imagenPrincipal || recipe.image,
+                      price: null,
+                    }))}
+                    loading={false}
+                    onProductClick={handleRecipeClick}
+                    emptyMessage="No se encontraron recetas con los filtros seleccionados. Intenta ajustar tus criterios de búsqueda."
+                  />
+                )}
+              </div>
+            </div>
+
+            <div className="recommendations-column">
+              <div className="recommendations-panel">
+                <h3>✨ Recomendaciones Personalizadas</h3>
+                <p>Basado en tu historial y preferencias</p>
+                {/* Aquí irá el componente de recomendaciones */}
+                <div className="recommendations-placeholder">
+                  <div className="recommendation-item">
+                    <div className="rec-image">🍝</div>
+                    <div className="rec-content">
+                      <h4>Pasta Carbonara</h4>
+                      <p>95% match</p>
+                    </div>
+                  </div>
+                  <div className="recommendation-item">
+                    <div className="rec-image">🥗</div>
+                    <div className="rec-content">
+                      <h4>Ensalada César</h4>
+                      <p>88% match</p>
+                    </div>
+                  </div>
+                  <div className="recommendation-item">
+                    <div className="rec-image">🍲</div>
+                    <div className="rec-content">
+                      <h4>Sopa de Tomate</h4>
+                      <p>82% match</p>
+                    </div>
+                  </div>
                 </div>
-              ) : (
-                <ProductGrid
-                  products={recipes.map(recipe => ({
-                    id: recipe.id,
-                    name: recipe.nombre || recipe.title,
-                    description: recipe.descripcion || recipe.description,
-                    imageUrl: recipe.imagenPrincipal || recipe.image,
-                    price: null,
-                  }))}
-                  loading={false}
-                  onProductClick={handleRecipeClick}
-                  emptyMessage="No se encontraron recetas con los filtros seleccionados. Intenta ajustar tus criterios de búsqueda."
-                />
-              )}
+              </div>
             </div>
           </div>
         )}

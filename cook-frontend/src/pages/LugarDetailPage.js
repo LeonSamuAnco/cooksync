@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaPhone, FaGlobe, FaMapMarkerAlt, FaClock, FaStar } from 'react-icons/fa';
 import lugarService from '../services/lugarService';
+import activityService from '../services/activityService';
 import './LugarDetailPage.css';
 
 const LugarDetailPage = () => {
@@ -20,6 +21,27 @@ const LugarDetailPage = () => {
     try {
       const data = await lugarService.getById(id);
       setLugar(data);
+
+      // Registrar actividad de vista (sin bloquear la carga)
+      if (data && data.items) {
+        // Ejecutar en background sin await para no bloquear la UI
+        activityService.create({
+          tipo: 'LUGAR_VISTO',
+          descripcion: `Viste el lugar "${data.items.nombre}"`,
+          referenciaId: parseInt(id),
+          referenciaTipo: 'lugar',
+          metadata: {
+            tipoId: data.lugar_tipo_id,
+            tipo: data.lugar_tipos?.nombre,
+            ciudad: data.ciudad,
+            pais: data.pais,
+          },
+        }).then(() => {
+          console.log('✅ Actividad de lugar registrada');
+        }).catch((actError) => {
+          console.warn('⚠️ No se pudo registrar la actividad:', actError.message);
+        });
+      }
     } catch (error) {
       console.error('Error al cargar lugar:', error);
     } finally {

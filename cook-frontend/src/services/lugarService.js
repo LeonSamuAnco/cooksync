@@ -198,6 +198,11 @@ const lugarService = {
       return null;
     }
   },
+
+  // Alias para consistencia con otros servicios
+  getAll: function(filters = {}) {
+    return this.getLugares(filters);
+  }
 };
 
 export default lugarService;

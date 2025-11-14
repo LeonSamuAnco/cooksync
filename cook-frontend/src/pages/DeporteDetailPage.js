@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaShoppingCart } from 'react-icons/fa';
 import deporteService from '../services/deporteService';
+import activityService from '../services/activityService';
 import './DeporteDetailPage.css';
 
 const DeporteDetailPage = () => {
@@ -31,6 +32,28 @@ const DeporteDetailPage = () => {
         setSelectedTalla(firstVariacion.talla);
         setSelectedColor(firstVariacion.color);
         setSelectedVariacion(firstVariacion);
+      }
+
+      // Registrar actividad de vista (sin bloquear la carga)
+      if (data && data.items) {
+        // Ejecutar en background sin await para no bloquear la UI
+        activityService.create({
+          tipo: 'DEPORTE_VISTO',
+          descripcion: `Viste el producto deportivo "${data.items.nombre}"`,
+          referenciaId: parseInt(id),
+          referenciaTipo: 'deporte',
+          metadata: {
+            tipoId: data.deporte_tipo_id,
+            marcaId: data.marca_id,
+            marca: data.deporte_marcas?.nombre,
+            tipo: data.deporte_tipos?.nombre,
+            genero: data.genero,
+          },
+        }).then(() => {
+          console.log('✅ Actividad de deporte registrada');
+        }).catch((actError) => {
+          console.warn('⚠️ No se pudo registrar la actividad:', actError.message);
+        });
       }
     } catch (error) {
       console.error('Error al cargar deporte:', error);

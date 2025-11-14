@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaShoppingCart, FaArrowLeft } from 'react-icons/fa';
 import celularService from '../services/celularService';
+import activityService from '../services/activityService';
 import CelularPurchaseOptions from '../components/celulares/CelularPurchaseOptions';
 import './CelularDetailPage.css';
 
@@ -22,6 +23,27 @@ const CelularDetailPage = () => {
     try {
       const data = await celularService.getById(id);
       setCelular(data);
+      
+      // Registrar actividad de vista (sin bloquear la carga)
+      if (data && data.items) {
+        // Ejecutar en background sin await para no bloquear la UI
+        activityService.create({
+          tipo: 'CELULAR_VISTO',
+          descripcion: `Viste el celular "${data.items.nombre}"`,
+          referenciaId: parseInt(id),
+          referenciaTipo: 'celular',
+          metadata: {
+            marcaId: data.marca_id,
+            gamaId: data.gama_id,
+            marca: data.celular_marcas?.nombre,
+            modelo: data.modelo,
+          },
+        }).then(() => {
+          console.log('✅ Actividad de celular registrada');
+        }).catch((actError) => {
+          console.warn('⚠️ No se pudo registrar la actividad:', actError.message);
+        });
+      }
     } catch (error) {
       console.error('Error al cargar celular:', error);
     } finally {

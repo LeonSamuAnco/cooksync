@@ -1,3 +1,4 @@
+import React from "react";
 import { BrowserRouter as Router, Routes, Route, useNavigate, Navigate } from "react-router-dom";
 import Login from "./components/auth/Login";
 import Register from "./components/auth/Register";
@@ -10,6 +11,8 @@ import CategoriesExplorer from "./pages/CategoriesExplorer";
 import AuthRedirect from "./components/auth/AuthRedirect";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { NotificationProvider, useNotification } from "./context/NotificationContext";
+import { useNotifications } from "./hooks/useNotifications";
+import NotificationsPanel from "./components/NotificationsPanel";
 import RecipeDetail from "./components/RecipeDetail";
 import HomePage from "./components/home/HomePage";
 import LandingPage from "./pages/LandingPage";
@@ -21,6 +24,7 @@ import LugaresPage from "./pages/LugaresPage";
 import LugarDetailPage from "./pages/LugarDetailPage";
 import DeportesPage from "./pages/DeportesPage";
 import DeporteDetailPage from "./pages/DeporteDetailPage";
+import RecommendationsPage from "./pages/RecommendationsPage";
 import SessionExpiredModal from "./components/SessionExpiredModal";
 import "./App.css";
 import "./utils/backendChecker";
@@ -29,6 +33,8 @@ const TopBar = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout, getDashboardRoute } = useAuth();
   const { showNotification } = useNotification();
+  const { unreadCount, notifications, markAsRead, markAllAsRead } = useNotifications();
+  const [showNotificationsPanel, setShowNotificationsPanel] = React.useState(false);
 
   const handleLogout = () => {
     logout();
@@ -58,6 +64,69 @@ const TopBar = () => {
         {isAuthenticated ? (
           <>
             <span className="user-greeting">👋 {user?.nombres || 'Usuario'}</span>
+            
+            {/* Campana de Notificaciones */}
+            <div className="notifications-container" style={{ position: 'relative' }}>
+              <button 
+                className="notifications-btn"
+                onClick={() => setShowNotificationsPanel(!showNotificationsPanel)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '1.5rem',
+                  cursor: 'pointer',
+                  position: 'relative',
+                  padding: '8px',
+                  borderRadius: '50%',
+                  transition: 'background-color 0.2s'
+                }}
+                onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255,255,255,0.1)'}
+                onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+              >
+                🔔
+                {unreadCount > 0 && (
+                  <span 
+                    className="notification-badge"
+                    style={{
+                      position: 'absolute',
+                      top: '2px',
+                      right: '2px',
+                      background: '#ff4757',
+                      color: 'white',
+                      borderRadius: '50%',
+                      width: '18px',
+                      height: '18px',
+                      fontSize: '0.7rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: 'bold'
+                    }}
+                  >
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
+              </button>
+              
+              {/* Panel de Notificaciones */}
+              {showNotificationsPanel && (
+                <div style={{
+                  position: 'absolute',
+                  top: '100%',
+                  right: '0',
+                  zIndex: 1000,
+                  marginTop: '8px'
+                }}>
+                  <NotificationsPanel
+                    notifications={notifications}
+                    onMarkAsRead={markAsRead}
+                    onMarkAllAsRead={markAllAsRead}
+                    onClose={() => setShowNotificationsPanel(false)}
+                  />
+                </div>
+              )}
+            </div>
+            
             <button className="nav-btn-primary" onClick={() => navigate(getDashboardRoute())}>
               📊 Dashboard
             </button>
@@ -128,6 +197,7 @@ const AppContent = () => {
         <Route path="/favorites" element={<FavoritesPage />} />
         <Route path="/activity" element={<ActivityPage />} />
         <Route path="/history" element={<ActivityPage />} />
+        <Route path="/recommendations" element={<ProtectedRoute><RecommendationsPage /></ProtectedRoute>} />
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/admin/*" element={<ProtectedRoute allowedRoles={['ADMIN']}><Dashboard /></ProtectedRoute>} />
         <Route path="/moderador/*" element={<ProtectedRoute allowedRoles={['MODERADOR']}><Dashboard /></ProtectedRoute>} />

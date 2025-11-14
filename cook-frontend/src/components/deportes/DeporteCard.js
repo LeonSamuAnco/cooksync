@@ -1,12 +1,65 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import favoritesService from '../../services/favoritesService';
 import './DeporteCard.css';
 
 const DeporteCard = ({ deporte }) => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [favoriteId, setFavoriteId] = useState(null);
+  const [toggling, setToggling] = useState(false);
 
   const handleClick = () => {
     navigate(`/deportes/${deporte.id}`);
+  };
+
+  // Cargar estado de favorito al montar el componente
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadFavoriteStatus();
+    }
+  }, [isAuthenticated, deporte.id]);
+
+  const loadFavoriteStatus = async () => {
+    try {
+      const result = await favoritesService.checkIsFavorite('deporte', deporte.id);
+      setIsFavorite(result.isFavorite);
+      setFavoriteId(result.favoriteId);
+    } catch (error) {
+      console.error('Error cargando estado de favorito:', error);
+    }
+  };
+
+  const handleToggleFavorite = async (event) => {
+    event.stopPropagation();
+    
+    if (!isAuthenticated) {
+      if (window.confirm('👉 Primero debes iniciar sesión para poder agregar a favoritos.\n\n¿Deseas ir a la página de inicio de sesión?')) {
+        window.location.href = '/login';
+      }
+      return;
+    }
+
+    setToggling(true);
+
+    try {
+      if (isFavorite) {
+        await favoritesService.removeFromFavorites(favoriteId);
+        setIsFavorite(false);
+        setFavoriteId(null);
+      } else {
+        const result = await favoritesService.addToFavorites('deporte', deporte.id);
+        setIsFavorite(true);
+        setFavoriteId(result.id);
+      }
+    } catch (error) {
+      console.error('Error al alternar favorito:', error);
+      alert('❌ Hubo un error al actualizar los favoritos. Por favor, intenta de nuevo.');
+    } finally {
+      setToggling(false);
+    }
   };
 
   const nombre = deporte.items?.nombre || 'Sin nombre';
@@ -43,6 +96,19 @@ const DeporteCard = ({ deporte }) => {
             </span>
           )}
         </div>
+        
+        {/* Botón de favoritos */}
+        <button
+          className="favorite-btn"
+          onClick={handleToggleFavorite}
+          disabled={toggling}
+          title={isAuthenticated 
+            ? (isFavorite ? "Quitar de favoritos" : "Agregar a favoritos")
+            : "Inicia sesión para agregar a favoritos"
+          }
+        >
+          {toggling ? "⏳" : (isFavorite ? "❤️" : "🤍")}
+        </button>
       </div>
 
       <div className="deporte-card-content">

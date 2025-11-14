@@ -113,16 +113,94 @@
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
 }
 
-/* Layout horizontal para recetas */
+/* Layout horizontal para recetas - 3 columnas */
 .recipes-section {
   display: grid;
-  grid-template-columns: 350px 1fr;
-  gap: 2rem;
+  grid-template-columns: 350px 1fr 300px;
+  gap: 1.5rem;
   align-items: start;
+  min-height: 600px;
+}
+
+/* Panel de recomendaciones */
+.recommendations-panel {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 16px;
+  padding: 1.5rem;
+  color: white;
+  position: sticky;
+  top: 20px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+}
+
+.recommendations-panel h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.recommendations-panel p {
+  margin: 0 0 1.5rem 0;
+  opacity: 0.9;
+  font-size: 0.9rem;
+}
+
+.recommendations-placeholder {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.recommendation-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 1rem;
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.recommendation-item:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.rec-image {
+  font-size: 2rem;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+}
+
+.rec-content h4 {
+  margin: 0 0 0.25rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.rec-content p {
+  margin: 0;
+  font-size: 0.8rem;
+  opacity: 0.8;
 }
 
 .results-section {
   min-height: 500px;
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e2e8f0;
 }
 
 .results-section h2 {
@@ -131,6 +209,8 @@
   color: #1f2937;
   margin: 0 0 1.5rem 0;
   text-align: center;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #f1f5f9;
 }
 
 /* Loading state */
@@ -210,10 +290,23 @@
 }
 
 /* Responsive */
+@media (max-width: 1200px) {
+  .recipes-section {
+    grid-template-columns: 320px 1fr 280px;
+    gap: 1rem;
+  }
+}
+
 @media (max-width: 1024px) {
   .recipes-section {
     grid-template-columns: 1fr;
     gap: 1.5rem;
+  }
+  
+  .recommendations-panel {
+    position: relative;
+    top: auto;
+    max-height: none;
   }
 }
 

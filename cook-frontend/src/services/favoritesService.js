@@ -18,8 +18,8 @@ class FavoritesService {
   }
 
   /**
-   * Agregar item a favoritos (receta, producto o ingrediente)
-   * @param {string} tipo - Tipo de favorito: 'receta', 'producto', 'ingrediente'
+   * Agregar item a favoritos
+   * @param {string} tipo - Tipo de favorito: 'receta', 'celular', 'torta', 'lugar', 'deporte', 'producto', 'ingrediente'
    * @param {number} referenciaId - ID del item
    * @returns {Promise<Object>} Respuesta del servidor
    */

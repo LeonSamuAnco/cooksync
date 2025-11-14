@@ -8,8 +8,17 @@ const FavoritesPage = () => {
   const navigate = useNavigate();
   const [favorites, setFavorites] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('all'); // all, receta, producto, ingrediente
-  const [stats, setStats] = useState({ total: 0, recetas: 0, productos: 0, ingredientes: 0 });
+  const [filter, setFilter] = useState('all'); // all, receta, celular, torta, lugar, deporte, producto, ingrediente
+  const [stats, setStats] = useState({ 
+    total: 0, 
+    recetas: 0, 
+    celulares: 0, 
+    tortas: 0, 
+    lugares: 0, 
+    deportes: 0, 
+    productos: 0, 
+    ingredientes: 0 
+  });
 
   useEffect(() => {
     loadFavorites();
@@ -63,6 +72,18 @@ const FavoritesPage = () => {
       case 'receta':
         navigate(`/recipes/${favorite.referenciaId}`);
         break;
+      case 'celular':
+        navigate(`/celulares/${favorite.referenciaId}`);
+        break;
+      case 'torta':
+        navigate(`/tortas/${favorite.referenciaId}`);
+        break;
+      case 'lugar':
+        navigate(`/lugares/${favorite.referenciaId}`);
+        break;
+      case 'deporte':
+        navigate(`/deportes/${favorite.referenciaId}`);
+        break;
       case 'producto':
         navigate(`/products/${favorite.referenciaId}`);
         break;
@@ -75,12 +96,54 @@ const FavoritesPage = () => {
   };
 
   const renderFavoriteCard = (favorite) => {
-    // Extraer datos según la estructura
-    const title = favorite.receta?.nombre || favorite.producto?.nombre || favorite.ingrediente?.nombre || 'Sin título';
-    const image = favorite.receta?.imagenUrl || favorite.producto?.imagenUrl || favorite.ingrediente?.imagenUrl || '/placeholder-recipe.jpg';
-    const description = favorite.receta?.descripcion || favorite.producto?.descripcion || favorite.ingrediente?.descripcion || '';
-    const rating = favorite.receta?.calificacionPromedio || 0;
-    const author = favorite.receta?.usuario?.nombres || 'Desconocido';
+    // Extraer datos según la estructura y tipo
+    let title, image, description, rating, author, brand, location;
+    
+    switch (favorite.tipo) {
+      case 'receta':
+        title = favorite.data?.nombre || 'Sin título';
+        image = favorite.data?.imagenUrl || '/placeholder-recipe.jpg';
+        description = favorite.data?.descripcion || '';
+        rating = favorite.data?.calificacionPromedio || 0;
+        author = favorite.data?.usuario?.nombres || 'Desconocido';
+        break;
+        
+      case 'celular':
+        title = favorite.data?.nombre || 'Sin título';
+        image = favorite.data?.imagen_principal_url || '/placeholder-phone.jpg';
+        description = favorite.data?.descripcion || '';
+        brand = favorite.data?.celular_marcas?.nombre || 'Marca desconocida';
+        break;
+        
+      case 'torta':
+        title = favorite.data?.nombre || 'Sin título';
+        image = favorite.data?.imagen_principal_url || '/placeholder-cake.jpg';
+        description = favorite.data?.descripcion || '';
+        brand = favorite.data?.torta_sabores?.nombre || 'Sabor desconocido';
+        break;
+        
+      case 'lugar':
+        title = favorite.data?.nombre || 'Sin título';
+        image = favorite.data?.imagen_principal_url || '/placeholder-place.jpg';
+        description = favorite.data?.descripcion || '';
+        location = `${favorite.data?.ciudad || ''}, ${favorite.data?.pais || ''}`.trim().replace(/^,\s*|,\s*$/g, '') || 'Ubicación desconocida';
+        break;
+        
+      case 'deporte':
+        title = favorite.data?.nombre || 'Sin título';
+        image = favorite.data?.imagen_principal_url || '/placeholder-sport.jpg';
+        description = favorite.data?.descripcion || '';
+        brand = favorite.data?.deporte_marcas?.nombre || 'Marca desconocida';
+        break;
+        
+      default:
+        title = favorite.data?.nombre || 'Sin título';
+        image = favorite.data?.imagenUrl || '/placeholder-recipe.jpg';
+        description = favorite.data?.descripcion || '';
+        rating = favorite.data?.calificacionPromedio || 0;
+        author = favorite.data?.usuario?.nombres || 'Desconocido';
+    }
+    
     const createdAt = new Date(favorite.createdAt).toLocaleDateString();
 
     return (
@@ -89,6 +152,10 @@ const FavoritesPage = () => {
           <img src={image} alt={title} onError={(e) => e.target.src = '/placeholder-recipe.jpg'} />
           <div className="favorite-type-badge">
             {favorite.tipo === 'receta' && '🍳'}
+            {favorite.tipo === 'celular' && '📱'}
+            {favorite.tipo === 'torta' && '🎂'}
+            {favorite.tipo === 'lugar' && '📍'}
+            {favorite.tipo === 'deporte' && '⚽'}
             {favorite.tipo === 'producto' && '🛒'}
             {favorite.tipo === 'ingrediente' && '🥗'}
           </div>
@@ -117,6 +184,18 @@ const FavoritesPage = () => {
               <div className="favorite-author">
                 <FaUser className="author-icon" />
                 <span>{author}</span>
+              </div>
+            )}
+
+            {(favorite.tipo === 'celular' || favorite.tipo === 'torta' || favorite.tipo === 'deporte') && brand && (
+              <div className="favorite-brand">
+                <span className="brand-label">🏷️ {brand}</span>
+              </div>
+            )}
+
+            {favorite.tipo === 'lugar' && location && (
+              <div className="favorite-location">
+                <span className="location-label">📍 {location}</span>
               </div>
             )}
 
@@ -161,16 +240,24 @@ const FavoritesPage = () => {
             <span className="stat-label">Total</span>
           </div>
           <div className="stat-item">
-            <span className="stat-number">{stats.recetas}</span>
+            <span className="stat-number">{stats.recetas || 0}</span>
             <span className="stat-label">Recetas</span>
           </div>
           <div className="stat-item">
-            <span className="stat-number">{stats.productos || 0}</span>
-            <span className="stat-label">Productos</span>
+            <span className="stat-number">{stats.celulares || 0}</span>
+            <span className="stat-label">Celulares</span>
           </div>
           <div className="stat-item">
-            <span className="stat-number">{stats.ingredientes || 0}</span>
-            <span className="stat-label">Ingredientes</span>
+            <span className="stat-number">{stats.tortas || 0}</span>
+            <span className="stat-label">Tortas</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-number">{stats.lugares || 0}</span>
+            <span className="stat-label">Lugares</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-number">{stats.deportes || 0}</span>
+            <span className="stat-label">Deportes</span>
           </div>
         </div>
       </div>
@@ -186,7 +273,31 @@ const FavoritesPage = () => {
           className={`filter-btn ${filter === 'receta' ? 'active' : ''}`}
           onClick={() => setFilter('receta')}
         >
-          🍳 Recetas ({stats.recetas})
+          🍳 Recetas ({stats.recetas || 0})
+        </button>
+        <button 
+          className={`filter-btn ${filter === 'celular' ? 'active' : ''}`}
+          onClick={() => setFilter('celular')}
+        >
+          📱 Celulares ({stats.celulares || 0})
+        </button>
+        <button 
+          className={`filter-btn ${filter === 'torta' ? 'active' : ''}`}
+          onClick={() => setFilter('torta')}
+        >
+          🎂 Tortas ({stats.tortas || 0})
+        </button>
+        <button 
+          className={`filter-btn ${filter === 'lugar' ? 'active' : ''}`}
+          onClick={() => setFilter('lugar')}
+        >
+          📍 Lugares ({stats.lugares || 0})
+        </button>
+        <button 
+          className={`filter-btn ${filter === 'deporte' ? 'active' : ''}`}
+          onClick={() => setFilter('deporte')}
+        >
+          ⚽ Deportes ({stats.deportes || 0})
         </button>
         <button 
           className={`filter-btn ${filter === 'producto' ? 'active' : ''}`}

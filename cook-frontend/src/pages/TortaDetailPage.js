@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaShoppingCart, FaArrowLeft, FaClock, FaExclamationTriangle } from 'react-icons/fa';
 import tortasService from '../services/tortasService';
+import activityService from '../services/activityService';
 import TortaPurchaseOptions from '../components/tortas/TortaPurchaseOptions';
 import './TortaDetailPage.css';
 
@@ -27,6 +28,26 @@ const TortaDetailPage = () => {
       // Seleccionar la primera variación por defecto
       if (data.items?.torta_variaciones?.length > 0) {
         setSelectedVariacion(data.items.torta_variaciones[0]);
+      }
+
+      // Registrar actividad de vista (sin bloquear la carga)
+      if (data && data.items) {
+        // Ejecutar en background sin await para no bloquear la UI
+        activityService.create({
+          tipo: 'TORTA_VISTA',
+          descripcion: `Viste la torta "${data.items.nombre}"`,
+          referenciaId: parseInt(id),
+          referenciaTipo: 'torta',
+          metadata: {
+            sabor: data.torta_sabores?.nombre,
+            cobertura: data.torta_coberturas?.nombre,
+            ocasion: data.torta_ocasiones?.nombre,
+          },
+        }).then(() => {
+          console.log('✅ Actividad de torta registrada');
+        }).catch((actError) => {
+          console.warn('⚠️ No se pudo registrar la actividad:', actError.message);
+        });
       }
     } catch (error) {
       console.error('Error al cargar torta:', error);

@@ -144,6 +144,7 @@ class ActivityService {
    */
   async create(activityData) {
     try {
+      console.log('📤 Enviando datos de actividad:', activityData);
       const response = await fetch(this.baseURL, {
         method: 'POST',
         headers: this.getHeaders(),
@@ -151,8 +152,15 @@ class ActivityService {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || `Error ${response.status}`);
+        let errorMessage = `Error ${response.status}: ${response.statusText}`;
+        try {
+          const error = await response.json();
+          errorMessage = error.message || errorMessage;
+          console.error('🔍 Detalles del error del servidor:', error);
+        } catch (parseError) {
+          console.error('🔍 No se pudo parsear la respuesta de error:', parseError);
+        }
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();

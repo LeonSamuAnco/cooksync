@@ -467,7 +467,7 @@
 
 .cta-primary:hover {
   transform: translateY(-3px);
-  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 25px rgba(220, 38, 38, 0.3);
 }
 
 .cta-secondary {
@@ -514,4 +514,34 @@
     width: 100%;
     max-width: 300px;
   }
+}
+
+/* Sección de Recomendaciones */
+.recommendations-section {
+  margin: 4rem 0;
+  padding: 2rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border-radius: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.recommendations-section .recommendations-widget {
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+}
+
+.recommendations-section .recommendations-header {
+  margin-bottom: 2rem;
+}
+
+.recommendations-section .recommendations-header h2 {
+  color: #1e293b;
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.recommendations-section .recommendations-subtitle {
+  color: #64748b;
+  font-size: 1.1rem;
 }

@@ -41,6 +41,13 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     }
     
     const roleCode = userRole.codigo;
+
+    // ADMIN tiene acceso total a cualquier ruta protegida
+    if (roleCode === 'ADMIN') {
+      console.log('👑 ProtectedRoute - ADMIN detectado, acceso total concedido');
+      return true;
+    }
+
     const hasPermission = allowedRoles.includes(roleCode);
     console.log(`🔒 ProtectedRoute - Rol: ${roleCode}, Permitidos: [${allowedRoles}], Acceso: ${hasPermission ? '✅' : '❌'}`);
     return hasPermission;

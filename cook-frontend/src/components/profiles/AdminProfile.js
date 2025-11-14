@@ -3,6 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
 import adminService from '../../services/adminService';
+import searchService from '../../services/searchService';
+import productsService from '../../services/productsService';
+import celularService from '../../services/celularService';
+import tortasService from '../../services/tortasService';
+import lugarService from '../../services/lugarService';
+import deporteService from '../../services/deporteService';
 import './AdminProfile.css';
 
 const AdminProfile = ({ user }) => {
@@ -17,6 +23,11 @@ const AdminProfile = ({ user }) => {
   const [reports, setReports] = useState({});
   const [recipes, setRecipes] = useState([]);
   const [recipesStats, setRecipesStats] = useState({});
+  const [categories, setCategories] = useState([]); // recipe categories (admin CRUD)
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [categoryRecipes, setCategoryRecipes] = useState([]); // recetas de la categoría seleccionada
+  const [loadingCategoryRecipes, setLoadingCategoryRecipes] = useState(false);
+  const [unifiedCategories, setUnifiedCategories] = useState([]); // categorías de la Home (recetas, celulares, tortas, lugares, etc.)
   const [loading, setLoading] = useState(false);
   const [usersPage, setUsersPage] = useState(1);
   const [usersSearch, setUsersSearch] = useState('');
@@ -25,6 +36,26 @@ const AdminProfile = ({ user }) => {
   const [editingUser, setEditingUser] = useState(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
+  const [hasAttemptedUsersLoad, setHasAttemptedUsersLoad] = useState(false);
+  const [backendError, setBackendError] = useState(false);
+  
+  // Estados para tabla CRUD de categorías
+  const [showCategoryDataModal, setShowCategoryDataModal] = useState(false);
+  const [selectedCategoryForData, setSelectedCategoryForData] = useState(null);
+  const [categoryData, setCategoryData] = useState([]);
+  const [categoryStats, setCategoryStats] = useState({});
+  const [loadingCategoryData, setLoadingCategoryData] = useState(false);
+  const [showProductModal, setShowProductModal] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [productFormData, setProductFormData] = useState({
+    nombre: '',
+    descripcion: '',
+    precio: 0,
+    stock: 0,
+    imagenUrl: '',
+    sku: '',
+    categoriaId: null,
+  });
 
   useEffect(() => {
     loadInitialData();
@@ -32,6 +63,7 @@ const AdminProfile = ({ user }) => {
 
   const loadInitialData = async () => {
     setLoading(true);
+    setBackendError(false);
     try {
       // Primero probar la conexión
       console.log('Testing admin connection...');
@@ -44,12 +76,315 @@ const AdminProfile = ({ user }) => {
         loadRecentUsers(),
         loadSystemRoles(),
         loadRecipes(),
+        loadCategories(),
+        loadUnifiedCategories(),
       ]);
     } catch (error) {
-      showNotification('Error al cargar datos del sistema', 'error');
       console.error('Error loading initial data:', error);
+      setBackendError(true);
+      showNotification('⚠️ Backend no disponible. Verifica que el servidor esté corriendo en puerto 3002', 'error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadCategories = async () => {
+    try {
+      const list = await adminService.getRecipeCategories();
+      setCategories(list);
+      if (list && list.length && !selectedCategory) setSelectedCategory(list[0]);
+    } catch (e) {
+      console.error('Error loading categories', e);
+      setCategories([]);
+    }
+  };
+
+  // Cargar categorías unificadas (como las que ves en Home)
+  const loadUnifiedCategories = async () => {
+    try {
+      // Mostrar SOLO las 8 categorías principales de la Home con tipos específicos
+      const fixed = [
+        { id: 'recipes', nombre: 'Recetas', displayName: '🍳 Recetas', type: 'recipe', icon: '🍔', categoryId: 1 },
+        { id: 'phones', nombre: 'Celulares', displayName: '📱 Celulares', type: 'celular', icon: '📱', categoryId: 2 },
+        { id: 'cakes', nombre: 'Tortas', displayName: '🧁 Tortas', type: 'torta', icon: '🧁', categoryId: 3 },
+        { id: 'places', nombre: 'Lugares', displayName: '🏡 Lugares', type: 'lugar', icon: '🏡', categoryId: 4 },
+        { id: 'health', nombre: 'Salud & Belleza', displayName: '🧴 Salud & Belleza', type: 'product', icon: '🧴', categoryId: 5 },
+        { id: 'sports', nombre: 'Deportes', displayName: '🏃 Deportes', type: 'deporte', icon: '🏃', categoryId: 6 },
+        { id: 'books', nombre: 'Libros', displayName: '📖 Libros', type: 'product', icon: '📖', categoryId: 7 },
+        { id: 'toys', nombre: 'Juguetes', displayName: '🧸 Juguetes', type: 'product', icon: '🧸', categoryId: 8 },
+      ];
+
+      // Si el backend devolviera algo extra, lo ignoramos explícitamente
+      setUnifiedCategories(fixed);
+    } catch (e) {
+      console.error('Error loading unified categories', e);
+      setUnifiedCategories([]);
+    }
+  };
+
+  // ========================================
+  // FUNCIONES CRUD PARA CATEGORÍAS
+  // ========================================
+
+  const handleCategoryCardClick = async (category) => {
+    console.log('Opening category data table for:', category);
+    setSelectedCategoryForData(category);
+    setLoadingCategoryData(true);
+    setShowCategoryDataModal(true);
+
+    try {
+      let data = [];
+      let stats = {};
+
+      // Cargar datos según el tipo de categoría
+      switch (category.type) {
+        case 'recipe':
+          // Para recetas, usar el servicio de admin
+          const recipeResponse = await adminService.getAllRecipes(1, 1000);
+          data = recipeResponse.recipes || [];
+          stats = { total: data.length };
+          break;
+
+        case 'celular':
+          // Para celulares - obtener todos (sin parámetros que puedan causar error)
+          const celularResponse = await celularService.getAll();
+          console.log('📱 Respuesta completa del API de celulares:', celularResponse);
+          
+          let celularesRaw = celularResponse.data || celularResponse.celulares || celularResponse || [];
+          console.log('📱 Datos raw de celulares:', celularesRaw.slice(0, 2)); // Mostrar solo los primeros 2 para debug
+          
+          // Si hay paginación, obtener todas las páginas
+          if (celularResponse.totalPages && celularResponse.totalPages > 1) {
+            console.log('📱 Detectada paginación, obteniendo todas las páginas...');
+            for (let page = 2; page <= celularResponse.totalPages; page++) {
+              try {
+                const pageResponse = await celularService.getAll({ page });
+                const pageData = pageResponse.data || pageResponse.celulares || pageResponse || [];
+                // Filtrar duplicados por ID antes de agregar
+                const newItems = pageData.filter(newItem => 
+                  !celularesRaw.some(existingItem => existingItem.id === newItem.id)
+                );
+                celularesRaw = [...celularesRaw, ...newItems];
+              } catch (pageError) {
+                console.warn(`⚠️ Error obteniendo página ${page}:`, pageError);
+                break;
+              }
+            }
+          }
+          
+          // Normalizar datos de celulares para la tabla
+          data = celularesRaw.map(celular => ({
+            id: celular.id,
+            nombre: celular.nombre || celular.modelo || `Celular #${celular.id}`,
+            descripcion: celular.descripcion || `${celular.marca?.nombre || ''} ${celular.modelo || ''}`.trim(),
+            precio: celular.precio || celular.precioBase || 0,
+            stock: celular.stock || 0,
+            esActivo: celular.esActivo !== false,
+            imagenUrl: celular.imagenPrincipal || celular.imagen,
+            // Datos adicionales específicos de celulares
+            marca: celular.marca?.nombre,
+            modelo: celular.modelo,
+            ram: celular.ram,
+            almacenamiento: celular.almacenamiento
+          }));
+          
+          stats = { total: celularResponse.total || data.length };
+          console.log('📱 Celulares normalizados:', data.length, 'items');
+          break;
+
+        case 'torta':
+          // Para tortas - obtener todas
+          const tortaResponse = await tortasService.getAll();
+          let tortasRaw = tortaResponse.data || tortaResponse.tortas || tortaResponse || [];
+          
+          // Normalizar datos de tortas para la tabla
+          data = tortasRaw.map(torta => ({
+            id: torta.id,
+            nombre: torta.nombre || `Torta #${torta.id}`,
+            descripcion: torta.descripcion || `${torta.torta_sabores?.nombre || ''} ${torta.torta_coberturas?.nombre || ''}`.trim(),
+            precio: torta.precio || torta.precioBase || 0,
+            stock: torta.stock || 0,
+            esActivo: torta.esActivo !== false,
+            imagenUrl: torta.imagenPrincipal || torta.imagen,
+            // Datos específicos de tortas
+            sabor: torta.torta_sabores?.nombre,
+            cobertura: torta.torta_coberturas?.nombre,
+            ocasion: torta.torta_ocasiones?.nombre
+          }));
+          
+          stats = { total: tortaResponse.total || data.length };
+          console.log('🧁 Tortas normalizadas:', data.length, 'items');
+          break;
+
+        case 'lugar':
+          // Para lugares - obtener todos
+          const lugarResponse = await lugarService.getAll();
+          console.log('🏡 Respuesta completa del API de lugares:', lugarResponse);
+          
+          let lugaresRaw = lugarResponse.data || lugarResponse.lugares || lugarResponse || [];
+          console.log('🏡 Datos raw de lugares:', lugaresRaw.slice(0, 2));
+          
+          // Normalizar datos de lugares para la tabla
+          data = lugaresRaw.map(lugar => ({
+            id: lugar.id,
+            nombre: lugar.nombre || `Lugar #${lugar.id}`,
+            descripcion: lugar.descripcion || `${lugar.lugar_tipos?.nombre || ''} en ${lugar.ciudad || ''}`.trim(),
+            precio: lugar.precio || lugar.precioPromedio || 0,
+            stock: lugar.capacidad || 0, // Usar capacidad como "stock"
+            esActivo: lugar.esActivo !== false,
+            imagenUrl: lugar.imagenPrincipal || lugar.imagen,
+            // Datos específicos de lugares
+            tipo: lugar.lugar_tipos?.nombre,
+            ciudad: lugar.ciudad,
+            pais: lugar.pais,
+            capacidad: lugar.capacidad
+          }));
+          
+          stats = { total: lugarResponse.total || data.length };
+          console.log('🏡 Lugares normalizados:', data.length, 'items');
+          break;
+
+        case 'deporte':
+          // Para deportes - obtener todos
+          const deporteResponse = await deporteService.getAll();
+          console.log('🏃 Respuesta completa del API de deportes:', deporteResponse);
+          
+          let deportesRaw = deporteResponse.data || deporteResponse.deportes || deporteResponse || [];
+          console.log('🏃 Datos raw de deportes:', deportesRaw.slice(0, 2));
+          
+          // Normalizar datos de deportes para la tabla
+          data = deportesRaw.map(deporte => ({
+            id: deporte.id,
+            nombre: deporte.nombre || `Producto Deportivo #${deporte.id}`,
+            descripcion: deporte.descripcion || `${deporte.deporte_marcas?.nombre || ''} ${deporte.deporte_tipos?.nombre || ''}`.trim(),
+            precio: deporte.precio || deporte.precioBase || 0,
+            stock: deporte.stock || 0,
+            esActivo: deporte.esActivo !== false,
+            imagenUrl: deporte.imagenPrincipal || deporte.imagen,
+            // Datos específicos de deportes
+            marca: deporte.deporte_marcas?.nombre,
+            tipo: deporte.deporte_tipos?.nombre,
+            genero: deporte.genero,
+            talla: deporte.talla
+          }));
+          
+          stats = { total: deporteResponse.total || data.length };
+          console.log('🏃 Deportes normalizados:', data.length, 'items');
+          break;
+
+        case 'product':
+          // Para productos genéricos
+          if (category.categoryId) {
+            const products = await productsService.getAllProducts({ categoryId: category.categoryId });
+            const productStats = await productsService.getCategoryStats(category.categoryId);
+            data = products;
+            stats = productStats;
+          }
+          break;
+
+        default:
+          console.warn('Tipo de categoría no reconocido:', category.type);
+          data = [];
+          stats = { total: 0 };
+      }
+
+      setCategoryData(data);
+      setCategoryStats(stats);
+      
+      console.log(`✅ Cargados ${data.length} items para categoría ${category.type}`);
+      
+    } catch (error) {
+      console.error('Error loading category data:', error);
+      showNotification('Error al cargar datos de la categoría', 'error');
+      setCategoryData([]);
+      setCategoryStats({ total: 0 });
+    } finally {
+      setLoadingCategoryData(false);
+    }
+  };
+
+  const handleCreateProduct = () => {
+    setEditingProduct(null);
+    setProductFormData({
+      nombre: '',
+      descripcion: '',
+      precio: 0,
+      stock: 0,
+      imagenUrl: '',
+      sku: '',
+      categoriaId: selectedCategoryForData?.categoryId || null,
+    });
+    setShowProductModal(true);
+  };
+
+  const handleEditProduct = (product) => {
+    setEditingProduct(product);
+    setProductFormData({
+      nombre: product.nombre || '',
+      descripcion: product.descripcion || '',
+      precio: product.precio || 0,
+      stock: product.stock || 0,
+      imagenUrl: product.imagenUrl || '',
+      sku: product.sku || '',
+      categoriaId: product.categoriaId || null,
+    });
+    setShowProductModal(true);
+  };
+
+  const handleSaveProduct = async () => {
+    try {
+      if (editingProduct) {
+        // Actualizar producto existente
+        await productsService.updateProduct(editingProduct.id, productFormData);
+        showNotification('Producto actualizado exitosamente', 'success');
+      } else {
+        // Crear nuevo producto
+        await productsService.createProduct(productFormData);
+        showNotification('Producto creado exitosamente', 'success');
+      }
+      setShowProductModal(false);
+      // Recargar datos de la categoría
+      if (selectedCategoryForData) {
+        handleCategoryCardClick(selectedCategoryForData);
+      }
+    } catch (error) {
+      console.error('Error saving product:', error);
+      showNotification('Error al guardar producto', 'error');
+    }
+  };
+
+  const handleDeleteProduct = async (productId) => {
+    setConfirmAction({
+      message: '¿Estás seguro de eliminar este producto?',
+      onConfirm: async () => {
+        try {
+          await productsService.deleteProduct(productId);
+          showNotification('Producto eliminado exitosamente', 'success');
+          setShowConfirmModal(false);
+          // Recargar datos de la categoría
+          if (selectedCategoryForData) {
+            handleCategoryCardClick(selectedCategoryForData);
+          }
+        } catch (error) {
+          console.error('Error deleting product:', error);
+          showNotification('Error al eliminar producto', 'error');
+        }
+      }
+    });
+    setShowConfirmModal(true);
+  };
+
+  const handleToggleProductStatus = async (productId) => {
+    try {
+      await productsService.toggleProductStatus(productId);
+      showNotification('Estado del producto actualizado', 'success');
+      // Recargar datos de la categoría
+      if (selectedCategoryForData) {
+        handleCategoryCardClick(selectedCategoryForData);
+      }
+    } catch (error) {
+      console.error('Error toggling product status:', error);
+      showNotification('Error al cambiar estado del producto', 'error');
     }
   };
 
@@ -89,17 +424,32 @@ const AdminProfile = ({ user }) => {
   };
 
   const loadAllUsers = async (page = 1, search = '') => {
+    // Evitar bucle infinito
+    if (hasAttemptedUsersLoad && backendError) {
+      console.warn('Backend error detected, skipping user load to prevent infinite loop');
+      return;
+    }
+    
     try {
       setLoading(true);
+      setHasAttemptedUsersLoad(true);
       const result = await adminService.getAllUsers(page, 10, search);
-      setAllUsers(result.users || []);
-      setUsersPage(page);
-      setUsersSearch(search);
-      setUsersTotalPages(result.totalPages || 1);
+      
+      if (result && result.users) {
+        setAllUsers(result.users);
+        setUsersPage(page);
+        setUsersSearch(search);
+        setUsersTotalPages(Math.ceil((result.total || 0) / 10));
+        setBackendError(false);
+      } else {
+        setAllUsers([]);
+        setBackendError(true);
+      }
     } catch (error) {
-      console.error('Error loading all users:', error);
-      showNotification('Error al cargar usuarios', 'error');
+      console.error('Error en getAllUsers:', error);
+      setBackendError(true);
       setAllUsers([]);
+      showNotification('⚠️ No se pueden cargar usuarios. Backend no disponible.', 'error');
     } finally {
       setLoading(false);
     }
@@ -270,7 +620,7 @@ const AdminProfile = ({ user }) => {
   const sidebarItems = [
     { id: 'dashboard', icon: '📊', label: 'Dashboard', active: true },
     { id: 'users', icon: '👥', label: 'Usuarios' },
-    { id: 'recipes', icon: '🍽️', label: 'Recetas' },
+    { id: 'categories', icon: '🗂️', label: 'Categorías' },
     { id: 'orders', icon: '🛒', label: 'Pedidos' },
     { id: 'analytics', icon: '📈', label: 'Analytics' },
     { id: 'reports', icon: '📋', label: 'Reportes' },
@@ -284,8 +634,8 @@ const AdminProfile = ({ user }) => {
         return renderDashboard();
       case 'users':
         return renderUsers();
-      case 'recipes':
-        return renderRecipes();
+      case 'categories':
+        return renderCategories();
       case 'orders':
         return renderOrders();
       case 'analytics':
@@ -387,7 +737,8 @@ const AdminProfile = ({ user }) => {
   );
 
   const renderUsers = () => {
-    if (allUsers.length === 0 && !loading) {
+    // Cargar usuarios solo una vez al renderizar la sección
+    if (allUsers.length === 0 && !loading && !hasAttemptedUsersLoad && !backendError) {
       loadAllUsers(1, '');
     }
 
@@ -425,7 +776,40 @@ const AdminProfile = ({ user }) => {
           </form>
         </div>
         
-        {loading ? (
+        {backendError ? (
+          <div className="no-data-message" style={{ 
+            padding: '40px', 
+            textAlign: 'center', 
+            background: '#fff3cd', 
+            borderRadius: '8px', 
+            border: '2px solid #ffc107' 
+          }}>
+            <h3 style={{ color: '#856404', marginBottom: '10px' }}>⚠️ Backend No Disponible</h3>
+            <p style={{ color: '#856404', marginBottom: '20px' }}>
+              El servidor backend no está respondiendo. Por favor, sigue estos pasos:
+            </p>
+            <div style={{ textAlign: 'left', maxWidth: '600px', margin: '0 auto', background: 'white', padding: '20px', borderRadius: '8px' }}>
+              <ol style={{ color: '#333', lineHeight: '1.8' }}>
+                <li><strong>Abre una nueva terminal</strong></li>
+                <li>Navega a: <code style={{ background: '#f4f4f4', padding: '2px 6px', borderRadius: '4px' }}>cd cook-backend</code></li>
+                <li>Ejecuta: <code style={{ background: '#f4f4f4', padding: '2px 6px', borderRadius: '4px' }}>npm run start:dev</code></li>
+                <li>Espera el mensaje: <em>"Nest application successfully started"</em></li>
+                <li>Haz click en el botón de abajo para reintentar</li>
+              </ol>
+            </div>
+            <button 
+              className="primary-btn" 
+              onClick={() => {
+                setBackendError(false);
+                setHasAttemptedUsersLoad(false);
+                loadInitialData();
+              }}
+              style={{ marginTop: '20px' }}
+            >
+              🔄 Reintentar Conexión
+            </button>
+          </div>
+        ) : loading ? (
           <div className="loading-container">
             <div className="spinner"></div>
             <p>Cargando usuarios...</p>
@@ -618,6 +1002,258 @@ const AdminProfile = ({ user }) => {
             </div>
           </div>
         )}
+      </div>
+    </div>
+  );
+
+  const handleCreateCategory = async () => {
+    const nombre = prompt('Nombre de la categoría:');
+    if (!nombre) return;
+    const icono = prompt('Icono (emoji o nombre opcional):') || undefined;
+    const color = prompt('Color HEX (opcional, ej. #667eea):') || undefined;
+    try {
+      await adminService.createRecipeCategory({ nombre, icono, color });
+      await loadCategories();
+      showNotification('Categoría creada', 'success');
+    } catch (e) {
+      showNotification('Error al crear categoría', 'error');
+    }
+  };
+
+  const handleUpdateCategory = async (cat) => {
+    const nombre = prompt('Editar nombre:', cat.nombre) || cat.nombre;
+    const icono = prompt('Editar icono:', cat.icono || '') || undefined;
+    const color = prompt('Editar color HEX:', cat.color || '') || undefined;
+    try {
+      await adminService.updateRecipeCategory(cat.id, { nombre, icono, color });
+      await loadCategories();
+      showNotification('Categoría actualizada', 'success');
+    } catch (e) {
+      showNotification('Error al actualizar categoría', 'error');
+    }
+  };
+
+  const handleDeleteCategory = async (cat) => {
+    if (!window.confirm(`¿Eliminar la categoría "${cat.nombre}"?`)) return;
+    try {
+      await adminService.deleteRecipeCategory(cat.id);
+      await loadCategories();
+      if (selectedCategory?.id === cat.id) {
+        setSelectedCategory(null);
+        setCategoryRecipes([]);
+      }
+      showNotification('Categoría eliminada', 'success');
+    } catch (e) {
+      showNotification('Error al eliminar categoría', 'error');
+    }
+  };
+
+  const loadRecipesByCategory = async (categoryId) => {
+    setLoadingCategoryRecipes(true);
+    try {
+      const allRecipes = await adminService.getAllRecipes(1, 1000);
+      // Filtrar recetas por categoría
+      const filtered = allRecipes.recipes?.filter(r => r.categoriaRecetaId === categoryId) || [];
+      setCategoryRecipes(filtered);
+    } catch (e) {
+      console.error('Error loading recipes by category', e);
+      setCategoryRecipes([]);
+      showNotification('Error al cargar recetas de la categoría', 'error');
+    } finally {
+      setLoadingCategoryRecipes(false);
+    }
+  };
+
+  const handleCategorySelect = (cat) => {
+    setSelectedCategory(cat);
+    loadRecipesByCategory(cat.id);
+  };
+
+  const handleDeleteRecipe = async (recipeId) => {
+    if (!window.confirm('¿Estás seguro de eliminar esta receta?')) return;
+    try {
+      await adminService.toggleRecipeStatus(recipeId);
+      showNotification('Receta eliminada', 'success');
+      if (selectedCategory) {
+        loadRecipesByCategory(selectedCategory.id);
+      }
+    } catch (e) {
+      showNotification('Error al eliminar receta', 'error');
+    }
+  };
+
+  const renderCategories = () => (
+    <div className="admin-content-section">
+      <div className="section-header">
+        <div>
+          <h2>Gestión de Categorías</h2>
+          <p>Categorías del sistema (como en la Home) y categorías de recetas</p>
+        </div>
+      </div>
+
+      {/* Categorías del sistema (Home) */}
+      <div style={{ marginBottom: 20 }}>
+        <h3 style={{ margin: '0 0 12px 0' }}>Categorías del Sistema</h3>
+        <div className="recipes-grid">
+          {unifiedCategories.map(uc => (
+            <div key={`${uc.type}-${uc.id}-${uc.nombre}`} className="recipe-card" onClick={() => handleCategoryCardClick(uc)} style={{cursor: 'pointer'}}>
+              <div className="recipe-image" style={{display:'flex',alignItems:'center',justifyContent:'center'}}>
+                <div className="recipe-placeholder" style={{fontSize:'2.2rem'}}>{uc.icon || '🗂️'}</div>
+              </div>
+              <div className="recipe-status approved">{uc.type}</div>
+              <h4>{uc.displayName || uc.nombre}</h4>
+              <p style={{fontSize: '0.9rem', color: '#6b7280', marginTop: '8px'}}>Click para ver datos completos</p>
+              <div className="recipe-actions" onClick={(e) => e.stopPropagation()}>
+                <button className="view-btn" onClick={() => handleCategoryCardClick(uc)}>
+                  📊 Ver Tabla de Datos
+                </button>
+              </div>
+            </div>
+          ))}
+          {unifiedCategories.length === 0 && (
+            <div className="no-recipes" style={{gridColumn:'1 / -1'}}>
+              <p>No se encontraron categorías del sistema</p>
+              <button className="primary-btn" onClick={loadUnifiedCategories}>🔄 Recargar</button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Categorías de Recetas (CRUD Admin) */}
+      <div>
+        <div className="section-header" style={{padding:0, marginTop:12}}>
+          <div>
+            <h3>Categorías de Recetas</h3>
+            <p>Crear, editar y eliminar categorías de recetas</p>
+          </div>
+          <div className="section-actions">
+            <button className="primary-btn" onClick={handleCreateCategory}>+ Nueva Categoría</button>
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: '16px' }}>
+          <div style={{ background: 'white', borderRadius: '16px', padding: '12px', border: '1px solid #e5e7eb' }}>
+            <h4 style={{ margin: '8px 8px 12px 8px' }}>Todas</h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: 420, overflowY: 'auto' }}>
+              {categories.map(cat => (
+                <button
+                  key={cat.id}
+                  onClick={() => handleCategorySelect(cat)}
+                  style={{
+                    textAlign: 'left',
+                    padding: '10px 12px',
+                    borderRadius: '10px',
+                    border: '1px solid #e5e7eb',
+                    background: selectedCategory?.id === cat.id ? '#eef2ff' : 'white',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <span style={{ marginRight: 8 }}>{cat.icono || '🗂️'}</span>
+                  <strong>{cat.nombre}</strong>
+                </button>
+              ))}
+              {categories.length === 0 && <div style={{ color: '#6b7280', padding: 12 }}>No hay categorías</div>}
+            </div>
+          </div>
+
+          <div style={{ background: 'white', borderRadius: '16px', padding: '16px', border: '1px solid #e5e7eb' }}>
+            {selectedCategory ? (
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                  <div>
+                    <h3 style={{ margin: 0 }}>{selectedCategory.icono || '🗂️'} {selectedCategory.nombre}</h3>
+                    <p style={{ margin: '4px 0 0 0', color: '#6b7280', fontSize: '0.9rem' }}>
+                      {categoryRecipes.length} receta{categoryRecipes.length !== 1 ? 's' : ''}
+                    </p>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button className="primary-btn" onClick={() => navigate('/recipes/create')}>
+                      + Nueva Receta
+                    </button>
+                    <button className="edit-btn" onClick={() => handleUpdateCategory(selectedCategory)}>Editar Categoría</button>
+                    <button className="delete-btn" onClick={() => handleDeleteCategory(selectedCategory)}>Eliminar Categoría</button>
+                  </div>
+                </div>
+
+                {loadingCategoryRecipes ? (
+                  <div style={{ textAlign: 'center', padding: '40px' }}>
+                    <div className="spinner"></div>
+                    <p>Cargando recetas...</p>
+                  </div>
+                ) : categoryRecipes.length > 0 ? (
+                  <div className="users-table">
+                    <div className="table-header">
+                      <span>ID</span>
+                      <span>Nombre</span>
+                      <span>Tiempo</span>
+                      <span>Porciones</span>
+                      <span>Estado</span>
+                      <span>Acciones</span>
+                    </div>
+                    {categoryRecipes.map(recipe => (
+                      <div key={recipe.id} className="table-row">
+                        <span>{recipe.id}</span>
+                        <div className="user-cell">
+                          {recipe.imagenPrincipal ? (
+                            <img 
+                              src={recipe.imagenPrincipal} 
+                              alt={recipe.nombre}
+                              style={{ width: '40px', height: '40px', borderRadius: '8px', objectFit: 'cover', marginRight: '8px' }}
+                            />
+                          ) : (
+                            <div style={{ width: '40px', height: '40px', borderRadius: '8px', background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '8px' }}>
+                              🍽️
+                            </div>
+                          )}
+                          <span>{recipe.nombre}</span>
+                        </div>
+                        <span>{recipe.tiempoTotal || recipe.tiempoPreparacion || 0} min</span>
+                        <span>{recipe.porciones || 1}</span>
+                        <span className={`status-badge ${recipe.esActivo !== false ? 'active' : 'inactive'}`}>
+                          {recipe.esActivo !== false ? 'Activa' : 'Inactiva'}
+                        </span>
+                        <div className="action-buttons">
+                          <button 
+                            className="action-btn"
+                            onClick={() => navigate(`/recipes/${recipe.id}`)}
+                            title="Ver receta"
+                          >
+                            👁️ Ver
+                          </button>
+                          <button 
+                            className="action-btn"
+                            onClick={() => navigate(`/recipes/${recipe.id}/edit`)}
+                            title="Editar receta"
+                          >
+                            ✏️ Editar
+                          </button>
+                          <button 
+                            className="action-btn danger"
+                            onClick={() => handleDeleteRecipe(recipe.id)}
+                            title="Eliminar receta"
+                          >
+                            🗑️ Eliminar
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
+                    <p style={{ fontSize: '1.1rem', marginBottom: '16px' }}>No hay recetas en esta categoría</p>
+                    <button className="primary-btn" onClick={() => navigate('/recipes/create')}>
+                      + Crear Primera Receta
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div style={{ color: '#6b7280', textAlign: 'center', padding: '40px' }}>
+                <p>Selecciona una categoría para ver sus recetas</p>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -984,6 +1620,235 @@ const AdminProfile = ({ user }) => {
               </button>
               <button className="btn-danger" onClick={confirmAction.onConfirm}>
                 Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Tabla de Datos de Categoría */}
+      {showCategoryDataModal && selectedCategoryForData && (
+        <div className="modal-overlay" onClick={() => setShowCategoryDataModal(false)}>
+          <div className="modal-content category-data-modal" onClick={(e) => e.stopPropagation()} style={{maxWidth: '90vw', width: '1200px', maxHeight: '90vh', overflow: 'auto'}}>
+            <div className="modal-header" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '2px solid #e5e7eb', paddingBottom: '15px'}}>
+              <div>
+                <h2 style={{margin: 0, display: 'flex', alignItems: 'center', gap: '10px'}}>
+                  <span style={{fontSize: '2rem'}}>{selectedCategoryForData.icon}</span>
+                  {selectedCategoryForData.displayName || selectedCategoryForData.nombre}
+                </h2>
+                <p style={{margin: '5px 0 0 0', color: '#6b7280'}}>
+                  Total de items: {categoryStats.total || categoryData.length}
+                  {categoryStats.totalStock && ` | Stock total: ${categoryStats.totalStock}`}
+                  {categoryStats.avgPrice && ` | Precio promedio: S/ ${Number(categoryStats.avgPrice).toFixed(2)}`}
+                </p>
+              </div>
+              <div style={{display: 'flex', gap: '10px'}}>
+                <button className="primary-btn" onClick={handleCreateProduct}>
+                  + Nuevo Item
+                </button>
+                <button className="btn-secondary" onClick={() => setShowCategoryDataModal(false)}>
+                  ✕ Cerrar
+                </button>
+              </div>
+            </div>
+
+            {loadingCategoryData ? (
+              <div style={{textAlign: 'center', padding: '60px'}}>
+                <div className="spinner"></div>
+                <p>Cargando datos...</p>
+              </div>
+            ) : categoryData.length > 0 ? (
+              <div className="category-products-table">
+                <div className="table-container">
+                  <table className="products-table">
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Producto</th>
+                        <th>Descripción</th>
+                        <th>Precio</th>
+                        <th>Stock</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {categoryData.map((item, index) => (
+                        <tr key={`${selectedCategoryForData?.type || 'item'}-${item.id}-${index}`}>
+                          <td>#{item.id}</td>
+                          <td>
+                            <div className="product-info">
+                              {item.imagenUrl || item.imagenPrincipal ? (
+                                <img 
+                                  src={item.imagenUrl || item.imagenPrincipal} 
+                                  alt={item.nombre || item.titulo}
+                                  className="product-image"
+                                />
+                              ) : (
+                                <div className="product-placeholder">
+                                  {selectedCategoryForData.icon}
+                                </div>
+                              )}
+                              <div className="product-details">
+                                <span className="product-name">{item.nombre || item.titulo}</span>
+                                {item.marca && <span className="product-brand">{item.marca}</span>}
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <span className="product-description">
+                              {item.descripcion?.substring(0, 80) || 'Sin descripción'}
+                              {item.descripcion && item.descripcion.length > 80 && '...'}
+                            </span>
+                          </td>
+                          <td>
+                            <span className="product-price">
+                              {item.precio ? `S/ ${Number(item.precio).toFixed(2)}` : '-'}
+                            </span>
+                          </td>
+                          <td>
+                            <span className="product-stock">
+                              {item.stock !== undefined ? item.stock : '-'}
+                            </span>
+                          </td>
+                          <td>
+                            <span className={`status-badge ${item.esActivo !== false ? 'active' : 'inactive'}`}>
+                              {item.esActivo !== false ? 'Activo' : 'Inactivo'}
+                            </span>
+                          </td>
+                          <td>
+                            <div className="action-buttons-row">
+                              <button 
+                                className="action-btn edit"
+                                onClick={() => handleEditProduct(item)}
+                                title="Editar"
+                              >
+                                ✏️
+                              </button>
+                              <button 
+                                className="action-btn toggle"
+                                onClick={() => handleToggleProductStatus(item.id)}
+                                title="Cambiar estado"
+                              >
+                                {item.esActivo !== false ? '🚫' : '✅'}
+                              </button>
+                              <button 
+                                className="action-btn delete"
+                                onClick={() => handleDeleteProduct(item.id)}
+                                title="Eliminar"
+                              >
+                                🗑️
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ) : (
+              <div style={{textAlign: 'center', padding: '60px', color: '#6b7280'}}>
+                <p style={{fontSize: '1.2rem', marginBottom: '20px'}}>No hay items en esta categoría</p>
+                <button className="primary-btn" onClick={handleCreateProduct}>
+                  + Crear Primer Item
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Formulario de Producto */}
+      {showProductModal && (
+        <div className="modal-overlay" onClick={() => setShowProductModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{maxWidth: '600px'}}>
+            <div className="modal-header" style={{marginBottom: '20px'}}>
+              <h3>{editingProduct ? 'Editar Item' : 'Nuevo Item'}</h3>
+              <button className="btn-secondary" onClick={() => setShowProductModal(false)}>✕</button>
+            </div>
+
+            <div className="settings-form" style={{display: 'flex', flexDirection: 'column', gap: '15px'}}>
+              <div className="form-group">
+                <label style={{display: 'block', marginBottom: '5px', fontWeight: '500'}}>Nombre *</label>
+                <input 
+                  type="text"
+                  value={productFormData.nombre}
+                  onChange={(e) => setProductFormData({...productFormData, nombre: e.target.value})}
+                  placeholder="Nombre del producto"
+                  style={{width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e5e7eb'}}
+                />
+              </div>
+
+              <div className="form-group">
+                <label style={{display: 'block', marginBottom: '5px', fontWeight: '500'}}>Descripción</label>
+                <textarea 
+                  value={productFormData.descripcion}
+                  onChange={(e) => setProductFormData({...productFormData, descripcion: e.target.value})}
+                  placeholder="Descripción del producto"
+                  rows={3}
+                  style={{width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e5e7eb'}}
+                />
+              </div>
+
+              <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px'}}>
+                <div className="form-group">
+                  <label style={{display: 'block', marginBottom: '5px', fontWeight: '500'}}>Precio (S/)</label>
+                  <input 
+                    type="number"
+                    step="0.01"
+                    value={productFormData.precio}
+                    onChange={(e) => setProductFormData({...productFormData, precio: parseFloat(e.target.value) || 0})}
+                    placeholder="0.00"
+                    style={{width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e5e7eb'}}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label style={{display: 'block', marginBottom: '5px', fontWeight: '500'}}>Stock</label>
+                  <input 
+                    type="number"
+                    value={productFormData.stock}
+                    onChange={(e) => setProductFormData({...productFormData, stock: parseInt(e.target.value) || 0})}
+                    placeholder="0"
+                    style={{width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e5e7eb'}}
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label style={{display: 'block', marginBottom: '5px', fontWeight: '500'}}>URL de Imagen</label>
+                <input 
+                  type="text"
+                  value={productFormData.imagenUrl}
+                  onChange={(e) => setProductFormData({...productFormData, imagenUrl: e.target.value})}
+                  placeholder="https://ejemplo.com/imagen.jpg"
+                  style={{width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e5e7eb'}}
+                />
+              </div>
+
+              <div className="form-group">
+                <label style={{display: 'block', marginBottom: '5px', fontWeight: '500'}}>SKU</label>
+                <input 
+                  type="text"
+                  value={productFormData.sku}
+                  onChange={(e) => setProductFormData({...productFormData, sku: e.target.value})}
+                  placeholder="SKU-001"
+                  style={{width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e5e7eb'}}
+                />
+              </div>
+            </div>
+
+            <div className="modal-actions" style={{marginTop: '25px', display: 'flex', gap: '10px', justifyContent: 'flex-end'}}>
+              <button className="btn-secondary" onClick={() => setShowProductModal(false)}>
+                Cancelar
+              </button>
+              <button 
+                className="primary-btn" 
+                onClick={handleSaveProduct}
+                disabled={!productFormData.nombre}
+              >
+                {editingProduct ? 'Actualizar' : 'Crear'}
               </button>
             </div>
           </div>

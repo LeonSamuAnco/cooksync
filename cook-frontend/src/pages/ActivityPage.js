@@ -10,6 +10,7 @@ const ActivityPage = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [stats, setStats] = useState({});
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     loadActivities();
@@ -47,10 +48,40 @@ const ActivityPage = () => {
     }
   };
 
+  const handleDeleteHistory = async () => {
+    if (!window.confirm('¿Estás seguro de que quieres eliminar todo tu historial de actividades? Esta acción no se puede deshacer.')) {
+      return;
+    }
+
+    setDeleting(true);
+    try {
+      await activityService.clearAll();
+      console.log('✅ Historial eliminado correctamente');
+      
+      // Recargar actividades y estadísticas
+      await loadActivities();
+      await loadStats();
+      
+      alert('✅ Historial eliminado correctamente');
+    } catch (error) {
+      console.error('❌ Error eliminando historial:', error);
+      alert('❌ Error al eliminar el historial. Inténtalo de nuevo.');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const getActivityIcon = (tipo) => {
     const icons = {
       'RECETA_VISTA': <FaEye />,
       'RECETA_PREPARADA': '🍳',
+      'CELULAR_VISTO': '📱',
+      'CELULAR_COMPARADO': '📊',
+      'TORTA_VISTA': '🎂',
+      'TORTA_PEDIDA': '🛒',
+      'LUGAR_VISTO': '📍',
+      'LUGAR_VISITADO': '✅',
+      'DEPORTE_VISTO': '⚽',
       'COMPRA_REALIZADA': <FaShoppingCart />,
       'RESENA_PUBLICADA': <FaStar />,
       'FAVORITO_AGREGADO': <FaHeart />,
@@ -67,6 +98,13 @@ const ActivityPage = () => {
     const colors = {
       'RECETA_VISTA': '#667eea',
       'RECETA_PREPARADA': '#28a745',
+      'CELULAR_VISTO': '#667eea',
+      'CELULAR_COMPARADO': '#17a2b8',
+      'TORTA_VISTA': '#e83e8c',
+      'TORTA_PEDIDA': '#dc3545',
+      'LUGAR_VISTO': '#17a2b8',
+      'LUGAR_VISITADO': '#28a745',
+      'DEPORTE_VISTO': '#fd7e14',
       'COMPRA_REALIZADA': '#17a2b8',
       'RESENA_PUBLICADA': '#ffc107',
       'FAVORITO_AGREGADO': '#e83e8c',
@@ -99,6 +137,18 @@ const ActivityPage = () => {
       switch (activity.referenciaTipo) {
         case 'receta':
           navigate(`/recipes/${activity.referenciaId}`);
+          break;
+        case 'celular':
+          navigate(`/celulares/${activity.referenciaId}`);
+          break;
+        case 'torta':
+          navigate(`/tortas/${activity.referenciaId}`);
+          break;
+        case 'lugar':
+          navigate(`/lugares/${activity.referenciaId}`);
+          break;
+        case 'deporte':
+          navigate(`/deportes/${activity.referenciaId}`);
           break;
         case 'producto':
           navigate(`/products/${activity.referenciaId}`);
@@ -186,6 +236,17 @@ const ActivityPage = () => {
           <p>Historial completo de tus acciones en CookSync</p>
         </div>
 
+        <div className="activity-header-actions">
+          <button 
+            className="btn-delete-history"
+            onClick={handleDeleteHistory}
+            disabled={deleting || activities.length === 0}
+            title="Eliminar todo el historial"
+          >
+            {deleting ? '🔄 Eliminando...' : '🗑️ Limpiar Historial'}
+          </button>
+        </div>
+
         <div className="activity-stats">
           <div className="stat-item">
             <span className="stat-number">{stats.total || 0}</span>
@@ -217,25 +278,37 @@ const ActivityPage = () => {
           className={`filter-btn ${filter === 'RECETA_VISTA' ? 'active' : ''}`}
           onClick={() => setFilter('RECETA_VISTA')}
         >
-          👁️ Vistas
+          🍳 Recetas
         </button>
         <button 
-          className={`filter-btn ${filter === 'RECETA_PREPARADA' ? 'active' : ''}`}
-          onClick={() => setFilter('RECETA_PREPARADA')}
+          className={`filter-btn ${filter === 'CELULAR_VISTO' ? 'active' : ''}`}
+          onClick={() => setFilter('CELULAR_VISTO')}
         >
-          🍳 Preparadas
+          📱 Celulares
+        </button>
+        <button 
+          className={`filter-btn ${filter === 'TORTA_VISTA' ? 'active' : ''}`}
+          onClick={() => setFilter('TORTA_VISTA')}
+        >
+          🎂 Tortas
+        </button>
+        <button 
+          className={`filter-btn ${filter === 'LUGAR_VISTO' ? 'active' : ''}`}
+          onClick={() => setFilter('LUGAR_VISTO')}
+        >
+          📍 Lugares
+        </button>
+        <button 
+          className={`filter-btn ${filter === 'DEPORTE_VISTO' ? 'active' : ''}`}
+          onClick={() => setFilter('DEPORTE_VISTO')}
+        >
+          ⚽ Deportes
         </button>
         <button 
           className={`filter-btn ${filter === 'FAVORITO_AGREGADO' ? 'active' : ''}`}
           onClick={() => setFilter('FAVORITO_AGREGADO')}
         >
           ❤️ Favoritos
-        </button>
-        <button 
-          className={`filter-btn ${filter === 'RESENA_PUBLICADA' ? 'active' : ''}`}
-          onClick={() => setFilter('RESENA_PUBLICADA')}
-        >
-          ⭐ Reseñas
         </button>
       </div>
 
