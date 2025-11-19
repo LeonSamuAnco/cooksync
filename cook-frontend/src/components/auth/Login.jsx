@@ -153,6 +153,7 @@ const Login = () => {
                 <span className="checkmark"></span>
                 Recordarme
               </label>
+              {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
               <a href="#" className="forgot-password">¿Olvidaste tu contraseña?</a>
             </div>
 

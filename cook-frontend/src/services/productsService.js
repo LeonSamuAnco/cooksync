@@ -18,6 +18,7 @@ class ProductsService {
   // Obtener todos los productos (con filtros opcionales)
   async getAllProducts(filters = {}) {
     try {
+      // eslint-disable-next-line no-unused-vars
       const { search = '', categoryId = '', page = 1, limit = 100 } = filters;
       const queryParams = new URLSearchParams();
       

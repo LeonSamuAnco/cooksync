@@ -28,13 +28,10 @@ const CelularesPage = () => {
     setLoading(true);
     
     try {
-      console.log('🔍 Cargando celulares con filtros:', filters);
       const response = await celularService.getAll(filters);
-      console.log('📦 Respuesta del backend:', response);
       
       // El backend retorna {data: [...], total, page, limit, totalPages}
       const celularesData = response.data || response || [];
-      console.log('📱 Celulares extraídos:', celularesData);
       
       setCelulares(celularesData);
     } catch (error) {
@@ -49,9 +46,7 @@ const CelularesPage = () => {
     setLoading(true);
     
     try {
-      console.log('⭐ Cargando recomendaciones de celulares...');
       const recommendations = await celularService.getRecommendations(12);
-      console.log('📦 Recomendaciones recibidas:', recommendations);
       
       // Las recomendaciones retornan array directo
       setCelulares(recommendations || []);
@@ -65,7 +60,6 @@ const CelularesPage = () => {
 
   useEffect(() => {
     // Cargar TODOS los celulares al inicio en lugar de solo recomendaciones
-    console.log('🔄 Cargando todos los celulares al iniciar...');
     loadCelulares();
   }, [loadCelulares]); // Incluir loadCelulares en dependencias
 
@@ -74,7 +68,6 @@ const CelularesPage = () => {
   };
 
   const handleSearch = () => {
-    console.log('🔍 Buscando celulares con filtros:', filters);
     loadCelulares();
   };
 
@@ -139,7 +132,6 @@ const CelularesPage = () => {
               <button 
                 className="btn-reload"
                 onClick={() => {
-                  console.log('🔄 Recargando celulares...');
                   loadRecommendations();
                 }}
                 style={{

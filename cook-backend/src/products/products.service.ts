@@ -52,4 +52,82 @@ export class ProductsService {
       where: { esActivo: true },
     });
   }
+
+  async create(data: any) {
+    return this.prisma.product.create({
+      data: {
+        nombre: data.nombre,
+        descripcion: data.descripcion || '',
+        precio: data.precio || 0,
+        stock: data.stock || 0,
+        categoriaId: data.categoriaId,
+        imagenUrl: data.imagenUrl || null,
+        sku: data.sku || null,
+        atributos: data.atributos || {},
+        esActivo: true,
+      },
+      include: {
+        categoria: true,
+      },
+    });
+  }
+
+  async update(id: number, data: any) {
+    return this.prisma.product.update({
+      where: { id },
+      data: {
+        nombre: data.nombre,
+        descripcion: data.descripcion,
+        precio: data.precio,
+        stock: data.stock,
+        categoriaId: data.categoriaId,
+        imagenUrl: data.imagenUrl,
+        sku: data.sku,
+        atributos: data.atributos,
+      },
+      include: {
+        categoria: true,
+      },
+    });
+  }
+
+  async remove(id: number) {
+    return this.prisma.product.update({
+      where: { id },
+      data: { esActivo: false },
+    });
+  }
+
+  async toggleStatus(id: number) {
+    const product = await this.prisma.product.findUnique({ where: { id } });
+    if (!product) {
+      throw new Error('Producto no encontrado');
+    }
+    return this.prisma.product.update({
+      where: { id },
+      data: { esActivo: !product.esActivo },
+    });
+  }
+
+  async getCategoryStats(categoryId: number) {
+    const total = await this.prisma.product.count({
+      where: { categoriaId: categoryId, esActivo: true },
+    });
+    
+    const totalStock = await this.prisma.product.aggregate({
+      where: { categoriaId: categoryId, esActivo: true },
+      _sum: { stock: true },
+    });
+    
+    const avgPrice = await this.prisma.product.aggregate({
+      where: { categoriaId: categoryId, esActivo: true },
+      _avg: { precio: true },
+    });
+
+    return {
+      total,
+      totalStock: totalStock._sum.stock || 0,
+      avgPrice: avgPrice._avg.precio || 0,
+    };
+  }
 }

@@ -84,18 +84,15 @@ export class ActivityController {
   @HttpCode(HttpStatus.CREATED)
   async create(@Request() req, @Body() createDto: CreateActivityDto) {
     this.logger.log(`Usuario ${req.user.userId} registrando actividad manual`);
-    return await this.activityService.create(req.user.userId, createDto);
-  }
-
-  /**
-   * Eliminar actividad específica
-   * DELETE /activity/:id
-   */
-  @Delete(':id')
-  @HttpCode(HttpStatus.OK)
-  async remove(@Request() req, @Param('id', ParseIntPipe) id: number) {
-    this.logger.log(`Usuario ${req.user.userId} eliminando actividad ${id}`);
-    return await this.activityService.remove(id, req.user.userId);
+    this.logger.log(`Datos recibidos: ${JSON.stringify(createDto)}`);
+    try {
+      const result = await this.activityService.create(req.user.userId, createDto);
+      this.logger.log(`Actividad creada exitosamente: ${result.id}`);
+      return result;
+    } catch (error) {
+      this.logger.error(`Error creando actividad: ${error.message}`, error.stack);
+      throw error;
+    }
   }
 
   /**
@@ -107,5 +104,16 @@ export class ActivityController {
   async clearAll(@Request() req) {
     this.logger.log(`Usuario ${req.user.userId} limpiando todo el historial`);
     return await this.activityService.clearAll(req.user.userId);
+  }
+
+  /**
+   * Eliminar actividad específica
+   * DELETE /activity/:id
+   */
+  @Delete(':id')
+  @HttpCode(HttpStatus.OK)
+  async remove(@Request() req, @Param('id', ParseIntPipe) id: number) {
+    this.logger.log(`Usuario ${req.user.userId} eliminando actividad ${id}`);
+    return await this.activityService.remove(id, req.user.userId);
   }
 }

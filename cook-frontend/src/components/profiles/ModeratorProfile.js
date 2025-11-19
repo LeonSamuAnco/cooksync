@@ -8,11 +8,22 @@ const ModeratorProfile = ({ user }) => {
   const [recentActions, setRecentActions] = useState([]);
 
   useEffect(() => {
+    const loadRecentActions = async () => {
+      try {
+        const response = await fetch(`http://localhost:3002/moderation/recent-actions/${user.id}`);
+        const data = await response.json();
+        setRecentActions(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error('Error cargando acciones recientes:', error);
+        setRecentActions([]);
+      }
+    };
+
     loadPendingRecipes();
     loadReportedContent();
     loadModerationStats();
     loadRecentActions();
-  }, []);
+  }, [user.id]);
 
   const loadPendingRecipes = async () => {
     try {
@@ -46,16 +57,7 @@ const ModeratorProfile = ({ user }) => {
     }
   };
 
-  const loadRecentActions = async () => {
-    try {
-      const response = await fetch(`http://localhost:3002/moderation/recent-actions/${user.id}`);
-      const data = await response.json();
-      setRecentActions(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error('Error cargando acciones recientes:', error);
-      setRecentActions([]);
-    }
-  };
+  // loadRecentActions moved to useEffect
 
   const handleApproveRecipe = async (recipeId) => {
     try {

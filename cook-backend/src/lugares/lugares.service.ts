@@ -23,7 +23,9 @@ export class LugaresService {
       limit = 50,
     } = filters;
 
-    console.log('🔍 Filtros recibidos en LugaresService:', filters);
+    // Debug: Filtros recibidos
+    if (process.env.NODE_ENV === 'development') {
+    }
 
     // Parsear valores numéricos
     const pageNum = parseInt(page.toString(), 10);
@@ -39,26 +41,22 @@ export class LugaresService {
 
     if (lugarTipoId) {
       where.lugar_tipo_id = parseInt(lugarTipoId.toString(), 10);
-      console.log('🔧 Filtro lugarTipoId:', where.lugar_tipo_id);
     }
 
     if (rangoPrecioId) {
       where.rango_precio_id = parseInt(rangoPrecioId.toString(), 10);
-      console.log('🔧 Filtro rangoPrecioId:', where.rango_precio_id);
     }
 
     if (ciudad) {
       where.ciudad = {
         contains: ciudad,
       };
-      console.log('🔧 Filtro ciudad:', ciudad);
     }
 
     if (pais) {
       where.pais = {
         contains: pais,
       };
-      console.log('🔧 Filtro pais:', pais);
     }
 
     // Filtro por servicio (relación muchos a muchos a través de items)
@@ -71,7 +69,6 @@ export class LugaresService {
           },
         },
       };
-      console.log('🔧 Filtro servicioId:', servicioId);
     }
 
     // Filtro por día de la semana (horarios a través de items)
@@ -84,7 +81,6 @@ export class LugaresService {
           },
         },
       };
-      console.log('🔧 Filtro diaSemana:', diaSemana);
     }
 
     // Ordenamiento
@@ -101,8 +97,6 @@ export class LugaresService {
         orderBy = { items: { nombre: orden } };
         break;
     }
-
-    console.log('📊 OrderBy:', orderBy);
 
     try {
       // Consulta con Prisma
@@ -130,7 +124,9 @@ export class LugaresService {
         this.prisma.lugares.count({ where }),
       ]);
 
-      console.log(`✅ Lugares encontrados: ${lugares.length} de ${total}`);
+      // Log resultado solo en desarrollo
+      if (process.env.NODE_ENV === 'development') {
+      }
 
       return {
         data: lugares,
@@ -151,7 +147,6 @@ export class LugaresService {
    * Obtener un lugar por ID
    */
   async findOne(id: number) {
-    console.log(`🔍 Buscando lugar con ID: ${id}`);
 
     const lugar = await this.prisma.lugares.findUnique({
       where: { id },
@@ -176,11 +171,9 @@ export class LugaresService {
     });
 
     if (!lugar) {
-      console.log(`❌ Lugar con ID ${id} no encontrado`);
       throw new NotFoundException(`Lugar con ID ${id} no encontrado`);
     }
 
-    console.log(`✅ Lugar encontrado: ${lugar.items.nombre}`);
     return lugar;
   }
 
@@ -188,7 +181,6 @@ export class LugaresService {
    * Obtener todos los tipos de lugar
    */
   async getTipos() {
-    console.log('🔍 Obteniendo tipos de lugar...');
 
     const tipos = await this.prisma.lugar_tipos.findMany({
       orderBy: {
@@ -196,7 +188,6 @@ export class LugaresService {
       },
     });
 
-    console.log(`✅ Tipos encontrados: ${tipos.length}`);
     return tipos;
   }
 
@@ -204,7 +195,6 @@ export class LugaresService {
    * Obtener todos los rangos de precio
    */
   async getRangosPrecio() {
-    console.log('🔍 Obteniendo rangos de precio...');
 
     const rangos = await this.prisma.lugar_rangos_precio.findMany({
       orderBy: {
@@ -212,7 +202,6 @@ export class LugaresService {
       },
     });
 
-    console.log(`✅ Rangos encontrados: ${rangos.length}`);
     return rangos;
   }
 
@@ -220,7 +209,6 @@ export class LugaresService {
    * Obtener todos los servicios
    */
   async getServicios() {
-    console.log('🔍 Obteniendo servicios...');
 
     const servicios = await this.prisma.lugar_servicios.findMany({
       orderBy: {
@@ -228,7 +216,6 @@ export class LugaresService {
       },
     });
 
-    console.log(`✅ Servicios encontrados: ${servicios.length}`);
     return servicios;
   }
 
@@ -236,7 +223,6 @@ export class LugaresService {
    * Obtener lugares por tipo
    */
   async findByTipo(tipoId: number) {
-    console.log(`🔍 Buscando lugares de tipo: ${tipoId}`);
 
     const lugares = await this.prisma.lugares.findMany({
       where: {
@@ -257,7 +243,6 @@ export class LugaresService {
       },
     });
 
-    console.log(`✅ Lugares encontrados del tipo ${tipoId}: ${lugares.length}`);
     return lugares;
   }
 
@@ -265,7 +250,6 @@ export class LugaresService {
    * Obtener lugares por ciudad
    */
   async findByCiudad(ciudad: string) {
-    console.log(`🔍 Buscando lugares en ciudad: ${ciudad}`);
 
     const lugares = await this.prisma.lugares.findMany({
       where: {
@@ -288,7 +272,6 @@ export class LugaresService {
       },
     });
 
-    console.log(`✅ Lugares encontrados en ${ciudad}: ${lugares.length}`);
     return lugares;
   }
 
@@ -296,7 +279,6 @@ export class LugaresService {
    * Obtener estadísticas de lugares
    */
   async getStats() {
-    console.log('📊 Calculando estadísticas de lugares...');
 
     const [
       totalLugares,
@@ -360,7 +342,6 @@ export class LugaresService {
       lugaresPorCiudad,
     };
 
-    console.log('✅ Estadísticas calculadas:', stats);
     return stats;
   }
 }

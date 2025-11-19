@@ -1,0 +1,364 @@
+@startuml
+title Diagrama de Despliegue - CookSync 2025\nInfraestructura y Arquitectura de Deployment
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+
+' ============ DISPOSITIVOS CLIENTE ============
+node "Dispositivo Cliente" #LightBlue {
+  artifact "Navegador Web" {
+    component [React App] #LightGreen {
+      React 19.1.1
+      React Router 6.30.1
+      Socket.IO Client
+      ---
+      Bundle Size: ~2MB
+      Port: 3000 (dev)
+    }
+    
+    component [LocalStorage] #LightGray {
+      authToken (JWT)
+      user (JSON)
+      sessionData
+    }
+    
+    component [Service Worker] #LightCyan {
+      Cache API
+      Offline support
+      (futuro)
+    }
+  }
+}
+
+' ============ SERVIDOR WEB ============
+node "Servidor Web" #LightYellow {
+  component [Nginx/Apache] #LightSalmon {
+    Reverse Proxy
+    SSL/TLS Termination
+    Static Files Serving
+    Gzip Compression
+    ---
+    Port: 80, 443
+  }
+  
+  component [Static Assets] #LightGray {
+    HTML, CSS, JS
+    Images, Fonts
+    Build artifacts
+  }
+}
+
+' ============ SERVIDOR DE APLICACIONES ============
+node "Servidor de Aplicaciones" #LightGreen {
+  component [NestJS Application] #LightGreen {
+    **Main Process**
+    Node.js 18+
+    NestJS 11.0.1
+    ---
+    Port: 3002
+    Env: production
+  }
+  
+  package "Módulos Backend" {
+    component [AuthModule] #LightPink
+    component [RecipesModule] #LightGreen
+    component [CelularesModule] #LightCyan
+    component [TortasModule] #LightYellow
+    component [LugaresModule] #LightSalmon
+    component [DeportesModule] #LightGoldenRodYellow
+    component [FavoritesModule] #Lavender
+    component [NotificationsModule] #Lavender
+    component [ActivityModule] #LightSteelBlue
+    component [PantryModule] #LightCyan
+    component [ShoppingListModule] #LightYellow
+    component [ReviewsModule] #LightGreen
+    component [AdminModule] #LightCoral
+  }
+  
+  component [Middleware Layer] #LightCoral {
+    SecurityMiddleware
+    Rate Limiting
+    CORS
+    Helmet
+    Logger
+  }
+  
+  component [WebSocket Server] #Lavender {
+    Socket.IO 4.8.1
+    Namespace: /notifications
+    Auth: JWT
+    ---
+    Port: 3002 (same)
+  }
+  
+  component [Cron Jobs] #LightSteelBlue {
+    @nestjs/schedule
+    ---
+    - checkExpiringIngredients
+      (Daily 9 AM)
+    - sendScheduledNotifications
+      (Every hour)
+    - cleanupOldData
+      (Weekly)
+  }
+}
+
+' ============ BASE DE DATOS ============
+node "Servidor de Base de Datos" #LightCyan {
+  database "MySQL 8.0+" #LightCyan {
+    **Database: cooksync_db**
+    
+    folder "Tablas Principales (30+)" {
+      [User] #LightPink
+      [Recipe] #LightGreen
+      [Celular] #LightCyan
+      [Torta] #LightYellow
+      [Lugar] #LightSalmon
+      [DeporteEquipamiento] #LightGoldenRodYellow
+      [Favorite] #Lavender
+      [Notification] #Lavender
+      [UserActivity] #LightSteelBlue
+      [UserPantry] #LightCyan
+      [ShoppingList] #LightYellow
+      [RecipeReview] #LightGreen
+    }
+    
+    note right
+      **Configuración**
+      - Port: 3306
+      - Charset: utf8mb4
+      - Collation: utf8mb4_unicode_ci
+      - Max Connections: 200
+      - InnoDB Engine
+      - Índices optimizados
+      - Foreign Keys habilitadas
+    end note
+  }
+  
+  component [Prisma Client] #LightGray {
+    ORM Layer
+    Type-safe queries
+    Connection pooling
+    ---
+    Version: 6.16.2
+  }
+}
+
+' ============ CACHE Y SESIONES ============
+node "Servidor de Cache" #LightGray {
+  component [Redis] #LightCoral {
+    In-Memory Cache
+    Session Store
+    Rate Limiting Data
+    ---
+    Port: 6379
+    (futuro)
+  }
+}
+
+' ============ ALMACENAMIENTO DE ARCHIVOS ============
+node "Servidor de Archivos" #LightSalmon {
+  cloud "Cloudinary / AWS S3" #LightSalmon {
+    component [Image Storage] {
+      Recetas
+      Productos
+      Perfiles
+      ---
+      CDN enabled
+      Auto-optimization
+      Transformations
+    }
+  }
+}
+
+' ============ SERVICIOS EXTERNOS ============
+cloud "Servicios Externos" #LightGray {
+  component [Email Service] #LightYellow {
+    SendGrid / Mailgun
+    ---
+    - Notificaciones
+    - Verificación
+    - Recuperación
+    (futuro)
+  }
+  
+  component [SMS Service] #LightCyan {
+    Twilio
+    ---
+    - 2FA
+    - Alertas
+    (futuro)
+  }
+  
+  component [Payment Gateway] #LightGreen {
+    Stripe / PayPal
+    ---
+    - Suscripciones
+    - Pagos
+    (futuro)
+  }
+  
+  component [Analytics] #LightBlue {
+    Google Analytics
+    Mixpanel
+    ---
+    - Métricas
+    - Eventos
+  }
+}
+
+' ============ MONITOREO Y LOGS ============
+node "Servidor de Logs" #LightSteelBlue {
+  component [Winston Logger] #LightSteelBlue {
+    Application Logs
+    Error Tracking
+    ---
+    Levels: error, warn,
+    info, debug
+  }
+  
+  component [Log Aggregator] #LightGray {
+    ELK Stack
+    (futuro)
+    ---
+    - Elasticsearch
+    - Logstash
+    - Kibana
+  }
+}
+
+' ============ BALANCEADOR DE CARGA ============
+node "Load Balancer" #LightPink {
+  component [Nginx LB] #LightPink {
+    Round Robin
+    Health Checks
+    SSL Termination
+    ---
+    (futuro - escalabilidad)
+  }
+}
+
+' ============ RELACIONES Y FLUJOS ============
+
+' Cliente -> Servidor Web
+[React App] --> [Nginx/Apache] : HTTPS\n(Port 443)
+[React App] --> [Static Assets] : GET static files
+
+' Servidor Web -> Servidor de Aplicaciones
+[Nginx/Apache] --> [NestJS Application] : Proxy\nHTTP (Port 3002)
+
+' React App -> NestJS (API REST)
+[React App] ..> [NestJS Application] : REST API\nJSON over HTTPS
+[React App] ..> [AuthModule] : POST /auth/login
+[React App] ..> [RecipesModule] : GET /recipes
+[React App] ..> [CelularesModule] : GET /celulares
+[React App] ..> [FavoritesModule] : POST /favorites
+[React App] ..> [NotificationsModule] : GET /notifications
+
+' React App -> WebSocket
+[React App] <--> [WebSocket Server] : WebSocket\nws://localhost:3002
+
+' NestJS -> Prisma -> MySQL
+[NestJS Application] --> [Prisma Client] : ORM queries
+[Prisma Client] --> [MySQL 8.0+] : TCP/IP\n(Port 3306)
+
+' Módulos -> Prisma
+[AuthModule] --> [Prisma Client]
+[RecipesModule] --> [Prisma Client]
+[CelularesModule] --> [Prisma Client]
+[FavoritesModule] --> [Prisma Client]
+[NotificationsModule] --> [Prisma Client]
+[ActivityModule] --> [Prisma Client]
+
+' NestJS -> Redis (futuro)
+[NestJS Application] ..> [Redis] : Cache\n(futuro)
+[Middleware Layer] ..> [Redis] : Rate limiting\n(futuro)
+
+' NestJS -> Almacenamiento
+[NestJS Application] --> [Image Storage] : Upload images\nHTTPS API
+
+' NestJS -> Servicios Externos
+[NotificationsModule] ..> [Email Service] : Send emails\n(futuro)
+[AuthModule] ..> [SMS Service] : 2FA\n(futuro)
+[NestJS Application] ..> [Payment Gateway] : Process payments\n(futuro)
+[React App] --> [Analytics] : Track events
+
+' Logs
+[NestJS Application] --> [Winston Logger] : Write logs
+[Winston Logger] ..> [Log Aggregator] : Aggregate\n(futuro)
+
+' Cron Jobs
+[Cron Jobs] --> [NotificationsModule] : Trigger tasks
+[Cron Jobs] --> [PantryModule] : Check expiration
+
+' Load Balancer (futuro)
+[Nginx LB] ..> [NestJS Application] : Distribute\n(futuro)
+
+' LocalStorage
+[React App] --> [LocalStorage] : Store JWT\nStore user data
+
+note bottom of [NestJS Application]
+  **Configuración de Producción**
+  - NODE_ENV=production
+  - Rate Limiting: 500 req/min
+  - CORS: Dominios específicos
+  - Helmet: Security headers
+  - Compression: Gzip enabled
+  - Logging: Winston (info level)
+  - PM2: Process manager
+  - Clustering: 4 workers
+end note
+
+note bottom of [MySQL 8.0+]
+  **Datos Actuales**
+  - 45+ recetas peruanas
+  - 50 celulares con specs
+  - 50 lugares en Arequipa
+  - 100+ ingredientes maestros
+  - 30+ tablas relacionales
+  - Índices optimizados
+  - Soft delete habilitado
+end note
+
+note right of [WebSocket Server]
+  **WebSocket Features**
+  - Autenticación JWT
+  - Rooms por usuario
+  - Broadcast support
+  - Reconexión automática
+  - Heartbeat: 25s
+  - Max payload: 1MB
+end note
+
+note right of [Middleware Layer]
+  **Seguridad**
+  - Rate Limiting: 10,000 req/min (dev)
+                   500 req/min (prod)
+  - CORS: localhost:3000 (dev)
+          dominios específicos (prod)
+  - Helmet: XSS, CSRF protection
+  - JWT: Expiration 7 días
+  - Bcrypt: Password hashing
+end note
+
+note bottom of [React App]
+  **Build de Producción**
+  - npm run build
+  - Code splitting
+  - Tree shaking
+  - Minification
+  - Source maps
+  - Bundle analyzer
+  - Lazy loading
+end note
+
+note top of [Load Balancer]
+  **Escalabilidad (Futuro)**
+  - Múltiples instancias de NestJS
+  - Sticky sessions
+  - Health checks
+  - Auto-scaling
+  - Kubernetes deployment
+end note
+
+@enduml

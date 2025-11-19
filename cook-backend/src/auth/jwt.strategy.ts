@@ -18,6 +18,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       where: { id: payload.sub },
       include: {
         rol: true,
+        tipoDocumento: true,
+        cliente: {
+          include: {
+            plan: true,
+          },
+        },
       },
     });
 
@@ -25,11 +31,17 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('Usuario no autorizado');
     }
 
+    // Devolver la estructura completa del usuario para que esté disponible en req.user
+    const { passwordHash, tokenVerificacion, tokenRecuperacion, ...userSafe } = user;
+
     return {
+      ...userSafe, // Incluir todos los campos del usuario
+      // Agregar aliases para compatibilidad
       userId: user.id,
-      email: user.email,
-      nombre: user.nombres,
-      rol: user.rol?.nombre || 'cliente',
+      sub: user.id,
+      role: user.rol, // Alias para compatibilidad
+      documentType: user.tipoDocumento, // Alias para compatibilidad
+      client: user.cliente, // Alias para compatibilidad
     };
   }
 }

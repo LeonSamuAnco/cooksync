@@ -8,13 +8,11 @@ window.clearCookSyncStorage = () => {
   localStorage.removeItem('authToken');
   localStorage.removeItem('user');
   localStorage.removeItem('userRole');
-  console.log('✅ CookSync localStorage limpiado');
   window.location.reload();
 };
 
 // Función para ver qué hay en localStorage
 window.debugCookSyncStorage = () => {
-  console.log('🔍 Contenido del localStorage:');
   console.log('authToken:', localStorage.getItem('authToken'));
   console.log('user:', localStorage.getItem('user'));
   console.log('userRole:', localStorage.getItem('userRole'));
@@ -27,6 +25,5 @@ if (token && (!token.includes('.') || token.split('.').length !== 3)) {
   window.clearCookSyncStorage();
 }
 
-console.log('🛠️ Utilidades de depuración cargadas:');
 console.log('- clearCookSyncStorage() - Limpia todo el localStorage');
 console.log('- debugCookSyncStorage() - Muestra el contenido del localStorage');

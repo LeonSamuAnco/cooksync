@@ -1,0 +1,118 @@
+@startuml
+title Diagrama de Casos de Uso Detallado - CookSync 2025
+
+' --- DIRECTIVA CLAVE PARA LA FORMA ANCHA ---
+left to right direction
+
+' --- Estilo General ---
+skinparam shadowing false
+skinparam note {
+    BackgroundColor #LightYellow
+    BorderColor #gray
+}
+
+' --- Actores de CookSync (SIN ETIQUETAS) ---
+actor "Cliente" as Cliente
+actor "Vendedor" as Vendedor
+actor "Administrador" as Admin
+actor "Usuario Anónimo" as Anonimo
+
+' --- Límite del Sistema ---
+rectangle "CookSync: Sistema Multi-Categoría" {
+    ' --- Casos de Uso ---
+    usecase UC1 as "Gestionar Perfil y Sesión"
+    usecase UC2 as "Crear Lista de Compras"
+    usecase UC3 as "Agregar a Favoritos"
+    usecase UC4 as "Calificar y Dejar Reseñas"
+    usecase UC5 as "Publicar y Editar Recetas"
+    usecase UC6 as "Gestionar Catálogo de Productos"
+    usecase UC7 as "Ver Reportes de Actividad"
+    usecase UC8 as "Gestionar Usuarios y Roles"
+    usecase UC9 as "Moderar Contenido"
+    usecase UC10 as "Buscar y Filtrar Contenido\n(Recetas, Productos, etc.)"
+    usecase UC11 as "Ver Detalle de Ítem"
+    usecase UC12 as "Registrarse e Iniciar Sesión"
+    usecase UC13 as "Enviar Notificaciones\n(Alertas, Logros, etc.)"
+    usecase UC14 as "Registrar Actividad de Usuario\n(Logs)"
+    usecase UC15 as "Gestionar Despensa Virtual"
+
+    ' --- NOTAS DETALLADAS (A LA DERECHA) ---
+    note right of UC1
+      **Detalle de Gestión:**
+      - Actualizar datos personales
+      - Cambiar foto de perfil
+      - Cambiar contraseña
+      - Cerrar sesión en todos los dispositivos
+    end note
+
+    note right of UC6
+      **Detalle de Gestión:**
+      - Crear, editar y eliminar productos
+      (Celulares, Tortas, Equipamiento Deportivo)
+      - Gestionar stock y precios
+      - Ver estadísticas de ventas
+    end note
+
+    note right of UC8
+      **Detalle de Gestión:**
+      - Crear, editar y desactivar cuentas
+      - Asignar roles (Cliente, Vendedor, Admin)
+      - Resetear contraseñas de usuarios
+      - Ver historial de acceso
+    end note
+
+    note right of UC9
+      **Detalle de Gestión:**
+      - Aprobar o rechazar reseñas y recetas
+      - Editar contenido inapropiado
+      - Suspender usuarios por incumplimiento
+    end note
+
+    note right of UC15
+      **Detalle de Gestión:**
+      - Agregar/Eliminar ingredientes
+      - Actualizar cantidades y fechas
+      - Recibir alertas de vencimiento
+    end note
+}
+
+' --- Nota Explicativa del Stack (fuera del recuadro) ---
+note as TechStack
+  **Stack Técnico Clave:**
+  - **Backend:** NestJS + Prisma + MySQL
+  - **Frontend:** React 19
+  - **Autenticación:** JWT (7 días)
+  - **Tiempo Real:** WebSockets (Socket.IO)
+end note
+TechStack .. "CookSync: Sistema Multi-Categoría"
+
+' --- Relaciones: Actor -> Caso de Uso ---
+Cliente -- UC1
+Cliente -- UC2
+Cliente -- UC3
+Cliente -- UC4
+Cliente -- UC15
+
+Vendedor -- UC5
+Vendedor -- UC6
+
+Admin -- UC7
+Admin -- UC8
+Admin -- UC9
+
+Anonimo -- UC10
+Anonimo -- UC11
+Anonimo -- UC12
+
+' --- Relaciones entre Casos de Uso ---
+UC2 <.. UC4 : <<include>>
+UC13 <.. UC15 : <<extend>>\n(alerta de vencimiento)
+
+' --- Leyenda del Diagrama (Actualizada) ---
+legend right
+  |= Leyenda |
+  | **&person;** Actor |
+  | ( ) Caso de Uso |
+end legend
+
+@enduml

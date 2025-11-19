@@ -54,23 +54,18 @@ const RecipeDetail = () => {
   useEffect(() => {
     const fetchRecipe = async () => {
       try {
-        console.log(`Fetching recipe with ID: ${id}`);
-        console.log(`API URL: ${API_URL}/recipes/${id}`);
         
         const response = await fetch(`${API_URL}/recipes/${id}`);
-        console.log(`Response status: ${response.status}`);
         
         if (!response.ok) {
           throw new Error(`No se pudo cargar la receta: ${response.status}`);
         }
         
         const data = await response.json();
-        console.log('Recipe data received:', data);
         console.log('Recipe ingredients:', data.ingredientes, 'Type:', typeof data.ingredientes, 'IsArray:', Array.isArray(data.ingredientes));
         console.log('Recipe instructions:', data.instrucciones, 'Type:', typeof data.instrucciones, 'IsArray:', Array.isArray(data.instrucciones));
         
         const normalizedData = normalizeRecipeData(data);
-        console.log('Normalized recipe data:', normalizedData);
         setRecipe(normalizedData);
         
         // Registrar vista de receta en actividad del usuario
@@ -84,7 +79,6 @@ const RecipeDetail = () => {
               referenciaTipo: 'receta',
               referenciaUrl: `/recipes/${id}`,
             });
-            console.log('✅ Vista de receta registrada en actividad');
           }
         } catch (activityError) {
           console.warn('⚠️ No se pudo registrar la actividad:', activityError);

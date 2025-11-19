@@ -1,0 +1,419 @@
+@startuml
+title Diagrama de Actividades - CookSync 2025\nFlujos de Interacción Cliente-Sistema
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+
+|Cliente|
+start
+:Accede a CookSync;
+
+if (¿Está autenticado?) then (No)
+  |Sistema|
+  :Mostrar Landing Page;
+  :Mostrar opciones de registro/login;
+  
+  |Cliente|
+  if (¿Desea registrarse?) then (Sí)
+    :Completar formulario de registro;
+    :Seleccionar rol (Cliente/Vendedor);
+    
+    |Sistema|
+    :Validar datos con class-validator;
+    :Hashear contraseña con bcrypt;
+    :Crear usuario en BD (Prisma);
+    :Generar token JWT (exp: 7 días);
+    :Enviar notificación de bienvenida;
+    :Registrar actividad LOGIN;
+    
+    |Cliente|
+    :Recibir token y datos de usuario;
+  else (No - Login)
+    :Ingresar email y contraseña;
+    
+    |Sistema|
+    :Validar credenciales;
+    :Verificar intentos fallidos;
+    
+    if (¿Credenciales válidas?) then (Sí)
+      :Generar token JWT;
+      :Actualizar último acceso;
+      :Registrar actividad LOGIN;
+    else (No)
+      :Incrementar intentos fallidos;
+      :Mostrar error;
+      stop
+    endif
+  endif
+else (Sí)
+  |Sistema|
+  :Validar token JWT;
+  :Restaurar sesión desde localStorage;
+  :Cargar datos de usuario;
+endif
+
+|Cliente|
+:Navegar al Dashboard;
+
+|Sistema|
+:Determinar tipo de usuario (rol);
+:Cargar dashboard correspondiente;
+:Cargar notificaciones no leídas;
+:Conectar WebSocket para notificaciones;
+
+' ============ FLUJO DE BÚSQUEDA DE RECETAS ============
+partition "Búsqueda de Recetas por Ingredientes" #LightGreen {
+  |Cliente|
+  :Acceder a página de recetas;
+  
+  |Sistema|
+  :Cargar todos los ingredientes maestros;
+  :GET /recipes/ingredients/all;
+  :Mostrar selector de ingredientes;
+  
+  |Cliente|
+  :Seleccionar ingredientes (ej: Pollo, Arroz);
+  note right
+    **Mapeo de IDs**
+    Frontend convierte nombres a IDs:
+    "Pollo" → ID: 1
+    "Arroz" → ID: 2
+  end note
+  
+  |Sistema|
+  :Aplicar debounce de 500ms;
+  :Crear clave única de búsqueda;
+  
+  if (¿Búsqueda duplicada?) then (Sí)
+    :Ignorar petición;
+  else (No)
+    :Enviar petición al backend;
+    :GET /recipes/by-ingredients?ingredients=1,2;
+    
+    |Backend|
+    :Validar IDs de ingredientes;
+    :Buscar recetas con Prisma;
+    :Calcular % de coincidencia;
+    :Ordenar por coincidencia;
+    :Aplicar filtros adicionales;
+    note right
+      **Filtros Combinados**
+      - Categoría
+      - Dificultad
+      - Tiempo máximo
+      - Dietéticos (vegetariana, 
+        vegana, sin gluten)
+    end note
+    :Retornar recetas con ingredientes;
+    
+    |Sistema|
+    :Recibir resultados;
+    :Actualizar estado con useCallback;
+    :Renderizar RecipeGrid;
+  endif
+  
+  |Cliente|
+  :Ver recetas con % de coincidencia;
+  :Aplicar filtros adicionales;
+  
+  if (¿Desea ver detalle?) then (Sí)
+    :Click en receta;
+    
+    |Sistema|
+    :Navegar a /recipes/:id;
+    :GET /recipes/:id;
+    :Registrar actividad RECETA_VISTA;
+    :Cargar ingredientes e instrucciones;
+    :Normalizar datos con safeRecipe;
+    :Mostrar detalle completo;
+    
+    |Cliente|
+    :Ver ingredientes, instrucciones, tiempo;
+    
+    if (¿Agregar a favoritos?) then (Sí)
+      |Sistema|
+      :POST /favorites;
+      :Crear favorito tipo "receta";
+      :Actualizar contador vecesFavorita;
+      :Enviar notificación FAVORITO_AGREGADO;
+      :Actualizar UI con icono lleno;
+    endif
+    
+    if (¿Marcar como preparada?) then (Sí)
+      |Sistema|
+      :Registrar actividad RECETA_PREPARADA;
+      :Incrementar vecesPreparada;
+      :Agregar puntos de fidelidad (+10);
+      :Verificar insignias desbloqueadas;
+      :Enviar notificación de logro;
+    endif
+    
+    if (¿Escribir reseña?) then (Sí)
+      |Cliente|
+      :Seleccionar calificación (1-5 estrellas);
+      :Escribir comentario;
+      
+      |Sistema|
+      :POST /reviews;
+      :Validar calificación (1-5);
+      :Prevenir duplicados (constraint único);
+      :Crear reseña en BD;
+      :Actualizar calificacionPromedio;
+      :Incrementar totalCalificaciones;
+      :Registrar actividad RESENA_PUBLICADA;
+      :Enviar notificación al autor de receta;
+    endif
+  endif
+}
+
+' ============ FLUJO DE GESTIÓN DE DESPENSA ============
+partition "Gestión de Despensa Virtual" #LightCyan {
+  |Cliente|
+  :Acceder a Mi Despensa;
+  
+  |Sistema|
+  :GET /pantry/my-pantry;
+  :Cargar ingredientes del usuario;
+  :Verificar fechas de vencimiento;
+  :Mostrar alertas si hay ingredientes por vencer;
+  
+  |Cliente|
+  if (¿Agregar ingrediente?) then (Sí)
+    :Seleccionar ingrediente maestro;
+    :Ingresar cantidad y unidad;
+    :Ingresar fecha de vencimiento;
+    
+    |Sistema|
+    :POST /pantry;
+    :Validar datos;
+    :Crear entrada en usuario_despensa;
+    :Registrar actividad;
+    
+    if (¿Vence en 3 días o menos?) then (Sí)
+      :Crear notificación VENCIMIENTO;
+      :Prioridad: ALTA;
+      :Enviar por WebSocket;
+    endif
+  endif
+  
+  |Sistema|
+  :Ejecutar Cron Job (9 AM diario);
+  :Buscar ingredientes por vencer;
+  
+  if (¿Hay ingredientes por vencer?) then (Sí)
+    :Crear notificación automática;
+    :Enviar a todos los usuarios afectados;
+  endif
+}
+
+' ============ FLUJO DE CATÁLOGO DE CELULARES ============
+partition "Exploración de Celulares" #LightBlue {
+  |Cliente|
+  :Acceder a catálogo de celulares;
+  
+  |Sistema|
+  :GET /celulares;
+  :Cargar 50 celulares con specs;
+  :Cargar filtros (marcas, gamas, SO);
+  :Mostrar grid de celulares;
+  
+  |Cliente|
+  :Aplicar filtros;
+  note right
+    **7 Filtros Disponibles**
+    - Marca (Samsung, Apple, Xiaomi...)
+    - Gama (Alta, Media, Baja, Premium)
+    - Sistema Operativo (Android, iOS)
+    - Rango de Precio (min-max)
+    - RAM mínima (GB)
+    - Almacenamiento mínimo (GB)
+    - Conectividad 5G (boolean)
+  end note
+  
+  |Sistema|
+  :Normalizar tipos de datos;
+  :parseInt(marcaId, gamaId, sistemaOperativoId);
+  :parseFloat(precioMin, precioMax);
+  :boolean para conectividad5g;
+  :Aplicar filtros con Prisma WHERE;
+  :Retornar celulares filtrados;
+  
+  |Cliente|
+  :Ver resultados filtrados;
+  
+  if (¿Ver detalle?) then (Sí)
+    :Click en celular;
+    
+    |Sistema|
+    :GET /celulares/:id;
+    :Cargar specs completas;
+    :Cargar cámaras y lentes;
+    :Mostrar detalle técnico;
+    
+    |Cliente|
+    if (¿Agregar a favoritos?) then (Sí)
+      |Sistema|
+      :POST /favorites;
+      :Crear favorito tipo "celular";
+      :Actualizar UI;
+    endif
+    
+    if (¿Comparar con otro?) then (Sí)
+      :Seleccionar segundo celular;
+      
+      |Sistema|
+      :GET /celulares/compare?ids=1,2;
+      :Generar tabla comparativa;
+      :Resaltar diferencias;
+    endif
+  endif
+}
+
+' ============ FLUJO DE LUGARES TURÍSTICOS ============
+partition "Exploración de Lugares" #LightSalmon {
+  |Cliente|
+  :Acceder a lugares turísticos;
+  
+  |Sistema|
+  :GET /lugares;
+  :Cargar 50 lugares de Arequipa;
+  :Cargar tipos y servicios;
+  
+  |Cliente|
+  :Filtrar por tipo (Restaurante, Museo, Hotel);
+  :Filtrar por rango de precio ($, $$, $$$, $$$$);
+  :Filtrar por servicios (Wi-Fi, Parking);
+  
+  |Sistema|
+  :Aplicar filtros;
+  :Retornar lugares filtrados;
+  
+  |Cliente|
+  :Ver detalle de lugar;
+  
+  |Sistema|
+  :GET /lugares/:id;
+  :Cargar horarios por día;
+  :Cargar servicios disponibles;
+  :Mostrar mapa (latitud, longitud);
+  
+  |Cliente|
+  if (¿Marcar como visitado?) then (Sí)
+    |Sistema|
+    :Registrar actividad LUGAR_VISITADO;
+    :Agregar puntos (+5);
+  endif
+}
+
+' ============ FLUJO DE NOTIFICACIONES ============
+partition "Sistema de Notificaciones en Tiempo Real" #Lavender {
+  |Sistema|
+  :Conectar WebSocket al iniciar sesión;
+  :socket.io('http://localhost:3002/notifications');
+  :Autenticar con JWT en handshake;
+  
+  fork
+    :Escuchar evento 'new-notification';
+  fork again
+    :Escuchar evento 'unread-count';
+  fork again
+    :Ejecutar Cron Job cada hora;
+    :Buscar notificaciones programadas;
+    
+    if (¿Hay notificaciones pendientes?) then (Sí)
+      :Enviar por WebSocket;
+      :Actualizar estado a enviada;
+    endif
+  end fork
+  
+  |Cliente|
+  :Recibir notificación en tiempo real;
+  :Mostrar badge con contador;
+  :Reproducir sonido (opcional);
+  :Mostrar notificación del navegador;
+  
+  if (¿Click en notificación?) then (Sí)
+    |Sistema|
+    :PATCH /notifications/:id/read;
+    :Marcar como leída;
+    :Actualizar contador;
+    
+    if (¿Tiene URL de referencia?) then (Sí)
+      :Navegar a la URL;
+    endif
+  endif
+}
+
+' ============ FLUJO DE HISTORIAL Y ESTADÍSTICAS ============
+partition "Historial de Actividad" #LightSteelBlue {
+  |Cliente|
+  :Acceder a historial de actividad;
+  
+  |Sistema|
+  :GET /activity/my-activities;
+  :Cargar actividades con paginación;
+  :Agrupar por día;
+  :Calcular estadísticas;
+  
+  |Cliente|
+  :Ver timeline visual;
+  :Aplicar filtros (tipo, fecha);
+  
+  if (¿Exportar historial?) then (Sí)
+    |Sistema|
+    :Generar CSV con todas las actividades;
+    :Formato: Fecha, Tipo, Descripción, Referencia;
+    :Descargar archivo;
+  endif
+  
+  if (¿Ver estadísticas?) then (Sí)
+    |Sistema|
+    :GET /activity/stats;
+    :Calcular totales por tipo;
+    :Calcular promedio semanal;
+    :Identificar actividad más común;
+    :Verificar insignias desbloqueadas;
+    :Mostrar dashboard de estadísticas;
+  endif
+}
+
+|Cliente|
+if (¿Cerrar sesión?) then (Sí)
+  |Sistema|
+  :Registrar actividad LOGOUT;
+  :Desconectar WebSocket;
+  :Limpiar localStorage;
+  :Invalidar token (opcional);
+  :Redirigir a landing page;
+endif
+
+stop
+
+note bottom
+  **Stack Técnico Completo**
+  
+  **Backend:**
+  - NestJS 11.0.1
+  - Prisma 6.16.2 (ORM principal)
+  - MySQL (Base de datos)
+  - JWT (Autenticación, exp: 7 días)
+  - Socket.IO 4.8.1 (WebSockets)
+  - Cron Jobs (@nestjs/schedule)
+  - Rate Limiting: 10,000 req/min (dev)
+  
+  **Frontend:**
+  - React 19.1.1
+  - React Router 6.30.1
+  - Socket.IO Client
+  - LocalStorage (persistencia)
+  
+  **Optimizaciones:**
+  - Debounce 500ms en búsquedas
+  - useCallback para funciones estables
+  - Refs para prevenir búsquedas duplicadas
+  - Normalización de tipos de datos
+  - Fallbacks robustos
+  - Soft delete en todas las tablas
+end note
+
+@enduml

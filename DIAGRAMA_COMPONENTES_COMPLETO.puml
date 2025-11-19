@@ -1,0 +1,477 @@
+@startuml
+title Diagrama de Componentes - CookSync 2025\nArquitectura Frontend y Backend
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam componentStyle rectangle
+
+' ============ CAPA DE PRESENTACIÓN (FRONTEND) ============
+package "Frontend - React 19.1.1" #LightBlue {
+  
+  ' Páginas principales
+  package "Pages (27 páginas)" {
+    component [LandingPage] #LightGreen
+    component [RecipesPage] #LightGreen
+    component [RecipeDetailPage] #LightGreen
+    component [CelularesPage] #LightCyan
+    component [TortasPage] #LightYellow
+    component [LugaresPage] #LightSalmon
+    component [DeportesPage] #LightGoldenRodYellow
+    component [FavoritesPage] #Lavender
+    component [ActivityPage] #LightSteelBlue
+    component [ProfilePage] #MistyRose
+    component [DashboardPage] #LightPink
+  }
+  
+  ' Componentes reutilizables
+  package "Components (84 componentes)" {
+    component [RecipeCard] #LightGreen
+    component [RecipeGrid] #LightGreen
+    component [RecipeSearch] #LightGreen
+    component [RecipeFilters] #LightGreen
+    component [IngredientSelector] #LightGreen
+    
+    component [CelularCard] #LightCyan
+    component [CelularFilters] #LightCyan
+    component [CelularComparator] #LightCyan
+    
+    component [NotificationsPanel] #Lavender
+    component [NotificationItem] #Lavender
+    
+    component [ActivityTimeline] #LightSteelBlue
+    component [ActivityStats] #LightSteelBlue
+    component [ActivityFilterBar] #LightSteelBlue
+    
+    component [UserProfileUnified] #MistyRose
+    component [PantryManager] #LightCyan
+    component [ShoppingListManager] #LightYellow
+    
+    component [ProtectedRoute] #LightCoral
+    component [SessionExpiredModal] #LightCoral
+  }
+  
+  ' Context y Hooks
+  package "Context & Hooks" {
+    component [AuthContext] #LightPink {
+      + user: User
+      + isAuthenticated: boolean
+      + login()
+      + logout()
+      + register()
+    }
+    
+    component [NotificationContext] #Lavender {
+      + notifications: Notification[]
+      + unreadCount: number
+      + markAsRead()
+    }
+    
+    component [useNotifications] #Lavender {
+      + loadNotifications()
+      + connect()
+      + disconnect()
+    }
+  }
+  
+  ' Servicios API
+  package "Services (12 servicios)" {
+    component [recipeService] #LightGreen {
+      + getAllRecipes()
+      + searchByIngredients()
+      + getRecipeById()
+      + createRecipe()
+    }
+    
+    component [celularService] #LightCyan {
+      + getAllCelulares()
+      + filterBySpecs()
+      + getCelularById()
+      + compare()
+    }
+    
+    component [favoritesService] #Lavender {
+      + addToFavorites()
+      + removeFromFavorites()
+      + getGroupedByType()
+    }
+    
+    component [activityService] #LightSteelBlue {
+      + logActivity()
+      + getStats()
+      + exportToCSV()
+    }
+    
+    component [notificationsService] #Lavender {
+      + getMyNotifications()
+      + markAsRead()
+      + scheduleReminder()
+    }
+    
+    component [adminService] #LightCoral
+    component [tortasService] #LightYellow
+    component [lugarService] #LightSalmon
+    component [deporteService] #LightGoldenRodYellow
+    component [pantryService] #LightCyan
+    component [shoppingListService] #LightYellow
+    component [authService] #LightPink
+  }
+  
+  ' Utilidades
+  package "Utils" {
+    component [authUtils] {
+      + isValidJWTFormat()
+      + isTokenExpired()
+    }
+    component [emojiUtils]
+    component [sessionDebug]
+    component [backendChecker]
+    component [clearStorage]
+  }
+  
+  ' Configuración
+  component [API_CONFIG] #LightGray {
+    BASE_URL: "http://localhost:3002"
+    ENDPOINTS: {...}
+    getAuthHeaders()
+  }
+}
+
+' ============ CAPA DE APLICACIÓN (BACKEND) ============
+package "Backend - NestJS 11.0.1" #LightGreen {
+  
+  ' Módulos principales
+  package "Modules" {
+    component [AuthModule] #LightPink {
+      AuthController
+      AuthService
+      JwtStrategy
+      JwtAuthGuard
+    }
+    
+    component [RecipesModule] #LightGreen {
+      RecipesController
+      RecipesPrismaService
+      8 endpoints REST
+    }
+    
+    component [CelularesModule] #LightCyan {
+      CelularesController
+      CelularesService
+      7 filtros avanzados
+    }
+    
+    component [TortasModule] #LightYellow {
+      TortasController
+      TortasService
+    }
+    
+    component [LugaresModule] #LightSalmon {
+      LugaresController
+      LugaresService
+      8 endpoints REST
+    }
+    
+    component [DeportesModule] #LightGoldenRodYellow {
+      DeportesController
+      DeportesService
+    }
+    
+    component [FavoritesModule] #Lavender {
+      FavoritesController
+      FavoritesService
+      Sistema unificado
+    }
+    
+    component [NotificationsModule] #Lavender {
+      NotificationsController
+      NotificationsService
+      NotificationsGateway
+      WebSocket support
+    }
+    
+    component [ActivityModule] #LightSteelBlue {
+      ActivityController
+      ActivityService
+      10 tipos de actividades
+    }
+    
+    component [ClientsModule] #MistyRose {
+      ClientsController
+      ClientsService
+    }
+    
+    component [PantryModule] #LightCyan {
+      PantryController
+      PantryService
+    }
+    
+    component [ShoppingListModule] #LightYellow {
+      ShoppingListController
+      ShoppingListService
+    }
+    
+    component [ReviewsModule] #LightGreen {
+      ReviewsController
+      ReviewsService
+    }
+    
+    component [AdminModule] #LightCoral {
+      AdminController
+      AdminService
+    }
+    
+    component [VendorsModule] #LightYellow {
+      VendorsController
+      VendorsService
+    }
+    
+    component [UploadModule] #LightGray {
+      UploadController
+      UploadService
+      Multer + Sharp
+    }
+    
+    component [SearchModule] #LightBlue {
+      SearchController
+      SearchService
+      Búsqueda global
+    }
+  }
+  
+  ' Servicios compartidos
+  package "Shared Services" {
+    component [PrismaService] #LightGray {
+      + onModuleInit()
+      + enableShutdownHooks()
+    }
+    
+    component [ConfigService] #LightGray {
+      + get(key: string)
+      + getOrThrow(key: string)
+    }
+  }
+  
+  ' Middleware y Guards
+  package "Common" {
+    component [SecurityMiddleware] #LightCoral {
+      Rate Limiting
+      10,000 req/min (dev)
+      500 req/min (prod)
+    }
+    
+    component [JwtAuthGuard] #LightPink {
+      Validación de token
+      Extracción de usuario
+    }
+    
+    component [RolesGuard] #LightPink {
+      Validación de roles
+      RBAC
+    }
+    
+    component [ValidationPipe] #LightGray {
+      class-validator
+      class-transformer
+    }
+  }
+  
+  ' Tareas programadas
+  package "Scheduled Tasks" {
+    component [CronJobs] #Lavender {
+      checkExpiringIngredients()
+      sendScheduledNotifications()
+      cleanupOldActivities()
+    }
+  }
+}
+
+' ============ CAPA DE DATOS ============
+package "Data Layer" #LightYellow {
+  
+  component [PrismaClient] #LightGray {
+    ORM principal
+    Type-safe queries
+    Migrations
+  }
+  
+  database "MySQL Database" #LightCyan {
+    folder "Usuarios" {
+      [User]
+      [Role]
+      [DocumentType]
+      [Client]
+      [ClientPlan]
+    }
+    
+    folder "Recetas" {
+      [Recipe]
+      [RecipeCategory]
+      [RecipeDifficulty]
+      [RecipeIngredient]
+      [MasterIngredient]
+      [RecipeReview]
+    }
+    
+    folder "Productos" {
+      [Item]
+      [Celular]
+      [Torta]
+      [Lugar]
+      [DeporteEquipamiento]
+    }
+    
+    folder "Funcionalidades" {
+      [UserPantry]
+      [ShoppingList]
+      [Favorite]
+      [Notification]
+      [UserActivity]
+    }
+  }
+}
+
+' ============ SERVICIOS EXTERNOS ============
+package "External Services" #LightGray {
+  component [Cloudinary/S3] {
+    Almacenamiento
+    de imágenes
+  }
+  
+  component [EmailService] {
+    Envío de emails
+    (futuro)
+  }
+  
+  component [PaymentGateway] {
+    Pagos
+    (futuro)
+  }
+}
+
+' ============ WEBSOCKETS ============
+package "Real-Time Communication" #Lavender {
+  component [Socket.IO Server] #Lavender {
+    Puerto: 3002
+    Namespace: /notifications
+    Auth: JWT
+  }
+  
+  component [Socket.IO Client] #Lavender {
+    Conexión automática
+    Reconexión
+    Event listeners
+  }
+}
+
+' ============ RELACIONES ============
+
+' Frontend -> Services
+[RecipesPage] --> [recipeService]
+[CelularesPage] --> [celularService]
+[FavoritesPage] --> [favoritesService]
+[ActivityPage] --> [activityService]
+[ProfilePage] --> [authService]
+[DashboardPage] --> [adminService]
+
+' Services -> API Config
+[recipeService] --> [API_CONFIG]
+[celularService] --> [API_CONFIG]
+[favoritesService] --> [API_CONFIG]
+[activityService] --> [API_CONFIG]
+[notificationsService] --> [API_CONFIG]
+
+' Context -> Services
+[AuthContext] --> [authService]
+[NotificationContext] --> [notificationsService]
+
+' Components -> Context
+[ProtectedRoute] --> [AuthContext]
+[NotificationsPanel] --> [NotificationContext]
+[UserProfileUnified] --> [AuthContext]
+
+' Services -> Backend Modules
+[recipeService] ..> [RecipesModule] : HTTP/REST
+[celularService] ..> [CelularesModule] : HTTP/REST
+[favoritesService] ..> [FavoritesModule] : HTTP/REST
+[activityService] ..> [ActivityModule] : HTTP/REST
+[notificationsService] ..> [NotificationsModule] : HTTP/REST
+[authService] ..> [AuthModule] : HTTP/REST
+
+' Backend Modules -> Prisma
+[RecipesModule] --> [PrismaService]
+[CelularesModule] --> [PrismaService]
+[FavoritesModule] --> [PrismaService]
+[NotificationsModule] --> [PrismaService]
+[ActivityModule] --> [PrismaService]
+[AuthModule] --> [PrismaService]
+
+' Prisma -> Database
+[PrismaService] --> [PrismaClient]
+[PrismaClient] --> [MySQL Database]
+
+' Middleware
+[SecurityMiddleware] ..> [RecipesModule] : protege
+[SecurityMiddleware] ..> [CelularesModule] : protege
+[JwtAuthGuard] ..> [RecipesModule] : protege
+[JwtAuthGuard] ..> [FavoritesModule] : protege
+
+' WebSockets
+[NotificationsModule] --> [Socket.IO Server]
+[Socket.IO Server] <--> [Socket.IO Client] : WebSocket
+[Socket.IO Client] --> [useNotifications]
+[useNotifications] --> [NotificationContext]
+
+' Cron Jobs
+[CronJobs] --> [NotificationsModule] : trigger
+[CronJobs] --> [PantryModule] : check expiration
+
+' External Services
+[UploadModule] --> [Cloudinary/S3]
+[NotificationsModule] ..> [EmailService] : futuro
+[ClientsModule] ..> [PaymentGateway] : futuro
+
+note bottom of [RecipesModule]
+  **Búsqueda Inteligente**
+  - Mapeo de IDs de ingredientes
+  - Debounce 500ms en frontend
+  - Cálculo de % coincidencia
+  - Filtros combinados
+  - Rate limiting: 10,000 req/min
+end note
+
+note bottom of [NotificationsModule]
+  **Sistema en Tiempo Real**
+  - WebSockets con Socket.IO
+  - 9 tipos de notificaciones
+  - 4 niveles de prioridad
+  - Cron jobs (cada hora y 9 AM)
+  - Alertas automáticas
+end note
+
+note bottom of [CelularesModule]
+  **Filtros Avanzados**
+  - 7 filtros disponibles
+  - Normalización de tipos
+  - 50 celulares en catálogo
+  - Comparador de productos
+end note
+
+note right of [MySQL Database]
+  **Base de Datos**
+  - 30+ tablas
+  - Relaciones complejas
+  - Índices optimizados
+  - Soft delete
+  - Prisma migrations
+end note
+
+note right of [Socket.IO Server]
+  **WebSocket Features**
+  - Autenticación JWT
+  - Rooms por usuario
+  - Broadcast support
+  - Reconexión automática
+  - Event-driven
+end note
+
+@enduml

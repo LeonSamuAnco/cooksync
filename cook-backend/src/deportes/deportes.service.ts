@@ -13,7 +13,6 @@ export class DeportesService {
     const skip = (pageNum - 1) * limitNum;
 
     try {
-      console.log('🔍 Buscando deportes...');
       
       // Obtener deportes básicos
       const deportes = await this.prisma.deportes_equipamiento.findMany({
@@ -26,8 +25,6 @@ export class DeportesService {
         skip,
         take: limitNum,
       });
-
-      console.log(`✅ Encontrados ${deportes.length} deportes`);
 
       const total = await this.prisma.deportes_equipamiento.count();
 
@@ -44,8 +41,6 @@ export class DeportesService {
           variaciones,
         });
       }
-
-      console.log('✅ Deportes con variaciones procesados');
 
       return {
         data: deportesConVariaciones,

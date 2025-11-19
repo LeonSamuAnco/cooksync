@@ -1,12 +1,14 @@
 import {
   Controller,
   Post,
+  Put,
   Body,
   HttpCode,
   HttpStatus,
   Get,
   Param,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { AuthPrismaService } from './auth-prisma.service';
 import { RegisterUserDto } from './dto/register-user.dto';
@@ -72,14 +74,58 @@ export class AuthPrismaController {
   async getUserById(@Param('id') id: string) {
     try {
       const userId = parseInt(id);
-      const user = await this.authPrismaService.getUserById(userId);
-      return {
-        message: 'Usuario encontrado',
-        user,
-      };
+      const result = await this.authPrismaService.getUserById(userId);
+      
+      if (!result || !result.user) {
+        return {
+          message: 'Usuario no encontrado',
+          error: 'USER_NOT_FOUND'
+        };
+      }
+
+      return result.user; // Devolver directamente el usuario, no envuelto en objeto
     } catch (error: any) {
       return {
         message: 'Error obteniendo usuario',
+        error: error.message,
+      };
+    }
+  }
+
+  @Put('update-profile')
+  @UseGuards(JwtAuthGuard)
+  async updateProfile(@Req() req: any, @Body() updateData: any) {
+    try {
+      const userId = req.user.id;
+      const result = await this.authPrismaService.updateUserProfile(userId, updateData);
+      
+      if (!result) {
+        return {
+          message: 'Error actualizando perfil',
+          error: 'UPDATE_FAILED'
+        };
+      }
+
+      return result; // Devolver el usuario actualizado
+    } catch (error: any) {
+      return {
+        message: 'Error actualizando perfil',
+        error: error.message,
+      };
+    }
+  }
+
+  @Get('profile-stats/:id')
+  @UseGuards(JwtAuthGuard)
+  async getProfileStats(@Param('id') id: string) {
+    try {
+      const userId = parseInt(id);
+      const stats = await this.authPrismaService.getUserProfileStats(userId);
+      
+      return stats;
+    } catch (error: any) {
+      return {
+        message: 'Error obteniendo estadísticas',
         error: error.message,
       };
     }

@@ -65,18 +65,14 @@ export const apiRequest = async (endpoint, options = {}) => {
   };
   
   try {
-    console.log(`API Request: ${config.method || 'GET'} ${url}`);
     
     const response = await fetch(url, config);
-    
-    console.log(`API Response: ${response.status} ${response.statusText}`);
-    
+
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
     
     const data = await response.json();
-    console.log('API Data received:', data);
     
     return data;
   } catch (error) {

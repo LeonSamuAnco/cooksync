@@ -9,7 +9,6 @@ export const clearAuthData = () => {
   localStorage.removeItem('authToken');
   localStorage.removeItem('user');
   localStorage.removeItem('userRole');
-  console.log('Datos de autenticación limpiados');
 };
 
 /**

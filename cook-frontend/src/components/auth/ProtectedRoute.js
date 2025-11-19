@@ -7,14 +7,11 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
 
   // Logging para debugging
   console.log('🔒 ProtectedRoute - Loading:', loading, 'Authenticated:', isAuthenticated);
-  console.log('🔒 ProtectedRoute - User:', user);
-  console.log('🔒 ProtectedRoute - AllowedRoles:', allowedRoles);
 
   // Memoizar la verificación de autorización
   const isAuthorized = useMemo(() => {
     // Durante la carga, NO hacer NADA (evitar logs prematuros)
     if (loading) {
-      console.log('⏳ ProtectedRoute - Aún cargando, esperando...');
       return null;
     }
     
@@ -26,13 +23,11 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     
     // Si no hay roles específicos requeridos, permitir acceso a usuarios autenticados
     if (allowedRoles.length === 0) {
-      console.log('✅ ProtectedRoute - Acceso permitido (sin restricción de roles)');
       return true;
     }
     
     // Verificar si el usuario tiene uno de los roles permitidos
     const userRole = user.rol || user.role;
-    console.log('🔒 ProtectedRoute - Verificando rol del usuario:', userRole);
     
     if (!userRole) {
       console.error('❌ ProtectedRoute - Usuario autenticado pero sin rol definido');
@@ -44,7 +39,6 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
 
     // ADMIN tiene acceso total a cualquier ruta protegida
     if (roleCode === 'ADMIN') {
-      console.log('👑 ProtectedRoute - ADMIN detectado, acceso total concedido');
       return true;
     }
 

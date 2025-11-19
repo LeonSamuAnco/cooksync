@@ -34,20 +34,17 @@ class AdminService {
   // Obtener estadísticas del sistema
   async getSystemStats() {
     try {
-      console.log('Frontend: Calling admin stats endpoint');
       
       // Primero probar endpoint sin autenticación
       try {
         const testResponse = await fetch(`${API_URL}/admin/test-stats`);
         if (testResponse.ok) {
           const testData = await testResponse.json();
-          console.log('Frontend: Test stats data received:', testData);
           if (testData.success) {
             return testData.stats;
           }
         }
       } catch (testError) {
-        console.log('Frontend: Test endpoint failed, trying authenticated endpoint');
       }
       
       // Si el test falla, usar endpoint con autenticación
@@ -55,8 +52,6 @@ class AdminService {
         headers: this.getAuthHeaders(),
       });
 
-      console.log('Frontend: Response status:', response.status);
-      
       if (!response.ok) {
         const errorText = await response.text();
         console.error('Frontend: Error response:', errorText);
@@ -64,7 +59,6 @@ class AdminService {
       }
 
       const data = await response.json();
-      console.log('Frontend: Stats data received:', data);
       return data;
     } catch (error) {
       console.error('Error en getSystemStats:', error);
@@ -116,20 +110,17 @@ class AdminService {
   // Obtener todos los usuarios (con paginación y búsqueda opcional)
   async getAllUsers(page = 1, limit = 10, search = '') {
     try {
-      console.log('Frontend: Calling get all users endpoint');
       
       // Primero probar endpoint sin autenticación
       try {
         const testResponse = await fetch(`${API_URL}/admin/test-users?page=${page}&limit=${limit}`);
         if (testResponse.ok) {
           const testData = await testResponse.json();
-          console.log('Frontend: Test users data received:', testData);
           if (testData.success) {
             return testData;
           }
         }
       } catch (testError) {
-        console.log('Frontend: Test users endpoint failed, trying authenticated endpoint');
       }
 
       // Si el test falla, usar endpoint con autenticación
@@ -157,20 +148,17 @@ class AdminService {
   // Obtener usuarios recientes
   async getRecentUsers(limit = 5) {
     try {
-      console.log('Frontend: Calling recent users endpoint');
       
       // Primero probar endpoint sin autenticación
       try {
         const testResponse = await fetch(`${API_URL}/admin/test-recent-users`);
         if (testResponse.ok) {
           const testData = await testResponse.json();
-          console.log('Frontend: Test recent users data received:', testData);
           if (testData.success) {
             return testData.users;
           }
         }
       } catch (testError) {
-        console.log('Frontend: Test recent users endpoint failed, trying authenticated endpoint');
       }
       
       // Si el test falla, usar endpoint con autenticación
@@ -271,20 +259,17 @@ class AdminService {
   // Obtener todas las recetas para administración
   async getAllRecipes(page = 1, limit = 10, search = '') {
     try {
-      console.log('Frontend: Calling admin recipes endpoint');
       
       // Primero probar endpoint sin autenticación
       try {
         const testResponse = await fetch(`${API_URL}/admin/test-recipes`);
         if (testResponse.ok) {
           const testData = await testResponse.json();
-          console.log('Frontend: Test recipes data received:', testData);
           if (testData.success) {
             return testData;
           }
         }
       } catch (testError) {
-        console.log('Frontend: Test recipes endpoint failed, trying authenticated endpoint');
       }
       
       // Si el test falla, usar endpoint con autenticación

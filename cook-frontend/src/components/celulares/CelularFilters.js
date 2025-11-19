@@ -13,16 +13,11 @@ const CelularFilters = ({ filters, onFiltersChange, onSearch, loading }) => {
 
   const loadFilterOptions = async () => {
     try {
-      console.log('📥 Cargando opciones de filtros...');
       const [marcasData, gamasData, sosData] = await Promise.all([
         celularService.getMarcas(),
         celularService.getGamas(),
         celularService.getSistemasOperativos(),
       ]);
-
-      console.log('✅ Marcas cargadas:', marcasData);
-      console.log('✅ Gamas cargadas:', gamasData);
-      console.log('✅ Sistemas operativos cargados:', sosData);
 
       setMarcas(marcasData);
       setGamas(gamasData);
@@ -43,7 +38,6 @@ const CelularFilters = ({ filters, onFiltersChange, onSearch, loading }) => {
       processedValue = parseInt(processedValue, 10);
     }
     
-    console.log(`🔧 Filtro cambiado: ${field} = ${processedValue} (tipo: ${typeof processedValue})`);
     onFiltersChange({ [field]: processedValue });
   };
 

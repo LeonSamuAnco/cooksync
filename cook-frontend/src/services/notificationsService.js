@@ -44,7 +44,6 @@ class NotificationsService {
       }
 
       const data = await response.json();
-      console.log('📋 Notificaciones obtenidas:', data);
       return data;
     } catch (error) {
       console.error('❌ Error obteniendo notificaciones:', error);
@@ -91,7 +90,6 @@ class NotificationsService {
       }
 
       const data = await response.json();
-      console.log('📊 Estadísticas obtenidas:', data);
       return data;
     } catch (error) {
       console.error('❌ Error obteniendo estadísticas:', error);
@@ -123,7 +121,6 @@ class NotificationsService {
       }
 
       const data = await response.json();
-      console.log('✅ Notificación creada:', data);
       return data;
     } catch (error) {
       console.error('❌ Error creando notificación:', error);
@@ -148,7 +145,6 @@ class NotificationsService {
       }
 
       const data = await response.json();
-      console.log('✅ Notificación marcada como leída:', data);
       return data;
     } catch (error) {
       console.error('❌ Error marcando como leída:', error);
@@ -172,7 +168,6 @@ class NotificationsService {
       }
 
       const data = await response.json();
-      console.log('✅ Todas las notificaciones marcadas como leídas:', data);
       return data;
     } catch (error) {
       console.error('❌ Error marcando todas como leídas:', error);
@@ -197,7 +192,6 @@ class NotificationsService {
       }
 
       const data = await response.json();
-      console.log('✅ Notificación eliminada:', data);
       return data;
     } catch (error) {
       console.error('❌ Error eliminando notificación:', error);
@@ -227,7 +221,6 @@ class NotificationsService {
       }
 
       const data = await response.json();
-      console.log('⏰ Recordatorio programado:', data);
       return data;
     } catch (error) {
       console.error('❌ Error programando recordatorio:', error);
@@ -254,7 +247,6 @@ class NotificationsService {
       }
 
       const data = await response.json();
-      console.log('🧪 Test de ingredientes por vencer:', data);
       return data;
     } catch (error) {
       console.error('❌ Error en test:', error);

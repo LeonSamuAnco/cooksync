@@ -94,7 +94,6 @@ const ImageUpload = ({
       }
 
       const data = await response.json();
-      console.log('Imagen subida exitosamente:', data);
 
       // Callback de éxito
       if (onUploadSuccess) {

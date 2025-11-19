@@ -39,7 +39,6 @@ const CelularDetailPage = () => {
             modelo: data.modelo,
           },
         }).then(() => {
-          console.log('✅ Actividad de celular registrada');
         }).catch((actError) => {
           console.warn('⚠️ No se pudo registrar la actividad:', actError.message);
         });

@@ -44,7 +44,6 @@ const TortaDetailPage = () => {
             ocasion: data.torta_ocasiones?.nombre,
           },
         }).then(() => {
-          console.log('✅ Actividad de torta registrada');
         }).catch((actError) => {
           console.warn('⚠️ No se pudo registrar la actividad:', actError.message);
         });

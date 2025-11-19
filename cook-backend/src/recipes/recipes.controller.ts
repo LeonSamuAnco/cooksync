@@ -57,7 +57,6 @@ export class RecipesController {
     @Query('ingredients') ingredients: string,
     @Query() allFilters: any, // Usar any para evitar validación estricta
   ) {
-    console.log('🔍 Endpoint by-ingredients llamado con:', { ingredients, allFilters });
     
     if (!ingredients) {
       console.log('❌ No se proporcionaron ingredientes');
@@ -68,9 +67,7 @@ export class RecipesController {
       .split(',')
       .map((id) => parseInt(id.trim()))
       .filter((id) => !isNaN(id));
-    
-    console.log('📋 IDs de ingredientes procesados:', ingredientIds);
-    
+
     // Filtrar solo los campos válidos del DTO
     const validFilters: RecipeFiltersDto = {
       search: allFilters.search,
@@ -90,15 +87,12 @@ export class RecipesController {
       sortBy: allFilters.sortBy,
       sortOrder: allFilters.sortOrder,
     };
-    
-    console.log('🎯 Filtros válidos aplicados:', validFilters);
-    
+
     try {
       const result = await this.recipesService.findByIngredientsWithFilters(
         ingredientIds,
         validFilters,
       );
-      console.log('✅ Resultados encontrados:', result?.length || 0);
       return result;
     } catch (error) {
       console.error('❌ Error en findByIngredients:', error);

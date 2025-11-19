@@ -20,6 +20,7 @@ const RecipeFilters = ({ onFilterChange, userIngredients = [] }) => {
   const [categories, setCategories] = useState([]);
   const [availableIngredients, setAvailableIngredients] = useState([]);
   const [loadingIngredients, setLoadingIngredients] = useState(true);
+  // eslint-disable-next-line no-unused-vars
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [showAllIngredients, setShowAllIngredients] = useState(false);
 
@@ -31,9 +32,7 @@ const RecipeFilters = ({ onFilterChange, userIngredients = [] }) => {
   const loadCategories = async () => {
     setLoadingCategories(true);
     try {
-      console.log('📂 Cargando categorías de recetas...');
       const data = await recipeService.getRecipeCategories();
-      console.log('✅ Categorías cargadas:', data);
       setCategories(data);
     } catch (error) {
       console.error('❌ Error cargando categorías:', error);
@@ -46,10 +45,7 @@ const RecipeFilters = ({ onFilterChange, userIngredients = [] }) => {
   const loadIngredients = async () => {
     setLoadingIngredients(true);
     try {
-      console.log('🧂 Cargando ingredientes...');
       const data = await recipeService.getAllIngredients();
-      console.log('✅ Ingredientes cargados:', data);
-      console.log('📊 Total:', data.length);
       setAvailableIngredients(data);
     } catch (error) {
       console.error('❌ Error cargando ingredientes:', error);

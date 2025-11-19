@@ -1,0 +1,42 @@
+/* Layout específico para la pestaña de Recetas en /categorias
+   Copia el estilo de CelularesPage: sidebar de filtros + panel de resultados */
+
+.categories-page .recipes-section {
+  display: grid !important;
+  grid-template-columns: 320px 1fr !important;
+  gap: 2rem;
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Columna de filtros (similar a .celulares-sidebar) */
+.categories-page .recipes-section .filters-column {
+  background-color: #F8F9FA;
+  border-radius: 12px;
+  padding: 1.5rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  position: sticky;
+  top: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Columna de resultados (similar a .celulares-main) */
+.categories-page .recipes-section .results-column {
+  background-color: #FFFFFF;
+  max-height: calc(100vh - 16rem);
+  overflow-y: auto;
+  padding-right: 0.5rem;
+  scroll-behavior: smooth;
+}
+
+/* Panel de resultados dentro de la columna derecha */
+.categories-page .recipes-section .results-section {
+  min-height: 500px;
+  background: #FFFFFF;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e2e8f0;
+}

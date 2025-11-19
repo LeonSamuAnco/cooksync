@@ -45,7 +45,6 @@ class ActivityService {
       }
 
       const data = await response.json();
-      console.log('📋 Actividades obtenidas:', data);
       return data;
     } catch (error) {
       console.error('❌ Error obteniendo actividades:', error);
@@ -69,7 +68,6 @@ class ActivityService {
       }
 
       const data = await response.json();
-      console.log('📊 Estadísticas obtenidas:', data);
       return data;
     } catch (error) {
       console.error('❌ Error obteniendo estadísticas:', error);
@@ -104,7 +102,6 @@ class ActivityService {
       }
 
       const data = await response.json();
-      console.log('🕐 Actividades recientes obtenidas:', data);
       return data;
     } catch (error) {
       console.error('❌ Error obteniendo actividades recientes:', error);
@@ -129,7 +126,6 @@ class ActivityService {
       }
 
       const data = await response.json();
-      console.log('📅 Actividades agrupadas obtenidas:', data);
       return data;
     } catch (error) {
       console.error('❌ Error obteniendo actividades agrupadas:', error);
@@ -144,7 +140,6 @@ class ActivityService {
    */
   async create(activityData) {
     try {
-      console.log('📤 Enviando datos de actividad:', activityData);
       const response = await fetch(this.baseURL, {
         method: 'POST',
         headers: this.getHeaders(),
@@ -164,7 +159,6 @@ class ActivityService {
       }
 
       const data = await response.json();
-      console.log('✅ Actividad registrada:', data);
       return data;
     } catch (error) {
       console.error('❌ Error registrando actividad:', error);
@@ -189,7 +183,6 @@ class ActivityService {
       }
 
       const data = await response.json();
-      console.log('✅ Actividad eliminada:', data);
       return data;
     } catch (error) {
       console.error('❌ Error eliminando actividad:', error);
@@ -213,7 +206,6 @@ class ActivityService {
       }
 
       const data = await response.json();
-      console.log('✅ Historial limpiado:', data);
       return data;
     } catch (error) {
       console.error('❌ Error limpiando historial:', error);
@@ -262,7 +254,6 @@ class ActivityService {
     link.click();
     document.body.removeChild(link);
     
-    console.log('📥 Historial descargado como CSV');
   }
 
   /**

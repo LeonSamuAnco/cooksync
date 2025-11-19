@@ -17,12 +17,6 @@ const Dashboard = () => {
   };
 
   const renderProfileByRole = () => {
-    console.log('🔍 Usuario completo en renderProfileByRole:', user);
-    console.log('🔍 user.rol:', user?.rol);
-    console.log('🔍 user.role:', user?.role);
-    console.log('🔍 user.rolId:', user?.rolId);
-    console.log('🔍 typeof user:', typeof user);
-    console.log('🔍 JSON.stringify(user):', JSON.stringify(user));
     
     if (!user) {
       return (
@@ -43,10 +37,7 @@ const Dashboard = () => {
       console.log('⚠️ Usuario anidado detectado, extrayendo...');
       userRole = user.user.rol || user.user.role;
     }
-    
-    console.log('🔍 userRole detectado:', userRole);
-    console.log('🔍 userRole.codigo:', userRole?.codigo);
-    
+
     // Si aún no hay rol, intentar por rolId como último recurso
     if (!userRole && user.rolId) {
       console.log('⚠️ No se encontró objeto rol, pero hay rolId. Asumiendo CLIENTE por defecto.');

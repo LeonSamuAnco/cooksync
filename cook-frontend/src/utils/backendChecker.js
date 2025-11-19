@@ -53,7 +53,6 @@ export const BackendChecker = {
   // Mostrar reporte de conectividad en consola
   async logConnectivityReport() {
     console.group('🔍 Backend Connectivity Report');
-    console.log('Backend URL:', API_CONFIG.BASE_URL);
     
     const isAvailable = await this.isBackendAvailable();
     console.log('Backend Status:', isAvailable ? '✅ Available' : '❌ Unavailable');
@@ -63,7 +62,6 @@ export const BackendChecker = {
       console.table(endpoints);
     } else {
       console.warn('⚠️ Backend is not running. Please start the backend server:');
-      console.log('cd cook-backend && npm run start:dev');
     }
     
     console.groupEnd();
@@ -73,11 +71,6 @@ export const BackendChecker = {
   // Función helper para mostrar instrucciones de inicio
   showStartupInstructions() {
     console.group('🚀 Backend Startup Instructions');
-    console.log('1. Open a new terminal');
-    console.log('2. Navigate to backend directory: cd cook-backend');
-    console.log('3. Install dependencies: npm install');
-    console.log('4. Start the server: npm run start:dev');
-    console.log('5. Backend should be available at:', API_CONFIG.BASE_URL);
     console.groupEnd();
   }
 };

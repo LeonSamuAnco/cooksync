@@ -20,29 +20,41 @@ const Register = () => {
   })
   const [roles, setRoles] = useState([])
   const [documentTypes, setDocumentTypes] = useState([])
+  const [categories, setCategories] = useState([])
+  const [selectedCategories, setSelectedCategories] = useState([])
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const navigate = useNavigate()
 
-  // Cargar roles y tipos de documento al montar el componente
+  // Function to get icon for category
+  const getCategoryIcon = (categoryName) => {
+    const icons = {
+      'Celulares': '📱',
+      'Tortas': '🧁',
+      'Lugares': '🏡',
+      'Salud & Belleza': '🧴',
+      'Deportes': '🏃',
+      'Libros': '📖',
+      'Juguetes': '🧸',
+      'Recetas': '🍳'
+    }
+    return icons[categoryName] || '📦'
+  }
+
+  // Cargar roles, tipos de documento y categorías al montar el componente
   useEffect(() => {
     const fetchData = async () => {
       try {
-        console.log('🔍 Cargando roles y tipos de documento...');
-        
-        const [rolesResponse, docTypesResponse] = await Promise.all([
+        const [rolesResponse, docTypesResponse, categoriesResponse] = await Promise.all([
           fetch("http://localhost:3002/auth/roles"),
-          fetch("http://localhost:3002/auth/document-types")
+          fetch("http://localhost:3002/auth/document-types"),
+          fetch("http://localhost:3002/products/categories")
         ])
-        
-        console.log('📡 Respuesta roles:', rolesResponse.status);
-        console.log('📡 Respuesta tipos documento:', docTypesResponse.status);
-        
+
         if (rolesResponse.ok) {
           const rolesData = await rolesResponse.json()
-          console.log('✅ Roles cargados:', rolesData);
           setRoles(rolesData)
         } else {
           console.error('❌ Error al cargar roles:', rolesResponse.statusText);
@@ -50,10 +62,17 @@ const Register = () => {
         
         if (docTypesResponse.ok) {
           const docTypesData = await docTypesResponse.json()
-          console.log('✅ Tipos de documento cargados:', docTypesData);
           setDocumentTypes(docTypesData)
         } else {
           console.error('❌ Error al cargar tipos de documento:', docTypesResponse.statusText);
+        }
+
+        if (categoriesResponse.ok) {
+          const categoriesData = await categoriesResponse.json()
+          console.log('✅ Categorías cargadas:', categoriesData)
+          setCategories(categoriesData)
+        } else {
+          console.error('❌ Error al cargar categorías:', categoriesResponse.statusText);
         }
       } catch (error) {
         console.error("❌ Error cargando datos:", error)
@@ -71,6 +90,16 @@ const Register = () => {
     }))
   }
 
+  const handleCategoryChange = (categoryId) => {
+    setSelectedCategories(prev => {
+      if (prev.includes(categoryId)) {
+        return prev.filter(id => id !== categoryId)
+      } else {
+        return [...prev, categoryId]
+      }
+    })
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError("")
@@ -82,6 +111,12 @@ const Register = () => {
 
     if (!formData.aceptaTerminos) {
       setError("Debes aceptar los términos y condiciones")
+      return
+    }
+
+    // Validar que los vendedores seleccionen al menos una categoría
+    if (formData.rolId === 2 && selectedCategories.length === 0) {
+      setError("Como vendedor, debes seleccionar al menos una categoría de productos")
       return
     }
 
@@ -105,6 +140,8 @@ const Register = () => {
           aceptaTerminos: formData.aceptaTerminos,
           aceptaMarketing: formData.aceptaMarketing,
           rolId: formData.rolId,
+          // Solo enviar categorías si es vendedor
+          ...(formData.rolId === 2 && { categorias: selectedCategories })
         }),
       })
 
@@ -264,6 +301,35 @@ const Register = () => {
               </div>
             </div>
 
+            
+            {/* Selección de categorías - solo para vendedores */}
+            {formData.rolId === 2 && (
+              <div className="form-group categories-section">
+                <label>¿Qué categorías de productos vendes?</label>
+                <p className="categories-subtitle">Selecciona todas las categorías que aplican a tu negocio</p>
+                <div className="categories-grid">
+                  {console.log('🔍 Renderizando categorías:', categories, 'Total:', categories.length)}
+                  {categories.map(category => (
+                    <div key={category.id} className="category-checkbox">
+                      <input
+                        type="checkbox"
+                        id={`category-${category.id}`}
+                        checked={selectedCategories.includes(category.id)}
+                        onChange={() => handleCategoryChange(category.id)}
+                      />
+                      <label htmlFor={`category-${category.id}`} className="category-label">
+                        <span className="category-icon">{getCategoryIcon(category.nombre)}</span>
+                        <span className="category-name">{category.nombre}</span>
+                      </label>
+                    </div>
+                  ))}
+                </div>
+                {selectedCategories.length === 0 && (
+                  <p className="category-warning">⚠️ Por favor selecciona al menos una categoría</p>
+                )}
+              </div>
+            )}
+
             <div className="form-row">
               <div className="form-group half-width">
                 <label htmlFor="password">Contraseña</label>
@@ -383,6 +449,7 @@ const Register = () => {
                   required
                 />
                 <span className="checkmark"></span>
+                {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
                 Acepto los <a href="#" className="terms-link">términos y condiciones</a> y la <a href="#" className="terms-link">política de privacidad</a>
               </label>
 

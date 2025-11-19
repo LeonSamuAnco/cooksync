@@ -17,20 +17,20 @@ const DeporteCard = ({ deporte }) => {
 
   // Cargar estado de favorito al montar el componente
   useEffect(() => {
+    const loadFavoriteStatus = async () => {
+      try {
+        const result = await favoritesService.checkIsFavorite('deporte', deporte.id);
+        setIsFavorite(result.isFavorite);
+        setFavoriteId(result.favoriteId);
+      } catch (error) {
+        console.error('Error cargando estado de favorito:', error);
+      }
+    };
+
     if (isAuthenticated) {
       loadFavoriteStatus();
     }
   }, [isAuthenticated, deporte.id]);
-
-  const loadFavoriteStatus = async () => {
-    try {
-      const result = await favoritesService.checkIsFavorite('deporte', deporte.id);
-      setIsFavorite(result.isFavorite);
-      setFavoriteId(result.favoriteId);
-    } catch (error) {
-      console.error('Error cargando estado de favorito:', error);
-    }
-  };
 
   const handleToggleFavorite = async (event) => {
     event.stopPropagation();

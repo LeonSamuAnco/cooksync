@@ -744,3 +744,117 @@
 .auth-right-side {
   animation: slideInRight 0.6s ease-out;
 }
+
+/* Estilos para selección de categorías */
+.categories-section {
+  background: #f8fafc;
+  padding: 20px;
+  border-radius: 12px;
+  border: 2px solid #e5e7eb;
+  max-width: 100%;
+  max-height: none;
+  min-height: auto;
+  overflow-y: visible;
+}
+
+.categories-section label {
+  font-weight: 600;
+  color: #374151;
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+.categories-subtitle {
+  color: #6b7280;
+  font-size: 14px;
+  margin: 0 0 16px 0;
+  line-height: 1.5;
+}
+
+.categories-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.category-checkbox {
+  position: relative;
+}
+
+.category-checkbox input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.category-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  color: #374151;
+  width: 100%;
+  box-sizing: border-box;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.category-label:hover {
+  border-color: #3b82f6;
+  background: #f0f9ff;
+}
+
+.category-checkbox input[type="checkbox"]:checked + .category-label {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: white;
+}
+
+.category-icon {
+  font-size: 18px;
+}
+
+.category-name {
+  font-weight: 500;
+}
+
+.category-warning {
+  color: #dc2626;
+  font-size: 14px;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Responsive para categorías */
+@media (max-width: 768px) {
+  .categories-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .categories-section {
+    padding: 16px;
+  }
+  
+  .category-label {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+  
+  .category-icon {
+    font-size: 16px;
+  }
+}

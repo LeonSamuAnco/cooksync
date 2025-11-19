@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Put,
+  Post,
   Param,
   Query,
   UseGuards,
@@ -40,9 +41,7 @@ export class AdminController {
   @Roles('ADMIN')
   async getSystemStats() {
     try {
-      console.log('Admin: Getting system stats');
       const stats = await this.adminService.getSystemStats();
-      console.log('Admin: Stats retrieved successfully', stats);
       return stats;
     } catch (error) {
       console.error('Admin: Error getting stats:', error);
@@ -62,6 +61,30 @@ export class AdminController {
     return this.adminService.getAllUsers(page, limit, search);
   }
 
+  // Endpoint de prueba para usuarios recientes sin guards
+  @Get('test-recent-users')
+  async testRecentUsers() {
+    try {
+      const users = await this.adminService.getRecentUsers(5);
+      return { success: true, users };
+    } catch (error) {
+      return { success: false, error: error.message, users: [] };
+    }
+  }
+
+  // Endpoint de prueba para obtener todos los usuarios sin guards
+  @Get('test-users')
+  async testGetUsers(@Query('page') page?: string, @Query('limit') limit?: string) {
+    try {
+      const pageNum = page ? parseInt(page) : 1;
+      const limitNum = limit ? parseInt(limit) : 10;
+      const result = await this.adminService.getAllUsers(pageNum, limitNum);
+      return { success: true, ...result };
+    } catch (error) {
+      return { success: false, error: error.message, users: [], total: 0 };
+    }
+  }
+
   // Obtener usuarios recientes
   @Get('users/recent')
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -73,17 +96,6 @@ export class AdminController {
     } catch (error) {
       console.error('Error in getRecentUsers controller:', error);
       return [];
-    }
-  }
-
-  // Endpoint de prueba para usuarios recientes sin guards
-  @Get('test-recent-users')
-  async testRecentUsers() {
-    try {
-      const users = await this.adminService.getRecentUsers(5);
-      return { success: true, users };
-    } catch (error) {
-      return { success: false, error: error.message, users: [] };
     }
   }
 
@@ -155,11 +167,144 @@ export class AdminController {
     return this.adminService.getRecipesStats();
   }
 
-  // Activar/Desactivar receta
+  // Cambiar estado de receta (activar/desactivar)
   @Put('recipes/:id/toggle-status')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
-  async toggleRecipeStatus(@Param('id') recipeId: string) {
-    return this.adminService.toggleRecipeStatus(parseInt(recipeId));
+  async toggleRecipeStatus(@Param('id', ParseIntPipe) recipeId: number) {
+    return this.adminService.toggleRecipeStatus(recipeId);
+  }
+
+  // ========================================
+  // NUEVOS ENDPOINTS PARA ADMINISTRACIÓN COMPLETA
+  // ========================================
+
+  // Obtener estadísticas completas del dashboard
+  @Get('dashboard/complete')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  async getCompleteDashboardStats() {
+    return this.adminService.getCompleteDashboardStats();
+  }
+
+  // Obtener actividades recientes del sistema
+  @Get('activities/recent')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  async getRecentSystemActivities(@Query('limit') limit?: string) {
+    const limitNum = limit ? parseInt(limit) : 20;
+    return this.adminService.getRecentSystemActivities(limitNum);
+  }
+
+  // Obtener estadísticas de notificaciones
+  @Get('notifications/stats')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  async getNotificationsStats() {
+    return this.adminService.getNotificationsStats();
+  }
+
+  // Enviar notificación global
+  @Post('notifications/global')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  async sendGlobalNotification(@Body() data: any) {
+    return this.adminService.sendGlobalNotification(data);
+  }
+
+  // Obtener estadísticas de reseñas
+  @Get('reviews/stats')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  async getReviewsStats() {
+    return this.adminService.getReviewsStats();
+  }
+
+  // Moderar reseña
+  @Post('reviews/:id/moderate')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  async moderateReview(
+    @Param('id', ParseIntPipe) reviewId: number,
+    @Body() body: { action: 'approve' | 'reject' | 'delete' },
+  ) {
+    return this.adminService.moderateReview(reviewId, body.action);
+  }
+
+  // Obtener estadísticas de productos
+  @Get('products/stats')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  async getProductsStats() {
+    return this.adminService.getProductsStats();
+  }
+
+  // Obtener logs del sistema
+  @Get('logs')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  async getSystemLogs(
+    @Query('type') type?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.adminService.getSystemLogs({
+      type,
+      startDate: startDate ? new Date(startDate) : undefined,
+      endDate: endDate ? new Date(endDate) : undefined,
+      limit: limit ? parseInt(limit) : 100,
+    });
+  }
+
+  // Obtener configuración del sistema
+  @Get('config')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  async getSystemConfig() {
+    return this.adminService.getSystemConfig();
+  }
+
+  // Crear backup de base de datos
+  @Post('backup')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  async createBackup() {
+    return this.adminService.createBackup();
+  }
+
+  // ========================================
+  // CATEGORÍAS DE RECETAS (CRUD BÁSICO)
+  // ========================================
+
+  @Get('categories')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  async getAllRecipeCategories() {
+    return this.adminService.getAllRecipeCategories();
+  }
+
+  @Post('categories')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  async createRecipeCategory(@Body() body: any) {
+    return this.adminService.createRecipeCategory(body);
+  }
+
+  @Put('categories/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  async updateRecipeCategory(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: any,
+  ) {
+    return this.adminService.updateRecipeCategory(id, body);
+  }
+
+  @Post('categories/:id/delete')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  async deleteRecipeCategory(@Param('id', ParseIntPipe) id: number) {
+    return this.adminService.deleteRecipeCategory(id);
   }
 }

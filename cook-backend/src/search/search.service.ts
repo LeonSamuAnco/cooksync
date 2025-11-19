@@ -7,21 +7,17 @@ export class SearchService {
   constructor(private prisma: PrismaService) {}
 
   async findAllCategories() {
-    console.log('🔍 Buscando categorías de productos...');
     const productCategories = await this.prisma.productCategory.findMany({
       where: { esActivo: true },
       select: { id: true, nombre: true },
       orderBy: { nombre: 'asc' },
     });
-    console.log(`📦 Categorías de productos encontradas: ${productCategories.length}`, productCategories);
 
-    console.log('🔍 Buscando categorías de recetas...');
     const recipeCategories = await this.prisma.recipeCategory.findMany({
       where: { esActivo: true },
       select: { id: true, nombre: true },
       orderBy: { nombre: 'asc' },
     });
-    console.log(`🍳 Categorías de recetas encontradas: ${recipeCategories.length}`, recipeCategories);
 
     const unifiedCategories = [
       ...productCategories.map((cat) => ({ 
@@ -36,7 +32,6 @@ export class SearchService {
       })),
     ];
 
-    console.log(`✅ Total de categorías unificadas: ${unifiedCategories.length}`);
     return unifiedCategories.sort((a, b) => a.nombre.localeCompare(b.nombre));
   }
 

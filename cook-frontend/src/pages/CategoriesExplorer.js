@@ -100,6 +100,12 @@ const CategoriesExplorer = () => {
   ];
 
   const handleCategorySelect = (category) => {
+    // Si es la categoría de recetas, navegar a la página dedicada de recetas
+    if (category.id === 'recipes') {
+      navigate('/recetas');
+      return;
+    }
+
     // Si es la categoría de celulares, navegar a la página dedicada
     if (category.id === 'phones') {
       navigate('/celulares');
@@ -137,15 +143,12 @@ const CategoriesExplorer = () => {
   const searchRecipesByIngredients = async (ingredientIds, additionalFilters = {}) => {
     setLoading(true);
     try {
-      console.log('🔍 Buscando recetas con ingredientes:', ingredientIds);
-      console.log('🎯 Filtros adicionales:', additionalFilters);
       
       const results = await recipeService.searchByIngredientsWithFilters(
         ingredientIds,
         additionalFilters
       );
       
-      console.log('✅ Recetas encontradas:', results);
       setResults(results || []);
     } catch (error) {
       console.error('❌ Error buscando recetas:', error);
@@ -214,7 +217,6 @@ const CategoriesExplorer = () => {
 
   const handleApplyFilters = () => {
     if (selectedCategory?.id === 'recipes') {
-      console.log('🔍 Aplicando filtros:', filters);
       
       // Verificar si hay ingredientes seleccionados
       const hasIngredients = filters.ingredients && filters.ingredients.length > 0;
@@ -251,10 +253,7 @@ const CategoriesExplorer = () => {
         if (filters.dietary.lactoseFree) backendFilters.sinLactosa = true;
         if (filters.dietary.healthy) backendFilters.esSaludable = true;
       }
-      
-      console.log('🎯 Filtros para backend:', backendFilters);
-      console.log('🧂 Ingredientes:', filters.ingredients);
-      
+
       // Buscar recetas con ingredientes y filtros
       searchRecipesByIngredients(filters.ingredients, backendFilters);
     }

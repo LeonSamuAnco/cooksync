@@ -15,54 +15,52 @@ const DeporteDetailPage = () => {
   const [selectedVariacion, setSelectedVariacion] = useState(null);
 
   useEffect(() => {
+    const loadDeporte = async () => {
+      setLoading(true);
+      try {
+        const data = await deporteService.getById(id);
+        setDeporte(data);
+
+        // Seleccionar primera variación por defecto
+        const variaciones = data.items?.deporte_variaciones || [];
+        if (variaciones.length > 0) {
+          const firstVariacion = variaciones[0];
+          setSelectedTalla(firstVariacion.talla);
+          setSelectedColor(firstVariacion.color);
+          setSelectedVariacion(firstVariacion);
+        }
+
+        // Registrar actividad de vista (sin bloquear la carga)
+        if (data && data.items) {
+          // Ejecutar en background sin await para no bloquear la UI
+          activityService.create({
+            tipo: 'DEPORTE_VISTO',
+            descripcion: `Viste el producto deportivo "${data.items.nombre}"`,
+            referenciaId: parseInt(id),
+            referenciaTipo: 'deporte',
+            metadata: {
+              tipoId: data.deporte_tipo_id,
+              marcaId: data.marca_id,
+              marca: data.deporte_marcas?.nombre,
+              tipo: data.deporte_tipos?.nombre,
+              genero: data.genero,
+            },
+          }).then(() => {
+          }).catch((actError) => {
+            console.warn('⚠️ No se pudo registrar la actividad:', actError.message);
+          });
+        }
+      } catch (error) {
+        console.error('Error al cargar deporte:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     loadDeporte();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  const loadDeporte = async () => {
-    setLoading(true);
-    try {
-      const data = await deporteService.getById(id);
-      setDeporte(data);
-
-      // Seleccionar primera variación por defecto
-      const variaciones = data.items?.deporte_variaciones || [];
-      if (variaciones.length > 0) {
-        const firstVariacion = variaciones[0];
-        setSelectedTalla(firstVariacion.talla);
-        setSelectedColor(firstVariacion.color);
-        setSelectedVariacion(firstVariacion);
-      }
-
-      // Registrar actividad de vista (sin bloquear la carga)
-      if (data && data.items) {
-        // Ejecutar en background sin await para no bloquear la UI
-        activityService.create({
-          tipo: 'DEPORTE_VISTO',
-          descripcion: `Viste el producto deportivo "${data.items.nombre}"`,
-          referenciaId: parseInt(id),
-          referenciaTipo: 'deporte',
-          metadata: {
-            tipoId: data.deporte_tipo_id,
-            marcaId: data.marca_id,
-            marca: data.deporte_marcas?.nombre,
-            tipo: data.deporte_tipos?.nombre,
-            genero: data.genero,
-          },
-        }).then(() => {
-          console.log('✅ Actividad de deporte registrada');
-        }).catch((actError) => {
-          console.warn('⚠️ No se pudo registrar la actividad:', actError.message);
-        });
-      }
-    } catch (error) {
-      console.error('Error al cargar deporte:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const variaciones = deporte?.items?.deporte_variaciones || [];
+  const variaciones = React.useMemo(() => deporte?.items?.deporte_variaciones || [], [deporte]);
   
   // Obtener tallas únicas
   const tallasUnicas = [...new Set(variaciones.map((v) => v.talla))];

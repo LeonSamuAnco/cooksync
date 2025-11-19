@@ -11,7 +11,6 @@ const NotificationsPanel = ({ isOpen, onClose }) => {
     unreadCount,
     loading,
     connected,
-    loadNotifications,
     markAsRead,
     markAllAsRead,
     removeNotification,

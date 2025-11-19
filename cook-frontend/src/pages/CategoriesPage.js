@@ -5,6 +5,7 @@ import ProductSearch from '../components/products/ProductSearch';
 import ProductGrid from '../components/products/ProductGrid';
 import recipeService from '../services/recipeService';
 import './CategoriesPage.css';
+import './RecipesLayout.css';
 
 const CategoriesPage = () => {
   const navigate = useNavigate();
@@ -32,7 +33,6 @@ const CategoriesPage = () => {
   const handleRecipeFiltersChange = async (filters) => {
     setLoading(true);
     try {
-      console.log('🔍 Aplicando filtros de recetas:', filters);
       
       // Construir query params
       const params = {
@@ -60,6 +60,12 @@ const CategoriesPage = () => {
           filters.ingredients,
           params
         );
+        // Fallback: si no se encuentran recetas con los ingredientes seleccionados,
+        // cargar recomendaciones generales para no dejar la sección vacía
+        if (!results || results.length === 0) {
+          console.log('ℹ️ Sin resultados por ingredientes, cargando recomendaciones...');
+          results = await recipeService.getRecommendations({ limit: 12 });
+        }
       } else {
         const response = await recipeService.getAllRecipes(params);
         results = response.recipes || response;
@@ -128,7 +134,7 @@ const CategoriesPage = () => {
                 userIngredients={userIngredients}
               />
             </div>
-            
+
             <div className="results-column">
               <div className="results-section">
                 <h2>
@@ -136,7 +142,7 @@ const CategoriesPage = () => {
                     ? `${recipes.length} Recetas Encontradas`
                     : 'Selecciona filtros para buscar recetas'}
                 </h2>
-                
+
                 {loading ? (
                   <div className="loading-state">
                     <div className="spinner">⏳</div>
@@ -144,7 +150,7 @@ const CategoriesPage = () => {
                   </div>
                 ) : (
                   <ProductGrid
-                    products={recipes.map(recipe => ({
+                    products={recipes.map((recipe) => ({
                       id: recipe.id,
                       name: recipe.nombre || recipe.title,
                       description: recipe.descripcion || recipe.description,
@@ -156,37 +162,6 @@ const CategoriesPage = () => {
                     emptyMessage="No se encontraron recetas con los filtros seleccionados. Intenta ajustar tus criterios de búsqueda."
                   />
                 )}
-              </div>
-            </div>
-
-            <div className="recommendations-column">
-              <div className="recommendations-panel">
-                <h3>✨ Recomendaciones Personalizadas</h3>
-                <p>Basado en tu historial y preferencias</p>
-                {/* Aquí irá el componente de recomendaciones */}
-                <div className="recommendations-placeholder">
-                  <div className="recommendation-item">
-                    <div className="rec-image">🍝</div>
-                    <div className="rec-content">
-                      <h4>Pasta Carbonara</h4>
-                      <p>95% match</p>
-                    </div>
-                  </div>
-                  <div className="recommendation-item">
-                    <div className="rec-image">🥗</div>
-                    <div className="rec-content">
-                      <h4>Ensalada César</h4>
-                      <p>88% match</p>
-                    </div>
-                  </div>
-                  <div className="recommendation-item">
-                    <div className="rec-image">🍲</div>
-                    <div className="rec-content">
-                      <h4>Sopa de Tomate</h4>
-                      <p>82% match</p>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
           </div>

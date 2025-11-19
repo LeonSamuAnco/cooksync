@@ -20,19 +20,12 @@ const FavoritesPage = () => {
     ingredientes: 0 
   });
 
-  useEffect(() => {
-    loadFavorites();
-    loadStats();
-  }, [filter]);
-
-  const loadFavorites = async () => {
+  const loadFavorites = React.useCallback(async () => {
     try {
       setLoading(true);
       const tipo = filter === 'all' ? null : filter;
       const response = await favoritesService.getMyFavorites(tipo);
-      
-      console.log('📋 Favoritos cargados:', response);
-      
+
       // Manejar diferentes estructuras de respuesta
       const favoritesData = response.favorites || response.data || response || [];
       setFavorites(Array.isArray(favoritesData) ? favoritesData : []);
@@ -42,7 +35,12 @@ const FavoritesPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter]);
+
+  useEffect(() => {
+    loadFavorites();
+    loadStats();
+  }, [loadFavorites]);
 
   const loadStats = async () => {
     try {

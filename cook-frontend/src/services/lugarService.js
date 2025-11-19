@@ -21,7 +21,6 @@ const lugarService = {
       if (filters.limit) params.append('limit', filters.limit);
 
       const url = `${API_BASE_URL}/lugares?${params.toString()}`;
-      console.log('🔍 Fetching lugares:', url);
 
       const response = await fetch(url);
 
@@ -30,7 +29,6 @@ const lugarService = {
       }
 
       const data = await response.json();
-      console.log('✅ Lugares obtenidos:', data);
       return data;
     } catch (error) {
       console.error('❌ Error al obtener lugares:', error);
@@ -44,7 +42,6 @@ const lugarService = {
   async getById(id) {
     try {
       const url = `${API_BASE_URL}/lugares/${id}`;
-      console.log(`🔍 Fetching lugar ${id}:`, url);
 
       const response = await fetch(url);
 
@@ -53,7 +50,6 @@ const lugarService = {
       }
 
       const data = await response.json();
-      console.log('✅ Lugar obtenido:', data);
       return data;
     } catch (error) {
       console.error(`❌ Error al obtener lugar ${id}:`, error);
@@ -67,7 +63,6 @@ const lugarService = {
   async getTipos() {
     try {
       const url = `${API_BASE_URL}/lugares/tipos`;
-      console.log('🔍 Fetching tipos de lugar:', url);
 
       const response = await fetch(url);
 
@@ -76,7 +71,6 @@ const lugarService = {
       }
 
       const data = await response.json();
-      console.log('✅ Tipos obtenidos:', data);
       return data;
     } catch (error) {
       console.error('❌ Error al obtener tipos:', error);
@@ -90,7 +84,6 @@ const lugarService = {
   async getRangosPrecio() {
     try {
       const url = `${API_BASE_URL}/lugares/rangos-precio`;
-      console.log('🔍 Fetching rangos de precio:', url);
 
       const response = await fetch(url);
 
@@ -99,7 +92,6 @@ const lugarService = {
       }
 
       const data = await response.json();
-      console.log('✅ Rangos obtenidos:', data);
       return data;
     } catch (error) {
       console.error('❌ Error al obtener rangos:', error);
@@ -113,7 +105,6 @@ const lugarService = {
   async getServicios() {
     try {
       const url = `${API_BASE_URL}/lugares/servicios`;
-      console.log('🔍 Fetching servicios:', url);
 
       const response = await fetch(url);
 
@@ -122,7 +113,6 @@ const lugarService = {
       }
 
       const data = await response.json();
-      console.log('✅ Servicios obtenidos:', data);
       return data;
     } catch (error) {
       console.error('❌ Error al obtener servicios:', error);
@@ -136,7 +126,6 @@ const lugarService = {
   async getLugaresByTipo(tipoId) {
     try {
       const url = `${API_BASE_URL}/lugares/tipo/${tipoId}`;
-      console.log(`🔍 Fetching lugares de tipo ${tipoId}:`, url);
 
       const response = await fetch(url);
 
@@ -145,7 +134,6 @@ const lugarService = {
       }
 
       const data = await response.json();
-      console.log('✅ Lugares por tipo obtenidos:', data);
       return data;
     } catch (error) {
       console.error(`❌ Error al obtener lugares por tipo ${tipoId}:`, error);
@@ -159,7 +147,6 @@ const lugarService = {
   async getLugaresByCiudad(ciudad) {
     try {
       const url = `${API_BASE_URL}/lugares/ciudad/${encodeURIComponent(ciudad)}`;
-      console.log(`🔍 Fetching lugares en ${ciudad}:`, url);
 
       const response = await fetch(url);
 
@@ -168,7 +155,6 @@ const lugarService = {
       }
 
       const data = await response.json();
-      console.log('✅ Lugares por ciudad obtenidos:', data);
       return data;
     } catch (error) {
       console.error(`❌ Error al obtener lugares en ${ciudad}:`, error);
@@ -182,7 +168,6 @@ const lugarService = {
   async getStats() {
     try {
       const url = `${API_BASE_URL}/lugares/stats`;
-      console.log('📊 Fetching estadísticas de lugares:', url);
 
       const response = await fetch(url);
 
@@ -191,7 +176,6 @@ const lugarService = {
       }
 
       const data = await response.json();
-      console.log('✅ Estadísticas obtenidas:', data);
       return data;
     } catch (error) {
       console.error('❌ Error al obtener estadísticas:', error);

@@ -30,8 +30,6 @@ const FavoritesPage = () => {
       setError('');
       const data = await favoritesService.getMyFavorites();
       
-      console.log('🔍 Datos recibidos del backend:', data);
-      console.log('🔍 Estructura de datos:', {
         hasRecipes: !!data.recipes,
         hasData: !!data.data,
         hasFavorites: !!data.favorites,
@@ -70,10 +68,7 @@ const FavoritesPage = () => {
         // Si tiene propiedad favorites
         recipesArray = data.favorites;
       }
-      
-      console.log('✅ Recetas extraídas:', recipesArray);
-      console.log('✅ Cantidad de recetas:', recipesArray.length);
-      
+
       setFavorites(recipesArray);
     } catch (error) {
       console.error('Error cargando favoritas:', error);

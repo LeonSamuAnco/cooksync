@@ -74,6 +74,10 @@ export class FavoritesService {
       recetas: enrichedFavorites.filter((f) => f.tipo === FavoriteType.RECETA),
       productos: enrichedFavorites.filter((f) => f.tipo === FavoriteType.PRODUCTO),
       ingredientes: enrichedFavorites.filter((f) => f.tipo === FavoriteType.INGREDIENTE),
+      celulares: enrichedFavorites.filter((f) => f.tipo === FavoriteType.CELULAR),
+      tortas: enrichedFavorites.filter((f) => f.tipo === FavoriteType.TORTA),
+      lugares: enrichedFavorites.filter((f) => f.tipo === FavoriteType.LUGAR),
+      deportes: enrichedFavorites.filter((f) => f.tipo === FavoriteType.DEPORTE),
       total: enrichedFavorites.length,
     };
 
@@ -84,43 +88,66 @@ export class FavoritesService {
    * Crear favorito con prevención de duplicados
    */
   async create(userId: number, createFavoriteDto: CreateFavoriteDto) {
-    const { tipo, referenciaId } = createFavoriteDto;
+    try {
+      const { tipo, referenciaId } = createFavoriteDto;
 
-    // Verificar que la referencia existe
-    await this.validateReference(tipo, referenciaId);
+      this.logger.log(`Creando favorito: tipo=${tipo}, referenciaId=${referenciaId}, userId=${userId}`);
 
-    // Verificar si ya existe como favorito
-    const existing = await this.prisma.favorite.findFirst({
-      where: {
-        usuarioId: userId,
-        tipo,
-        referenciaId,
-        esActivo: true,
-      },
-    });
+      // Verificar que la referencia existe
+      this.logger.log('Validando referencia...');
+      await this.validateReference(tipo, referenciaId);
+      this.logger.log('Referencia validada OK');
 
-    if (existing) {
-      throw new ConflictException(
-        `Este ${tipo} ya está en tus favoritos`,
+      // Verificar si ya existe como favorito
+      this.logger.log('Verificando duplicados...');
+      const existing = await this.prisma.favorite.findFirst({
+        where: {
+          usuarioId: userId,
+          tipo,
+          referenciaId,
+          esActivo: true,
+        },
+      });
+
+      if (existing) {
+        throw new ConflictException(
+          `Este ${tipo} ya está en tus favoritos`,
+        );
+      }
+      this.logger.log('No hay duplicados');
+
+      // Crear el favorito
+      this.logger.log('Creando favorito en BD...');
+      const favorite = await this.prisma.favorite.create({
+        data: {
+          usuarioId: userId,
+          tipo,
+          referenciaId,
+        },
+      });
+      this.logger.log(`Favorito creado con ID: ${favorite.id}`);
+
+      this.logger.log(
+        `Usuario ${userId} agregó ${tipo} ${referenciaId} a favoritos`,
       );
+
+      // Enriquecer con datos
+      try {
+        this.logger.log('Enriqueciendo favorito...');
+        const enriched = await this.enrichFavoritesData([favorite]);
+        this.logger.log('Favorito enriquecido OK');
+        return enriched[0];
+      } catch (error) {
+        this.logger.error(`Error al enriquecer favorito: ${error.message}`);
+        this.logger.error(`Stack: ${error.stack}`);
+        // Devolver el favorito sin enriquecer
+        return favorite;
+      }
+    } catch (error) {
+      this.logger.error(`Error en create(): ${error.message}`);
+      this.logger.error(`Stack: ${error.stack}`);
+      throw error;
     }
-
-    // Crear el favorito
-    const favorite = await this.prisma.favorite.create({
-      data: {
-        usuarioId: userId,
-        tipo,
-        referenciaId,
-      },
-    });
-
-    this.logger.log(
-      `Usuario ${userId} agregó ${tipo} ${referenciaId} a favoritos`,
-    );
-
-    // Enriquecer con datos
-    const enriched = await this.enrichFavoritesData([favorite]);
-    return enriched[0];
   }
 
   /**
@@ -252,7 +279,7 @@ export class FavoritesService {
    * Obtener estadísticas de favoritos
    */
   async getStats(userId: number) {
-    const [recetas, productos, ingredientes, total] = await Promise.all([
+    const [recetas, productos, ingredientes, celulares, tortas, lugares, deportes, total] = await Promise.all([
       this.prisma.favorite.count({
         where: { usuarioId: userId, tipo: FavoriteType.RECETA, esActivo: true },
       }),
@@ -261,6 +288,18 @@ export class FavoritesService {
       }),
       this.prisma.favorite.count({
         where: { usuarioId: userId, tipo: FavoriteType.INGREDIENTE, esActivo: true },
+      }),
+      this.prisma.favorite.count({
+        where: { usuarioId: userId, tipo: FavoriteType.CELULAR, esActivo: true },
+      }),
+      this.prisma.favorite.count({
+        where: { usuarioId: userId, tipo: FavoriteType.TORTA, esActivo: true },
+      }),
+      this.prisma.favorite.count({
+        where: { usuarioId: userId, tipo: FavoriteType.LUGAR, esActivo: true },
+      }),
+      this.prisma.favorite.count({
+        where: { usuarioId: userId, tipo: FavoriteType.DEPORTE, esActivo: true },
       }),
       this.prisma.favorite.count({
         where: { usuarioId: userId, esActivo: true },
@@ -272,6 +311,10 @@ export class FavoritesService {
       recetas,
       productos,
       ingredientes,
+      celulares,
+      tortas,
+      lugares,
+      deportes,
     };
   }
 
@@ -346,6 +389,26 @@ export class FavoritesService {
           where: { id: referenciaId },
         }));
         break;
+      case FavoriteType.CELULAR:
+        exists = !!(await this.prisma.celulares.findUnique({
+          where: { id: referenciaId },
+        }));
+        break;
+      case FavoriteType.TORTA:
+        exists = !!(await this.prisma.tortas.findUnique({
+          where: { id: referenciaId },
+        }));
+        break;
+      case FavoriteType.LUGAR:
+        exists = !!(await this.prisma.lugares.findUnique({
+          where: { id: referenciaId },
+        }));
+        break;
+      case FavoriteType.DEPORTE:
+        exists = !!(await this.prisma.deportes_equipamiento.findUnique({
+          where: { id: referenciaId },
+        }));
+        break;
     }
 
     if (!exists) {
@@ -382,6 +445,46 @@ export class FavoritesService {
             case FavoriteType.INGREDIENTE:
               data = await this.prisma.masterIngredient.findUnique({
                 where: { id: fav.referenciaId },
+              });
+              break;
+            case FavoriteType.CELULAR:
+              data = await this.prisma.celulares.findUnique({
+                where: { id: fav.referenciaId },
+                include: {
+                  celular_marcas: true,
+                  celular_sistemas_operativos: true,
+                  celular_gamas: true,
+                },
+              });
+              break;
+            case FavoriteType.TORTA:
+              data = await this.prisma.tortas.findUnique({
+                where: { id: fav.referenciaId },
+                include: {
+                  torta_sabores: true,
+                  torta_rellenos: true,
+                  torta_coberturas: true,
+                  torta_ocasiones: true,
+                },
+              });
+              break;
+            case FavoriteType.LUGAR:
+              data = await this.prisma.lugares.findUnique({
+                where: { id: fav.referenciaId },
+                include: {
+                  lugar_tipos: true,
+                  lugar_rangos_precio: true,
+                },
+              });
+              break;
+            case FavoriteType.DEPORTE:
+              data = await this.prisma.deportes_equipamiento.findUnique({
+                where: { id: fav.referenciaId },
+                include: {
+                  deporte_marcas: true,
+                  deporte_tipos: true,
+                  deporte_equipamiento_tipos: true,
+                },
               });
               break;
           }

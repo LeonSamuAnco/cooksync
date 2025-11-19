@@ -5,15 +5,10 @@ import { CelularFiltersDto } from './dto/celular-filters.dto';
 @Controller('celulares')
 export class CelularesController {
   constructor(private readonly celularesService: CelularesService) {
-    console.log('✅ ========================================');
-    console.log('✅ CelularesController INICIALIZADO');
-    console.log('✅ Ruta base: /celulares');
-    console.log('✅ ========================================');
   }
 
   @Get('test')
   test(): string {
-    console.log('🧪 Endpoint de prueba celulares/test llamado');
     return 'Módulo de celulares funcionando!';
   }
 

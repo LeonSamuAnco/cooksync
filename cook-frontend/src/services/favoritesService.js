@@ -37,7 +37,6 @@ class FavoritesService {
       }
 
       const data = await response.json();
-      console.log('✅ Item agregado a favoritos:', data);
       return data;
     } catch (error) {
       console.error('❌ Error agregando a favoritos:', error);
@@ -62,7 +61,6 @@ class FavoritesService {
       }
 
       const data = await response.json();
-      console.log('✅ Item quitado de favoritos:', data);
       return data;
     } catch (error) {
       console.error('❌ Error quitando de favoritos:', error);
@@ -107,7 +105,6 @@ class FavoritesService {
       }
 
       const data = await response.json();
-      console.log('📋 Favoritos obtenidos:', data);
       return data;
     } catch (error) {
       console.error('❌ Error obteniendo favoritos:', error);
@@ -156,7 +153,6 @@ class FavoritesService {
       }
 
       const data = await response.json();
-      console.log('📊 Favoritos agrupados:', data);
       return data;
     } catch (error) {
       console.error('❌ Error obteniendo favoritos agrupados:', error);
@@ -180,7 +176,6 @@ class FavoritesService {
       }
 
       const data = await response.json();
-      console.log('🔄 Favoritos sincronizados:', data);
       return data;
     } catch (error) {
       console.error('❌ Error sincronizando favoritos:', error);
@@ -205,7 +200,6 @@ class FavoritesService {
       }
 
       const data = await response.json();
-      console.log('✅ Categoría agregada a favoritos:', data);
       return data;
     } catch (error) {
       console.error('❌ Error agregando categoría:', error);
@@ -229,7 +223,6 @@ class FavoritesService {
       }
 
       const data = await response.json();
-      console.log('📊 Estadísticas de favoritos:', data);
       return data;
     } catch (error) {
       console.error('❌ Error obteniendo estadísticas:', error);
@@ -259,7 +252,6 @@ class FavoritesService {
       }
 
       const data = await response.json();
-      console.log('💡 Sugerencias obtenidas:', data);
       return data;
     } catch (error) {
       console.error('❌ Error obteniendo sugerencias:', error);

@@ -559,9 +559,9 @@ model celulares {
   conectividad_5g             Boolean?                    @default(false)
   resistencia_agua_ip         String?                     @db.VarChar(10)
   celular_gamas               celular_gamas               @relation(fields: [gama_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_celular_gama")
-  items                       items                       @relation(fields: [item_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_celulares_item")
   celular_marcas              celular_marcas              @relation(fields: [marca_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_celular_marca")
   celular_sistemas_operativos celular_sistemas_operativos @relation(fields: [sistema_operativo_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_celular_so")
+  items                       items                       @relation(fields: [item_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_celulares_item")
 
   @@index([gama_id], map: "fk_celular_gama")
   @@index([marca_id], map: "fk_celular_marca")
@@ -859,6 +859,10 @@ enum FavoriteType {
   receta
   producto
   ingrediente
+  celular
+  torta
+  lugar
+  deporte
 }
 
 enum NotificationType {
@@ -883,6 +887,13 @@ enum NotificationPriority {
 enum ActivityType {
   RECETA_VISTA
   RECETA_PREPARADA
+  CELULAR_VISTO
+  CELULAR_COMPARADO
+  TORTA_VISTA
+  TORTA_PEDIDA
+  LUGAR_VISTO
+  LUGAR_VISITADO
+  DEPORTE_VISTO
   COMPRA_REALIZADA
   RESENA_PUBLICADA   @map("RESEÑA_PUBLICADA")
   FAVORITO_AGREGADO

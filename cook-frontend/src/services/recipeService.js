@@ -26,17 +26,13 @@ class RecipeService {
 
   async getAllIngredients() {
     try {
-      console.log('🔍 Solicitando ingredientes a:', `${API_BASE_URL}/recipes/ingredients/all`);
       const response = await fetch(`${API_BASE_URL}/recipes/ingredients/all`);
-      console.log('📡 Respuesta del servidor:', response.status, response.statusText);
       
       if (!response.ok) {
         throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
       
       const data = await response.json();
-      console.log('✅ Ingredientes recibidos del backend:', data);
-      console.log('📊 Total de ingredientes:', data.length);
       
       // Mapear a formato consistente
       return data.map(ing => ({
@@ -48,7 +44,6 @@ class RecipeService {
       }));
     } catch (error) {
       console.error('❌ Error obteniendo ingredientes:', error);
-      console.log('🔄 Usando ingredientes de fallback...');
       return this.getFallbackIngredients();
     }
   }
@@ -70,7 +65,6 @@ class RecipeService {
 
   async getRecipeCategories() {
     try {
-      console.log('🔍 Solicitando categorías de recetas...');
       const response = await fetch(`${API_BASE_URL}/search/categories`);
       
       if (!response.ok) {
@@ -78,7 +72,6 @@ class RecipeService {
       }
       
       const data = await response.json();
-      console.log('✅ Categorías recibidas:', data);
       
       // Filtrar solo categorías de recetas
       return data.filter(cat => cat.type === 'recipe');
@@ -96,6 +89,35 @@ class RecipeService {
       { id: 4, nombre: 'Sopas y Caldos', type: 'recipe' },
       { id: 5, nombre: 'Ensaladas', type: 'recipe' },
     ];
+  }
+
+  async getRecommendations(params = {}) {
+    try {
+      const queryParams = new URLSearchParams();
+
+      Object.keys(params).forEach((key) => {
+        if (
+          params[key] !== undefined &&
+          params[key] !== null &&
+          params[key] !== ''
+        ) {
+          queryParams.append(key, params[key]);
+        }
+      });
+
+      const response = await fetch(
+        `${API_BASE_URL}/recipes/recommendations?${queryParams.toString()}`
+      );
+
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('❌ Error obteniendo recomendaciones de recetas:', error);
+      return [];
+    }
   }
 
   async searchByIngredientsWithFilters(ingredientIds, filters = {}) {
@@ -119,7 +141,6 @@ class RecipeService {
       });
 
       const url = `${API_BASE_URL}/recipes/by-ingredients?${queryParams.toString()}`;
-      console.log('🔍 Buscando recetas con filtros:', url);
       
       const response = await fetch(url);
       
@@ -128,7 +149,6 @@ class RecipeService {
       }
       
       const data = await response.json();
-      console.log('✅ Recetas encontradas:', data);
       return data;
     } catch (error) {
       console.error('❌ Error buscando recetas con filtros:', error);

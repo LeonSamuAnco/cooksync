@@ -128,7 +128,6 @@ export class ClientsService {
   async getPantry(userId: number) {
     try {
       // Funcionalidad temporalmente deshabilitada hasta arreglar Prisma
-      console.log('getPantry called for user:', userId);
       
       return {
         success: true,

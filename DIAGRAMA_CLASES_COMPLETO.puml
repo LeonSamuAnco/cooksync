@@ -1,0 +1,446 @@
+@startuml
+title Diagrama de Clases - CookSync 2025\nArquitectura Backend (NestJS + Prisma)
+
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+
+' ============ USUARIOS Y AUTENTICACIÓN ============
+package "Usuarios y Autenticación" #LightBlue {
+  class User {
+    - id: number
+    - email: string
+    - passwordHash: string
+    - rolId: number
+    - tipoDocumentoId: number
+    - numeroDocumento: string
+    - nombres: string
+    - apellidos: string
+    - telefono: string
+    - fechaNacimiento: Date
+    - genero: Gender
+    - fotoPerfil: string
+    - emailVerificado: boolean
+    - esActivo: boolean
+    - ultimoAcceso: DateTime
+    --
+    + login(): Promise<Token>
+    + register(): Promise<User>
+    + updateProfile(): Promise<User>
+    + changePassword(): Promise<void>
+  }
+
+  class Role {
+    - id: number
+    - codigo: string
+    - nombre: string
+    - descripcion: string
+    - permisos: JSON
+    - esActivo: boolean
+    --
+    + hasPermission(permission: string): boolean
+  }
+
+  class DocumentType {
+    - id: number
+    - codigo: string
+    - nombre: string
+    - longitudMinima: number
+    - longitudMaxima: number
+    - patronValidacion: string
+    --
+    + validate(numero: string): boolean
+  }
+
+  class Client {
+    - id: number
+    - usuarioId: number
+    - planClienteId: number
+    - fechaRegistro: Date
+    - fechaInicioPlan: Date
+    - fechaFinPlan: Date
+    - puntosFidelidad: number
+    - nivelCliente: ClientLevel
+    --
+    + upgradePlan(): Promise<void>
+    + addPoints(points: number): void
+  }
+
+  class ClientPlan {
+    - id: number
+    - codigo: string
+    - nombre: string
+    - precioMensual: Decimal
+    - precioAnual: Decimal
+    - limiteIngredientes: number
+    - limiteRecetasFavoritas: number
+    - funcionalidades: JSON
+    --
+    + isFeatureEnabled(feature: string): boolean
+  }
+}
+
+' ============ RECETAS ============
+package "Sistema de Recetas" #LightGreen {
+  class Recipe {
+    - id: number
+    - nombre: string
+    - descripcion: string
+    - categoriaRecetaId: number
+    - dificultadId: number
+    - tiempoPreparacion: number
+    - tiempoCoccion: number
+    - tiempoTotal: number
+    - porciones: number
+    - caloriasAproximadas: number
+    - instrucciones: JSON
+    - imagenPrincipal: string
+    - esVegetariana: boolean
+    - esVegana: boolean
+    - sinGluten: boolean
+    - calificacionPromedio: Decimal
+    - totalCalificaciones: number
+    - vecesPreparada: number
+    - vecesFavorita: number
+    --
+    + searchByIngredients(ids: number[]): Promise<Recipe[]>
+    + calculateMatchPercentage(userIngredients: number[]): number
+    + addToFavorites(userId: number): Promise<void>
+    + markAsPrepared(userId: number): Promise<void>
+    + updateRating(newRating: number): Promise<void>
+  }
+
+  class RecipeCategory {
+    - id: number
+    - nombre: string
+    - descripcion: string
+    - icono: string
+    - color: string
+    - ordenMostrar: number
+    --
+    + getRecipes(): Promise<Recipe[]>
+  }
+
+  class RecipeDifficulty {
+    - id: number
+    - nivel: string
+    - descripcion: string
+    - orden: number
+    - color: string
+    --
+    + getRecipesByDifficulty(): Promise<Recipe[]>
+  }
+
+  class RecipeIngredient {
+    - id: number
+    - recetaId: number
+    - ingredienteMaestroId: number
+    - cantidad: Decimal
+    - unidadMedidaId: number
+    - esOpcional: boolean
+    - esPrincipal: boolean
+    - ordenAparicion: number
+    --
+    + convertUnit(targetUnit: number): Decimal
+  }
+
+  class MasterIngredient {
+    - id: number
+    - nombre: string
+    - nombreAlternativo: string
+    - unidadMedidaBaseId: number
+    - caloriasPor100g: Decimal
+    - proteinasPor100g: Decimal
+    - carbohidratosPor100g: Decimal
+    - esPerecedero: boolean
+    - tiempoVidaDias: number
+    - esBasico: boolean
+    --
+    + getNutritionalInfo(): JSON
+    + getSubstitutes(): Promise<MasterIngredient[]>
+  }
+
+  class RecipeReview {
+    - id: number
+    - usuarioId: number
+    - recetaId: number
+    - calificacion: number
+    - comentario: string
+    - tituloResena: string
+    - meGusta: number
+    - esUtil: number
+    - esVerificado: boolean
+    --
+    + markAsHelpful(): Promise<void>
+    + like(): Promise<void>
+  }
+}
+
+' ============ PRODUCTOS MULTI-CATEGORÍA ============
+package "Productos Multi-Categoría" #LightYellow {
+  class Item {
+    - id: number
+    - nombre: string
+    - descripcion: string
+    - imagenPrincipalUrl: string
+    - esActivo: boolean
+    --
+    + getDetails(): Promise<any>
+  }
+
+  class Celular {
+    - id: number
+    - itemId: number
+    - marcaId: number
+    - sistemaOperativoId: number
+    - gamaId: number
+    - modelo: string
+    - fechaLanzamiento: Date
+    - pantallaTamanoPulgadas: Decimal
+    - procesadorNombre: string
+    - memoriaRamGb: number
+    - almacenamientoInternoGb: number
+    - bateriaCapacidadMah: number
+    - conectividad5g: boolean
+    --
+    + filterBySpecs(filters: any): Promise<Celular[]>
+    + compare(other: Celular): JSON
+  }
+
+  class CelularMarca {
+    - id: number
+    - nombre: string
+    - paisOrigen: string
+    - logoUrl: string
+    --
+    + getCelulares(): Promise<Celular[]>
+  }
+
+  class Torta {
+    - id: number
+    - itemId: number
+    - ocasion: string
+    - sabor: string
+    - tamanio: string
+    - precioBase: Decimal
+    --
+    + getVariations(): Promise<TortaVariacion[]>
+  }
+
+  class Lugar {
+    - id: number
+    - itemId: number
+    - lugarTipoId: number
+    - rangoPrecioId: number
+    - direccion: string
+    - ciudad: string
+    - pais: string
+    - latitud: Decimal
+    - longitud: Decimal
+    - telefono: string
+    - sitioWeb: string
+    --
+    + getHorarios(): Promise<LugarHorario[]>
+    + getServicios(): Promise<LugarServicio[]>
+    + filterByType(tipoId: number): Promise<Lugar[]>
+  }
+
+  class DeporteEquipamiento {
+    - id: number
+    - itemId: number
+    - deporteTipoId: number
+    - marca: string
+    - talla: string
+    - color: string
+    --
+    + getVariations(): Promise<DeporteVariacion[]>
+  }
+}
+
+' ============ FUNCIONALIDADES AVANZADAS ============
+package "Funcionalidades Avanzadas" #LightCyan {
+  class UserPantry {
+    - id: number
+    - usuarioId: number
+    - ingredienteMaestroId: number
+    - cantidad: Decimal
+    - unidadMedidaId: number
+    - fechaVencimiento: Date
+    - fechaCompra: Date
+    --
+    + checkExpiration(): boolean
+    + updateQuantity(newQuantity: Decimal): Promise<void>
+    + getExpiringIngredients(days: number): Promise<UserPantry[]>
+  }
+
+  class ShoppingList {
+    - id: number
+    - usuarioId: number
+    - ingredienteMaestroId: number
+    - cantidad: Decimal
+    - recetaId: number
+    - esComprado: boolean
+    - prioridad: number
+    - precioEstimado: Decimal
+    --
+    + markAsBought(): Promise<void>
+    + generateFromRecipe(recipeId: number): Promise<void>
+  }
+
+  class Favorite {
+    - id: number
+    - usuarioId: number
+    - tipo: FavoriteType
+    - referenciaId: number
+    - esActivo: boolean
+    --
+    + toggle(): Promise<void>
+    + getGroupedByType(): Promise<JSON>
+  }
+
+  class Notification {
+    - id: number
+    - usuarioId: number
+    - titulo: string
+    - mensaje: string
+    - tipo: NotificationType
+    - leido: boolean
+    - prioridad: NotificationPriority
+    - programada: boolean
+    - fechaProgramada: DateTime
+    --
+    + markAsRead(): Promise<void>
+    + sendViaWebSocket(): Promise<void>
+  }
+
+  class UserActivity {
+    - id: number
+    - usuarioId: number
+    - tipo: ActivityType
+    - descripcion: string
+    - referenciaId: number
+    - referenciaTipo: string
+    - metadata: JSON
+    - fecha: DateTime
+    --
+    + log(type: ActivityType, data: any): Promise<void>
+    + getStats(): Promise<JSON>
+    + exportToCSV(): Promise<string>
+  }
+}
+
+' ============ SERVICIOS BACKEND ============
+package "Servicios Backend (NestJS)" #LightSalmon {
+  class AuthService {
+    + login(credentials: LoginDto): Promise<Token>
+    + register(userData: RegisterDto): Promise<User>
+    + validateToken(token: string): Promise<User>
+    + refreshToken(token: string): Promise<Token>
+  }
+
+  class RecipesService {
+    + findAll(filters: RecipeFiltersDto): Promise<Recipe[]>
+    + findByIngredients(ids: number[]): Promise<Recipe[]>
+    + findById(id: number): Promise<Recipe>
+    + create(data: CreateRecipeDto): Promise<Recipe>
+    + update(id: number, data: UpdateRecipeDto): Promise<Recipe>
+    + delete(id: number): Promise<void>
+  }
+
+  class NotificationsService {
+    + create(userId: number, data: CreateNotificationDto): Promise<Notification>
+    + findAllByUser(userId: number): Promise<Notification[]>
+    + markAsRead(id: number): Promise<void>
+    + sendScheduledNotifications(): Promise<void>
+    + checkExpiringIngredients(): Promise<void>
+  }
+
+  class ActivityService {
+    + logActivity(userId: number, type: ActivityType, data: any): Promise<UserActivity>
+    + getStats(userId: number): Promise<JSON>
+    + exportToCSV(userId: number): Promise<string>
+  }
+
+  class FavoritesService {
+    + addToFavorites(userId: number, type: FavoriteType, refId: number): Promise<Favorite>
+    + removeFromFavorites(id: number): Promise<void>
+    + getGroupedByType(userId: number): Promise<JSON>
+  }
+}
+
+' ============ RELACIONES ============
+
+' Usuarios
+User "1" -- "1" Role : tiene >
+User "1" -- "1" DocumentType : tiene >
+User "1" -- "0..1" Client : es >
+Client "1" -- "1" ClientPlan : suscrito a >
+
+' Recetas
+Recipe "1" -- "1" RecipeCategory : pertenece a >
+Recipe "1" -- "1" RecipeDifficulty : tiene >
+Recipe "1" -- "*" RecipeIngredient : contiene >
+RecipeIngredient "1" -- "1" MasterIngredient : usa >
+Recipe "1" -- "*" RecipeReview : tiene >
+User "1" -- "*" RecipeReview : escribe >
+
+' Productos
+Item "1" -- "0..1" Celular : es >
+Item "1" -- "0..1" Torta : es >
+Item "1" -- "0..1" Lugar : es >
+Item "1" -- "0..1" DeporteEquipamiento : es >
+Celular "1" -- "1" CelularMarca : tiene >
+
+' Funcionalidades
+User "1" -- "*" UserPantry : gestiona >
+UserPantry "1" -- "1" MasterIngredient : contiene >
+User "1" -- "*" ShoppingList : crea >
+ShoppingList "1" -- "0..1" Recipe : generada desde >
+User "1" -- "*" Favorite : tiene >
+User "1" -- "*" Notification : recibe >
+User "1" -- "*" UserActivity : registra >
+
+' Servicios
+AuthService ..> User : gestiona
+RecipesService ..> Recipe : gestiona
+NotificationsService ..> Notification : gestiona
+ActivityService ..> UserActivity : gestiona
+FavoritesService ..> Favorite : gestiona
+
+note bottom of Recipe
+  **Búsqueda Inteligente**
+  - Mapeo de IDs de ingredientes
+  - Cálculo de % de coincidencia
+  - Filtros combinados (categoría, 
+    dificultad, tiempo, dietéticos)
+  - Debounce de 500ms en frontend
+end note
+
+note bottom of Notification
+  **Sistema de Notificaciones**
+  - WebSockets (Socket.IO)
+  - 9 tipos de notificaciones
+  - 4 niveles de prioridad
+  - Cron jobs (cada hora y 9 AM)
+  - Alertas de vencimiento (3 días)
+end note
+
+note bottom of UserActivity
+  **Historial de Actividad**
+  - 10 tipos de actividades
+  - Registro automático
+  - Exportación CSV
+  - Sistema de insignias
+  - Timeline visual
+end note
+
+note right of Celular
+  **Filtros de Celulares**
+  - 7 filtros disponibles
+  - Normalización de tipos
+  - Marca, Gama, SO
+  - Precio, RAM, Almacenamiento
+  - Conectividad 5G
+end note
+
+@enduml

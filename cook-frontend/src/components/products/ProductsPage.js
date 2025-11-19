@@ -39,7 +39,6 @@ const ProductsPage = () => {
   }, []);
 
   const handleProductClick = useCallback((product) => {
-    console.log('Navegando a producto:', product);
     // Navegar al detalle de la receta
     navigate(`/products/${product.id}`);
   }, [navigate]);

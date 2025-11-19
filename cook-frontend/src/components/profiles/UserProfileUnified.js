@@ -17,16 +17,16 @@ const UserProfileUnified = ({ user }) => {
   const [profileImage, setProfileImage] = useState(null);
   const [showImageUpload, setShowImageUpload] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  // eslint-disable-next-line no-unused-vars
   const [loading, setLoading] = useState(true);
+  // eslint-disable-next-line no-unused-vars
   const [loadingStats, setLoadingStats] = useState(false);
   const [userData, setUserData] = useState(user);
 
   // Sincronizar userData con user cuando cambie, con fallback a localStorage
   useEffect(() => {
-    console.log('🔄 Verificando user en UserProfileUnified:', user);
     
     if (user) {
-      console.log('✅ User disponible desde props:', user.nombres);
       setUserData(user);
     } else {
       // Fallback: intentar cargar desde localStorage
@@ -35,7 +35,6 @@ const UserProfileUnified = ({ user }) => {
       if (storedUser) {
         try {
           const parsedUser = JSON.parse(storedUser);
-          console.log('✅ Usuario cargado desde localStorage:', parsedUser.nombres);
           setUserData(parsedUser);
         } catch (error) {
           console.error('❌ Error parseando usuario de localStorage:', error);
@@ -93,22 +92,14 @@ const UserProfileUnified = ({ user }) => {
     deseados: []
   });
 
-  useEffect(() => {
-    loadProfileData();
-    loadFavoritos();
-    loadHistorial();
-    loadStats();
-  }, [user.id]);
-
-  const loadProfileData = () => {
+  const loadProfileData = React.useCallback(() => {
     if (user) {
       setProfileImage(user.fotoPerfil || null);
     }
-  };
+  }, [user]);
 
-  const loadFavoritos = async () => {
+  const loadFavoritos = React.useCallback(async () => {
     try {
-      console.log('🔍 Cargando favoritos de todas las categorías...');
       
       // Cargar favoritos agrupados
       const favoritosAgrupados = await favoritesService.getGroupedFavorites();
@@ -125,21 +116,19 @@ const UserProfileUnified = ({ user }) => {
 
         // Actualizar datos por categoría
         setRecetasData(prev => ({ ...prev, favoritas: favoritosAgrupados.recetas || [] }));
-        setCelularesData(prev => ({ ...prev, favoritos: favoritosAgrupados.celulares || [] }));
+        setCelularesData(prev => ({ ...prev, favoritas: favoritosAgrupados.celulares || [] }));
         setTortasData(prev => ({ ...prev, favoritas: favoritosAgrupados.tortas || [] }));
-        setLugaresData(prev => ({ ...prev, favoritos: favoritosAgrupados.lugares || [] }));
-        setDeportesData(prev => ({ ...prev, favoritos: favoritosAgrupados.deportes || [] }));
+        setLugaresData(prev => ({ ...prev, favoritas: favoritosAgrupados.lugares || [] }));
+        setDeportesData(prev => ({ ...prev, favoritas: favoritosAgrupados.deportes || [] }));
       }
       
-      console.log('✅ Favoritos cargados');
     } catch (error) {
       console.error('❌ Error cargando favoritos:', error);
     }
-  };
+  }, []);
 
-  const loadHistorial = async () => {
+  const loadHistorial = React.useCallback(async () => {
     try {
-      console.log('🔍 Cargando historial de actividades...');
       
       // Cargar actividades recientes de cada categoría
       const actividades = await activityService.getRecent(50);
@@ -156,18 +145,16 @@ const UserProfileUnified = ({ user }) => {
         }));
       }
       
-      console.log('✅ Historial cargado');
     } catch (error) {
       console.error('❌ Error cargando historial:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const loadStats = async () => {
+  const loadStats = React.useCallback(async () => {
     try {
       setLoadingStats(true);
-      console.log('📊 Cargando estadísticas...');
       
       const statsData = await activityService.getStats();
       
@@ -180,13 +167,19 @@ const UserProfileUnified = ({ user }) => {
         });
       }
       
-      console.log('✅ Estadísticas cargadas:', statsData);
     } catch (error) {
       console.error('❌ Error cargando estadísticas:', error);
     } finally {
       setLoadingStats(false);
     }
-  };
+  }, [favoritosPorCategoria]);
+
+  useEffect(() => {
+    loadProfileData();
+    loadFavoritos();
+    loadHistorial();
+    loadStats();
+  }, [loadProfileData, loadFavoritos, loadHistorial, loadStats]);
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -217,6 +210,7 @@ const UserProfileUnified = ({ user }) => {
     navigate('/shopping-lists');
   };
 
+  // eslint-disable-next-line no-unused-vars
   const handleCrearReceta = () => {
     navigate('/recipes/create');
   };
@@ -306,14 +300,12 @@ const UserProfileUnified = ({ user }) => {
       }
 
       const updatedUser = await response.json();
-      console.log('✅ Perfil actualizado, datos recibidos:', updatedUser);
       
       // Actualizar estado local
       setUserData(updatedUser);
       
       // Actualizar en localStorage también
       localStorage.setItem('user', JSON.stringify(updatedUser));
-      console.log('✅ Usuario guardado en localStorage');
       
       alert('✅ Perfil actualizado correctamente');
       

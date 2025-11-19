@@ -26,7 +26,6 @@ export class LugaresController {
    */
   @Get()
   async findAll(@Query() filters: LugarFiltersDto) {
-    console.log('📍 GET /lugares - Filtros:', filters);
     return this.lugaresService.findAll(filters);
   }
 
@@ -36,7 +35,6 @@ export class LugaresController {
    */
   @Get('tipos')
   async getTipos() {
-    console.log('📍 GET /lugares/tipos');
     return this.lugaresService.getTipos();
   }
 
@@ -46,7 +44,6 @@ export class LugaresController {
    */
   @Get('rangos-precio')
   async getRangosPrecio() {
-    console.log('📍 GET /lugares/rangos-precio');
     return this.lugaresService.getRangosPrecio();
   }
 
@@ -56,7 +53,6 @@ export class LugaresController {
    */
   @Get('servicios')
   async getServicios() {
-    console.log('📍 GET /lugares/servicios');
     return this.lugaresService.getServicios();
   }
 
@@ -66,7 +62,6 @@ export class LugaresController {
    */
   @Get('stats')
   async getStats() {
-    console.log('📍 GET /lugares/stats');
     return this.lugaresService.getStats();
   }
 
@@ -76,7 +71,6 @@ export class LugaresController {
    */
   @Get('tipo/:tipoId')
   async findByTipo(@Param('tipoId', ParseIntPipe) tipoId: number) {
-    console.log(`📍 GET /lugares/tipo/${tipoId}`);
     return this.lugaresService.findByTipo(tipoId);
   }
 
@@ -86,7 +80,6 @@ export class LugaresController {
    */
   @Get('ciudad/:ciudad')
   async findByCiudad(@Param('ciudad') ciudad: string) {
-    console.log(`📍 GET /lugares/ciudad/${ciudad}`);
     return this.lugaresService.findByCiudad(ciudad);
   }
 
@@ -96,7 +89,6 @@ export class LugaresController {
    */
   @Get(':id')
   async findOne(@Param('id', ParseIntPipe) id: number) {
-    console.log(`📍 GET /lugares/${id}`);
     return this.lugaresService.findOne(id);
   }
 }

@@ -32,7 +32,6 @@ export const useNotifications = () => {
 
     // Eventos de conexión
     socketRef.current.on('connect', () => {
-      console.log('✅ Conectado a WebSocket de notificaciones');
       setConnected(true);
     });
 
@@ -48,7 +47,6 @@ export const useNotifications = () => {
 
     // Eventos de notificaciones
     socketRef.current.on('new-notification', (notification) => {
-      console.log('🔔 Nueva notificación recibida:', notification);
       
       // Agregar al inicio de la lista
       setNotifications((prev) => [notification, ...prev]);
@@ -66,12 +64,10 @@ export const useNotifications = () => {
     });
 
     socketRef.current.on('unread-count', (data) => {
-      console.log('📊 Contador actualizado:', data.count);
       setUnreadCount(data.count);
     });
 
     socketRef.current.on('broadcast-notification', (notification) => {
-      console.log('📢 Notificación broadcast:', notification);
       // Manejar notificaciones broadcast (promociones, anuncios, etc.)
     });
 

@@ -17,6 +17,7 @@ import RecipeDetail from "./components/RecipeDetail";
 import HomePage from "./components/home/HomePage";
 import LandingPage from "./pages/LandingPage";
 import CelularesPage from "./pages/CelularesPage";
+import RecetasPage from "./pages/RecetasPageFixed";
 import CelularDetailPage from "./pages/CelularDetailPage";
 import TortasPage from "./pages/TortasPage";
 import TortaDetailPage from "./pages/TortaDetailPage";
@@ -186,6 +187,7 @@ const AppContent = () => {
         <Route path="/receta/:id" element={<RecipeDetail />} />
         <Route path="/recipes/:id" element={<RecipeDetail />} />
         <Route path="/celulares" element={<CelularesPage />} />
+        <Route path="/recetas" element={<RecetasPage />} />
         <Route path="/celulares/:id" element={<CelularDetailPage />} />
         <Route path="/tortas" element={<TortasPage />} />
         <Route path="/tortas/:id" element={<TortaDetailPage />} />

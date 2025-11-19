@@ -25,14 +25,12 @@ const LugaresPage = () => {
   const loadLugares = useCallback(async () => {
     try {
       setLoading(true);
-      console.log('🔄 Cargando lugares con filtros:', filters);
 
       const response = await lugarService.getLugares(filters);
 
       setLugares(response.data || []);
       setMeta(response.meta || null);
 
-      console.log('✅ Lugares cargados:', response.data?.length);
     } catch (error) {
       console.error('❌ Error al cargar lugares:', error);
       setLugares([]);
@@ -48,7 +46,6 @@ const LugaresPage = () => {
 
   // Manejar cambio de filtros
   const handleFilterChange = (newFilters) => {
-    console.log('🔧 Filtros actualizados:', newFilters);
     setFilters(newFilters);
   };
 

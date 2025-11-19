@@ -12,12 +12,7 @@ const ActivityPage = () => {
   const [stats, setStats] = useState({});
   const [deleting, setDeleting] = useState(false);
 
-  useEffect(() => {
-    loadActivities();
-    loadStats();
-  }, [filter]);
-
-  const loadActivities = async () => {
+  const loadActivities = React.useCallback(async () => {
     try {
       setLoading(true);
       const filters = {};
@@ -26,7 +21,6 @@ const ActivityPage = () => {
       }
       
       const response = await activityService.getMyActivities(filters);
-      console.log('📊 Actividades cargadas:', response);
       
       const activitiesData = response.activities || response.data || response || [];
       setActivities(Array.isArray(activitiesData) ? activitiesData : []);
@@ -36,12 +30,16 @@ const ActivityPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter]);
+
+  useEffect(() => {
+    loadActivities();
+    loadStats();
+  }, [loadActivities]);
 
   const loadStats = async () => {
     try {
       const response = await activityService.getStats();
-      console.log('📈 Estadísticas cargadas:', response);
       setStats(response || {});
     } catch (error) {
       console.error('❌ Error cargando estadísticas:', error);
@@ -56,7 +54,6 @@ const ActivityPage = () => {
     setDeleting(true);
     try {
       await activityService.clearAll();
-      console.log('✅ Historial eliminado correctamente');
       
       // Recargar actividades y estadísticas
       await loadActivities();

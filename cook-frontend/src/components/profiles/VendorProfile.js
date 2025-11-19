@@ -7,38 +7,46 @@ import './VendorProfile.css';
 
 const VendorProfile = ({ user }) => {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout } = useAuth(); // eslint-disable-line no-unused-vars
   const { showNotification } = useNotification();
   const [activeSection, setActiveSection] = useState('dashboard');
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
   const [analytics, setAnalytics] = useState({});
   const [stats, setStats] = useState({});
+  // eslint-disable-next-line no-unused-vars
   const [reviews, setReviews] = useState([]);
   const [customers, setCustomers] = useState([]);
+  const [inventory, setInventory] = useState({ ingredients: [], summary: {} });
+  const [campaigns, setCampaigns] = useState({ campaigns: [], stats: {} });
+  const [settings, setSettings] = useState({ profile: {}, preferences: {}, paymentMethods: [] });
+  // eslint-disable-next-line no-unused-vars
+  const [notifications, setNotifications] = useState({ notifications: [], unreadCount: 0 });
   const [loading, setLoading] = useState(false);
   const [productsPage, setProductsPage] = useState(1);
+  // eslint-disable-next-line no-unused-vars
   const [ordersPage, setOrdersPage] = useState(1);
 
   useEffect(() => {
-    loadInitialData();
-  }, [user.id]);
+    const loadInitialData = async () => {
+      setLoading(true);
+      try {
+        await Promise.all([
+          loadStats(),
+          loadProducts(),
+          loadOrders(),
+          loadAnalytics(),
+        ]);
+      } catch (error) {
+        showNotification('Error al cargar datos', 'error');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const loadInitialData = async () => {
-    setLoading(true);
-    try {
-      await Promise.all([
-        loadStats(),
-        loadProducts(),
-        loadOrders(),
-        loadAnalytics(),
-      ]);
-    } catch (error) {
-      showNotification('Error al cargar datos', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
+    loadInitialData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user.id]);
 
   const loadStats = async () => {
     try {
@@ -80,6 +88,7 @@ const VendorProfile = ({ user }) => {
     }
   };
 
+  // eslint-disable-next-line no-unused-vars
   const loadReviews = async () => {
     try {
       const data = await vendorService.getVendorReviews(user.id, 1, 10);
@@ -95,6 +104,43 @@ const VendorProfile = ({ user }) => {
       setCustomers(data.customers || []);
     } catch (error) {
       console.error('Error cargando clientes:', error);
+    }
+  };
+
+  const loadInventory = async () => {
+    try {
+      const data = await vendorService.getVendorInventory(user.id);
+      setInventory(data);
+    } catch (error) {
+      console.error('Error cargando inventario:', error);
+    }
+  };
+
+  const loadCampaigns = async () => {
+    try {
+      const data = await vendorService.getVendorCampaigns(user.id);
+      setCampaigns(data);
+    } catch (error) {
+      console.error('Error cargando campañas:', error);
+    }
+  };
+
+  const loadSettings = async () => {
+    try {
+      const data = await vendorService.getVendorSettings(user.id);
+      setSettings(data);
+    } catch (error) {
+      console.error('Error cargando configuración:', error);
+    }
+  };
+
+  // eslint-disable-next-line no-unused-vars
+  const loadNotifications = async () => {
+    try {
+      const data = await vendorService.getVendorNotifications(user.id);
+      setNotifications(data);
+    } catch (error) {
+      console.error('Error cargando notificaciones:', error);
     }
   };
 
@@ -339,16 +385,94 @@ const VendorProfile = ({ user }) => {
     </div>
   );
 
-  const renderInventory = () => (
-    <div className="vendor-content-section">
-      <div className="section-header">
-        <h2>📋 Control de Inventario</h2>
+  const renderInventory = () => {
+    if (inventory.ingredients.length === 0 && !loading) {
+      loadInventory();
+    }
+
+    return (
+      <div className="vendor-content-section">
+        <div className="section-header">
+          <h2>📋 Control de Inventario</h2>
+          <button className="primary-btn" onClick={() => showNotification('Función en desarrollo', 'info')}>
+            + Agregar Ingrediente
+          </button>
+        </div>
+        
+        {/* Resumen del inventario */}
+        <div className="inventory-summary">
+          <div className="summary-card">
+            <h4>Total Items</h4>
+            <p className="big-number">{inventory.summary?.totalItems || 0}</p>
+          </div>
+          <div className="summary-card warning">
+            <h4>Stock Bajo</h4>
+            <p className="big-number">{inventory.summary?.lowStockItems || 0}</p>
+          </div>
+          <div className="summary-card danger">
+            <h4>Sin Stock</h4>
+            <p className="big-number">{inventory.summary?.outOfStockItems || 0}</p>
+          </div>
+          <div className="summary-card">
+            <h4>Valor Total</h4>
+            <p className="big-number">S/ {inventory.summary?.totalValue || 0}</p>
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="loading-container">
+            <div className="spinner"></div>
+            <p>Cargando inventario...</p>
+          </div>
+        ) : (
+          <div className="inventory-table">
+            {inventory.ingredients?.length > 0 ? (
+              <>
+                <div className="table-header">
+                  <span>Ingrediente</span>
+                  <span>Categoría</span>
+                  <span>Stock Actual</span>
+                  <span>Stock Mínimo</span>
+                  <span>Costo</span>
+                  <span>Estado</span>
+                  <span>Acciones</span>
+                </div>
+                {inventory.ingredients.map(ingredient => (
+                  <div key={ingredient.id} className="table-row">
+                    <span className="ingredient-name">{ingredient.name}</span>
+                    <span>{ingredient.category}</span>
+                    <span>{ingredient.currentStock} {ingredient.unit}</span>
+                    <span>{ingredient.minStock} {ingredient.unit}</span>
+                    <span>S/ {ingredient.cost}</span>
+                    <span className={`status ${ingredient.status}`}>
+                      {ingredient.status === 'in_stock' && '✅ En Stock'}
+                      {ingredient.status === 'low_stock' && '⚠️ Stock Bajo'}
+                      {ingredient.status === 'out_of_stock' && '❌ Sin Stock'}
+                    </span>
+                    <span>
+                      <button 
+                        className="edit-btn small"
+                        onClick={() => showNotification('Edición en desarrollo', 'info')}
+                      >
+                        Editar
+                      </button>
+                    </span>
+                  </div>
+                ))}
+              </>
+            ) : (
+              <div className="no-data">
+                <p>No hay ingredientes en el inventario</p>
+                <button className="primary-btn" onClick={() => showNotification('Función en desarrollo', 'info')}>
+                  Agregar Primer Ingrediente
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
-      <div className="inventory-content">
-        <p>Módulo de inventario en desarrollo...</p>
-      </div>
-    </div>
-  );
+    );
+  };
 
   const renderAnalytics = () => (
     <div className="vendor-content-section">
@@ -442,27 +566,288 @@ const VendorProfile = ({ user }) => {
     );
   };
 
-  const renderMarketing = () => (
-    <div className="vendor-content-section">
-      <div className="section-header">
-        <h2>📢 Marketing y Promociones</h2>
-      </div>
-      <div className="marketing-content">
-        <p>Módulo de marketing en desarrollo...</p>
-      </div>
-    </div>
-  );
+  const renderMarketing = () => {
+    if (campaigns.campaigns.length === 0 && !loading) {
+      loadCampaigns();
+    }
 
-  const renderSettings = () => (
-    <div className="vendor-content-section">
-      <div className="section-header">
-        <h2>⚙️ Configuración de Tienda</h2>
+    return (
+      <div className="vendor-content-section">
+        <div className="section-header">
+          <h2>📢 Marketing y Promociones</h2>
+          <button className="primary-btn" onClick={() => showNotification('Función en desarrollo', 'info')}>
+            + Nueva Campaña
+          </button>
+        </div>
+        
+        {/* Estadísticas de marketing */}
+        <div className="marketing-stats">
+          <div className="stat-card">
+            <h4>Campañas Totales</h4>
+            <p className="big-number">{campaigns.stats?.totalCampaigns || 0}</p>
+          </div>
+          <div className="stat-card">
+            <h4>Campañas Activas</h4>
+            <p className="big-number">{campaigns.stats?.activeCampaigns || 0}</p>
+          </div>
+          <div className="stat-card">
+            <h4>Total Vistas</h4>
+            <p className="big-number">{campaigns.stats?.totalViews || 0}</p>
+          </div>
+          <div className="stat-card">
+            <h4>Conversiones</h4>
+            <p className="big-number">{campaigns.stats?.totalConversions || 0}</p>
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="loading-container">
+            <div className="spinner"></div>
+            <p>Cargando campañas...</p>
+          </div>
+        ) : (
+          <div className="campaigns-list">
+            {campaigns.campaigns?.length > 0 ? (
+              campaigns.campaigns.map(campaign => (
+                <div key={campaign.id} className="campaign-card">
+                  <div className="campaign-header">
+                    <h4>{campaign.name}</h4>
+                    <span className={`campaign-status ${campaign.status}`}>
+                      {campaign.status === 'active' && '🟢 Activa'}
+                      {campaign.status === 'scheduled' && '🟡 Programada'}
+                      {campaign.status === 'paused' && '🟠 Pausada'}
+                      {campaign.status === 'ended' && '🔴 Finalizada'}
+                    </span>
+                  </div>
+                  <div className="campaign-info">
+                    <div className="campaign-dates">
+                      <span>📅 {new Date(campaign.startDate).toLocaleDateString()} - {new Date(campaign.endDate).toLocaleDateString()}</span>
+                    </div>
+                    <div className="campaign-metrics">
+                      <span>👁️ {campaign.views} vistas</span>
+                      <span>🎯 {campaign.conversions} conversiones</span>
+                      {campaign.discount && <span>💰 {campaign.discount}% descuento</span>}
+                    </div>
+                  </div>
+                  <div className="campaign-actions">
+                    <button 
+                      className="edit-btn"
+                      onClick={() => showNotification('Edición en desarrollo', 'info')}
+                    >
+                      Editar
+                    </button>
+                    <button 
+                      className="view-btn"
+                      onClick={() => showNotification('Ver detalles en desarrollo', 'info')}
+                    >
+                      Ver Detalles
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="no-data">
+                <p>No tienes campañas de marketing</p>
+                <button className="primary-btn" onClick={() => showNotification('Función en desarrollo', 'info')}>
+                  Crear Primera Campaña
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
-      <div className="settings-content">
-        <p>Módulo de configuración en desarrollo...</p>
+    );
+  };
+
+  const renderSettings = () => {
+    if (Object.keys(settings.profile).length === 0 && !loading) {
+      loadSettings();
+    }
+
+    return (
+      <div className="vendor-content-section">
+        <div className="section-header">
+          <h2>⚙️ Configuración de Tienda</h2>
+          <button className="primary-btn" onClick={() => showNotification('Función en desarrollo', 'info')}>
+            Guardar Cambios
+          </button>
+        </div>
+        
+        {loading ? (
+          <div className="loading-container">
+            <div className="spinner"></div>
+            <p>Cargando configuración...</p>
+          </div>
+        ) : (
+          <div className="settings-sections">
+            {/* Perfil del negocio */}
+            <div className="settings-section">
+              <h3>🏪 Perfil del Negocio</h3>
+              <div className="settings-form">
+                <div className="form-group">
+                  <label>Nombre del Negocio</label>
+                  <input 
+                    type="text" 
+                    value={settings.profile?.businessName || ''} 
+                    placeholder="Mi Cocina Gourmet"
+                    onChange={() => showNotification('Función en desarrollo', 'info')}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Descripción</label>
+                  <textarea 
+                    value={settings.profile?.description || ''} 
+                    placeholder="Describe tu negocio..."
+                    onChange={() => showNotification('Función en desarrollo', 'info')}
+                  />
+                </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Teléfono</label>
+                    <input 
+                      type="tel" 
+                      value={settings.profile?.phone || ''} 
+                      placeholder="+51 999 888 777"
+                      onChange={() => showNotification('Función en desarrollo', 'info')}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Email</label>
+                    <input 
+                      type="email" 
+                      value={settings.profile?.email || ''} 
+                      placeholder="contacto@micocina.com"
+                      onChange={() => showNotification('Función en desarrollo', 'info')}
+                    />
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label>Dirección</label>
+                  <input 
+                    type="text" 
+                    value={settings.profile?.address || ''} 
+                    placeholder="Av. Principal 123, Arequipa"
+                    onChange={() => showNotification('Función en desarrollo', 'info')}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Preferencias de notificaciones */}
+            <div className="settings-section">
+              <h3>🔔 Notificaciones</h3>
+              <div className="settings-toggles">
+                <div className="toggle-item">
+                  <span>Nuevos pedidos</span>
+                  <label className="toggle">
+                    <input 
+                      type="checkbox" 
+                      checked={settings.preferences?.notifications?.newOrders || false}
+                      onChange={() => showNotification('Función en desarrollo', 'info')}
+                    />
+                    <span className="slider"></span>
+                  </label>
+                </div>
+                <div className="toggle-item">
+                  <span>Stock bajo</span>
+                  <label className="toggle">
+                    <input 
+                      type="checkbox" 
+                      checked={settings.preferences?.notifications?.lowStock || false}
+                      onChange={() => showNotification('Función en desarrollo', 'info')}
+                    />
+                    <span className="slider"></span>
+                  </label>
+                </div>
+                <div className="toggle-item">
+                  <span>Nuevas reseñas</span>
+                  <label className="toggle">
+                    <input 
+                      type="checkbox" 
+                      checked={settings.preferences?.notifications?.newReviews || false}
+                      onChange={() => showNotification('Función en desarrollo', 'info')}
+                    />
+                    <span className="slider"></span>
+                  </label>
+                </div>
+                <div className="toggle-item">
+                  <span>Marketing</span>
+                  <label className="toggle">
+                    <input 
+                      type="checkbox" 
+                      checked={settings.preferences?.notifications?.marketing || false}
+                      onChange={() => showNotification('Función en desarrollo', 'info')}
+                    />
+                    <span className="slider"></span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {/* Métodos de pago */}
+            <div className="settings-section">
+              <h3>💳 Métodos de Pago</h3>
+              <div className="payment-methods">
+                {settings.paymentMethods?.map(method => (
+                  <div key={method.id} className="payment-method">
+                    <span>{method.name}</span>
+                    <label className="toggle">
+                      <input 
+                        type="checkbox" 
+                        checked={method.enabled}
+                        onChange={() => showNotification('Función en desarrollo', 'info')}
+                      />
+                      <span className="slider"></span>
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Configuración del negocio */}
+            <div className="settings-section">
+              <h3>🏢 Configuración del Negocio</h3>
+              <div className="settings-toggles">
+                <div className="toggle-item">
+                  <span>Mostrar teléfono públicamente</span>
+                  <label className="toggle">
+                    <input 
+                      type="checkbox" 
+                      checked={settings.preferences?.business?.showPhone || false}
+                      onChange={() => showNotification('Función en desarrollo', 'info')}
+                    />
+                    <span className="slider"></span>
+                  </label>
+                </div>
+                <div className="toggle-item">
+                  <span>Mostrar email públicamente</span>
+                  <label className="toggle">
+                    <input 
+                      type="checkbox" 
+                      checked={settings.preferences?.business?.showEmail || false}
+                      onChange={() => showNotification('Función en desarrollo', 'info')}
+                    />
+                    <span className="slider"></span>
+                  </label>
+                </div>
+                <div className="toggle-item">
+                  <span>Permitir mensajes de clientes</span>
+                  <label className="toggle">
+                    <input 
+                      type="checkbox" 
+                      checked={settings.preferences?.business?.allowMessages || false}
+                      onChange={() => showNotification('Función en desarrollo', 'info')}
+                    />
+                    <span className="slider"></span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="vendor-panel">

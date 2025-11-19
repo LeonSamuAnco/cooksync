@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
 import adminService from '../../services/adminService';
-import searchService from '../../services/searchService';
+// eslint-disable-next-line no-unused-vars
 import productsService from '../../services/productsService';
 import celularService from '../../services/celularService';
 import tortasService from '../../services/tortasService';
@@ -13,26 +13,34 @@ import './AdminProfile.css';
 
 const AdminProfile = ({ user }) => {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout } = useAuth(); // eslint-disable-line no-unused-vars
   const { showNotification } = useNotification();
   const [activeSection, setActiveSection] = useState('dashboard');
   const [systemStats, setSystemStats] = useState({});
-  const [recentUsers, setRecentUsers] = useState([]);
+  // eslint-disable-next-line no-unused-vars
+  // const [recentUsers, setRecentUsers] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
   const [systemRoles, setSystemRoles] = useState([]);
+  // eslint-disable-next-line no-unused-vars
   const [reports, setReports] = useState({});
   const [recipes, setRecipes] = useState([]);
+  // eslint-disable-next-line no-unused-vars
   const [recipesStats, setRecipesStats] = useState({});
   const [categories, setCategories] = useState([]); // recipe categories (admin CRUD)
   const [selectedCategory, setSelectedCategory] = useState(null);
+  // eslint-disable-next-line no-unused-vars
   const [categoryRecipes, setCategoryRecipes] = useState([]); // recetas de la categoría seleccionada
+  // eslint-disable-next-line no-unused-vars
   const [loadingCategoryRecipes, setLoadingCategoryRecipes] = useState(false);
+  // eslint-disable-next-line no-unused-vars
   const [unifiedCategories, setUnifiedCategories] = useState([]); // categorías de la Home (recetas, celulares, tortas, lugares, etc.)
   const [loading, setLoading] = useState(false);
   const [usersPage, setUsersPage] = useState(1);
   const [usersSearch, setUsersSearch] = useState('');
   const [usersTotalPages, setUsersTotalPages] = useState(1);
+  // eslint-disable-next-line no-unused-vars
   const [showUserModal, setShowUserModal] = useState(false);
+  // eslint-disable-next-line no-unused-vars
   const [editingUser, setEditingUser] = useState(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
@@ -59,6 +67,7 @@ const AdminProfile = ({ user }) => {
 
   useEffect(() => {
     loadInitialData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadInitialData = async () => {
@@ -66,14 +75,11 @@ const AdminProfile = ({ user }) => {
     setBackendError(false);
     try {
       // Primero probar la conexión
-      console.log('Testing admin connection...');
-      const testResult = await adminService.testConnection();
-      console.log('Admin connection test result:', testResult);
+      await adminService.testConnection();
       
       // Luego cargar datos reales
       await Promise.all([
         loadSystemStats(),
-        loadRecentUsers(),
         loadSystemRoles(),
         loadRecipes(),
         loadCategories(),
@@ -127,7 +133,6 @@ const AdminProfile = ({ user }) => {
   // ========================================
 
   const handleCategoryCardClick = async (category) => {
-    console.log('Opening category data table for:', category);
     setSelectedCategoryForData(category);
     setLoadingCategoryData(true);
     setShowCategoryDataModal(true);
@@ -148,19 +153,17 @@ const AdminProfile = ({ user }) => {
         case 'celular':
           // Para celulares - obtener todos (sin parámetros que puedan causar error)
           const celularResponse = await celularService.getAll();
-          console.log('📱 Respuesta completa del API de celulares:', celularResponse);
           
           let celularesRaw = celularResponse.data || celularResponse.celulares || celularResponse || [];
           console.log('📱 Datos raw de celulares:', celularesRaw.slice(0, 2)); // Mostrar solo los primeros 2 para debug
           
           // Si hay paginación, obtener todas las páginas
           if (celularResponse.totalPages && celularResponse.totalPages > 1) {
-            console.log('📱 Detectada paginación, obteniendo todas las páginas...');
             for (let page = 2; page <= celularResponse.totalPages; page++) {
               try {
                 const pageResponse = await celularService.getAll({ page });
                 const pageData = pageResponse.data || pageResponse.celulares || pageResponse || [];
-                // Filtrar duplicados por ID antes de agregar
+                // eslint-disable-next-line no-loop-func
                 const newItems = pageData.filter(newItem => 
                   !celularesRaw.some(existingItem => existingItem.id === newItem.id)
                 );
@@ -189,7 +192,6 @@ const AdminProfile = ({ user }) => {
           }));
           
           stats = { total: celularResponse.total || data.length };
-          console.log('📱 Celulares normalizados:', data.length, 'items');
           break;
 
         case 'torta':
@@ -213,13 +215,11 @@ const AdminProfile = ({ user }) => {
           }));
           
           stats = { total: tortaResponse.total || data.length };
-          console.log('🧁 Tortas normalizadas:', data.length, 'items');
           break;
 
         case 'lugar':
           // Para lugares - obtener todos
           const lugarResponse = await lugarService.getAll();
-          console.log('🏡 Respuesta completa del API de lugares:', lugarResponse);
           
           let lugaresRaw = lugarResponse.data || lugarResponse.lugares || lugarResponse || [];
           console.log('🏡 Datos raw de lugares:', lugaresRaw.slice(0, 2));
@@ -241,13 +241,11 @@ const AdminProfile = ({ user }) => {
           }));
           
           stats = { total: lugarResponse.total || data.length };
-          console.log('🏡 Lugares normalizados:', data.length, 'items');
           break;
 
         case 'deporte':
           // Para deportes - obtener todos
           const deporteResponse = await deporteService.getAll();
-          console.log('🏃 Respuesta completa del API de deportes:', deporteResponse);
           
           let deportesRaw = deporteResponse.data || deporteResponse.deportes || deporteResponse || [];
           console.log('🏃 Datos raw de deportes:', deportesRaw.slice(0, 2));
@@ -269,7 +267,6 @@ const AdminProfile = ({ user }) => {
           }));
           
           stats = { total: deporteResponse.total || data.length };
-          console.log('🏃 Deportes normalizados:', data.length, 'items');
           break;
 
         case 'product':
@@ -290,9 +287,7 @@ const AdminProfile = ({ user }) => {
 
       setCategoryData(data);
       setCategoryStats(stats);
-      
-      console.log(`✅ Cargados ${data.length} items para categoría ${category.type}`);
-      
+
     } catch (error) {
       console.error('Error loading category data:', error);
       showNotification('Error al cargar datos de la categoría', 'error');
@@ -411,18 +406,6 @@ const AdminProfile = ({ user }) => {
     }
   };
 
-  const loadRecentUsers = async () => {
-    try {
-      const users = await adminService.getRecentUsers(5);
-      setRecentUsers(users);
-    } catch (error) {
-      console.error('Error loading recent users:', error);
-      // Usar datos de prueba si falla la conexión
-      setRecentUsers([]);
-      showNotification('Error al cargar usuarios recientes', 'error');
-    }
-  };
-
   const loadAllUsers = async (page = 1, search = '') => {
     // Evitar bucle infinito
     if (hasAttemptedUsersLoad && backendError) {
@@ -477,16 +460,13 @@ const AdminProfile = ({ user }) => {
 
   const loadRecipes = async () => {
     try {
-      console.log('Frontend: Loading recipes...');
       
       // Método 1: Intentar endpoint directo de recetas
       try {
-        console.log('Trying direct recipes endpoint...');
         const directResponse = await fetch('http://localhost:3002/recipes');
         
         if (directResponse.ok) {
           const directData = await directResponse.json();
-          console.log('Direct recipes response:', directData);
           
           if (directData.recipes && Array.isArray(directData.recipes)) {
             setRecipes(directData.recipes);
@@ -494,7 +474,6 @@ const AdminProfile = ({ user }) => {
             return;
           }
         } else {
-          console.log('Direct endpoint status:', directResponse.status);
         }
       } catch (directError) {
         console.log('Direct endpoint error:', directError.message);
@@ -502,9 +481,7 @@ const AdminProfile = ({ user }) => {
       
       // Método 2: Intentar endpoint de admin
       try {
-        console.log('Trying admin recipes endpoint...');
         const adminData = await adminService.getAllRecipes(1, 50);
-        console.log('Admin recipes response:', adminData);
         
         if (adminData && adminData.recipes && Array.isArray(adminData.recipes)) {
           setRecipes(adminData.recipes);
@@ -516,7 +493,6 @@ const AdminProfile = ({ user }) => {
       }
       
       // Método 3: Datos de prueba como último recurso
-      console.log('Using fallback test data...');
       const testRecipes = [
         {
           id: 1,
@@ -570,7 +546,6 @@ const AdminProfile = ({ user }) => {
           if (activeSection === 'users') {
             await loadAllUsers(usersPage, usersSearch);
           }
-          await loadRecentUsers();
           await loadSystemStats();
         } catch (error) {
           console.error('Error toggling user status:', error);
@@ -591,31 +566,34 @@ const AdminProfile = ({ user }) => {
       if (activeSection === 'users') {
         loadAllUsers(usersPage, usersSearch);
       }
-      loadRecentUsers(); // Actualizar usuarios recientes también
     } catch (error) {
       console.error('Error changing user role:', error);
       showNotification('Error al cambiar rol del usuario', 'error');
     }
   };
 
-  const handleToggleRecipeStatus = async (recipeId) => {
-    setConfirmAction({
-      message: '¿Estás seguro de cambiar el estado de esta receta?',
-      onConfirm: async () => {
-        try {
-          const result = await adminService.toggleRecipeStatus(recipeId);
-          showNotification(result.message || 'Estado de receta cambiado', 'success');
-          await loadRecipes();
-        } catch (error) {
-          console.error('Error toggling recipe status:', error);
-          showNotification('Error al cambiar estado de la receta', 'error');
-        } finally {
-          setShowConfirmModal(false);
-        }
-      }
-    });
-    setShowConfirmModal(true);
-  };
+  // eslint-disable-next-line no-unused-vars
+  // eslint-disable-next-line no-unused-vars
+  // eslint-disable-next-line no-unused-vars
+  // eslint-disable-next-line no-unused-vars
+  // const handleToggleRecipeStatus = async (recipeId) => {
+  //   setConfirmAction({
+  //     message: '¿Estás seguro de cambiar el estado de esta receta?',
+  //     onConfirm: async () => {
+  //       try {
+  //         const result = await adminService.toggleRecipeStatus(recipeId);
+  //         showNotification(result.message || 'Estado de receta cambiado', 'success');
+  //         await loadRecipes();
+  //       } catch (error) {
+  //         console.error('Error toggling recipe status:', error);
+  //         showNotification('Error al cambiar estado de la receta', 'error');
+  //       } finally {
+  //         setShowConfirmModal(false);
+  //       }
+  //     }
+  //   });
+  //   setShowConfirmModal(true);
+  // };
 
   const sidebarItems = [
     { id: 'dashboard', icon: '📊', label: 'Dashboard', active: true },
@@ -895,116 +873,6 @@ const AdminProfile = ({ user }) => {
       </div>
     );
   };
-
-  const renderRecipes = () => (
-    <div className="admin-content-section">
-      <div className="section-header">
-        <h2>🍽️ Gestión de Recetas</h2>
-        <button className="primary-btn" onClick={() => navigate('/recipes/create')}>+ Nueva Receta</button>
-      </div>
-      
-      {/* Estadísticas de recetas */}
-      <div className="recipes-stats">
-        <div className="stat-card">
-          <div className="stat-icon">📊</div>
-          <div className="stat-info">
-            <h3>{recipesStats.totalRecipes || recipes.length}</h3>
-            <p>Total Recetas</p>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon">✅</div>
-          <div className="stat-info">
-            <h3>{recipesStats.activeRecipes || recipes.length}</h3>
-            <p>Recetas Activas</p>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon">👁️</div>
-          <div className="stat-info">
-            <h3>{recipesStats.totalViews || 0}</h3>
-            <p>Total Visualizaciones</p>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon">⭐</div>
-          <div className="stat-info">
-            <h3>{recipesStats.averageRating || 4.5}</h3>
-            <p>Rating Promedio</p>
-          </div>
-        </div>
-      </div>
-      
-      <div className="recipes-grid">
-        {recipes.length > 0 ? (
-          recipes.map(recipe => (
-            <div key={recipe.id} className="recipe-card">
-              <div className="recipe-image">
-                {recipe.imagenUrl ? (
-                  <img src={recipe.imagenUrl} alt={recipe.titulo} />
-                ) : (
-                  <div className="recipe-placeholder">🍽️</div>
-                )}
-              </div>
-              <div className="recipe-status approved">Aprobada</div>
-              <h4>{recipe.titulo}</h4>
-              <p>Por: {recipe.autor?.nombres || 'Chef Admin'}</p>
-              <div className="recipe-info">
-                <span>⏱️ {recipe.tiempoPreparacion}min</span>
-                <span>👥 {recipe.porciones} porciones</span>
-                <span>📊 {recipe.dificultad?.nombre || 'Medio'}</span>
-              </div>
-              <div className="recipe-actions">
-                <button 
-                  className="edit-btn"
-                  onClick={() => navigate(`/recipes/${recipe.id}/edit`)}
-                >
-                  Editar
-                </button>
-                <button 
-                  className="view-btn"
-                  onClick={() => navigate(`/recipes/${recipe.id}`)}
-                >
-                  Ver
-                </button>
-                <button 
-                  className="delete-btn"
-                  onClick={() => handleToggleRecipeStatus(recipe.id)}
-                >
-                  Eliminar
-                </button>
-              </div>
-            </div>
-          ))
-        ) : (
-          <div className="no-recipes">
-            <p>No hay recetas disponibles</p>
-            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
-              <button className="primary-btn" onClick={() => loadRecipes()}>
-                🔄 Recargar Recetas
-              </button>
-              <button 
-                className="primary-btn" 
-                onClick={async () => {
-                  try {
-                    const response = await fetch('http://localhost:3002/recipes');
-                    const data = await response.json();
-                    console.log('Direct test:', data);
-                    showNotification(`Test: ${data.recipes?.length || 0} recetas encontradas`, 'info');
-                  } catch (error) {
-                    console.error('Test error:', error);
-                    showNotification('Test falló: Backend no disponible', 'error');
-                  }
-                }}
-              >
-                🧪 Test Directo
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
 
   const handleCreateCategory = async () => {
     const nombre = prompt('Nombre de la categoría:');

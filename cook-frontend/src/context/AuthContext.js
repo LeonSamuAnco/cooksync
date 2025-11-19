@@ -27,13 +27,11 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const checkAuthStatus = useCallback(async () => {
-    console.log('🔄 Verificando estado de autenticación...');
     
     // Intentar reparar estructura si es necesario
     try {
       const wasRepaired = repairUserStructure();
       if (wasRepaired) {
-        console.log('✅ Estructura de usuario reparada automáticamente');
       }
     } catch (e) {
       console.warn('⚠️ No se pudo reparar estructura:', e);
@@ -43,10 +41,7 @@ export const AuthProvider = ({ children }) => {
     const savedUser = localStorage.getItem('user');
     
     try {
-      
-      console.log('🔍 Token encontrado:', token ? 'Sí' : 'No');
-      console.log('🔍 Usuario guardado:', savedUser ? 'Sí' : 'No');
-      
+
       // Verificar estructura del usuario
       if (savedUser) {
         const isValid = verifyUserStructure();
@@ -80,7 +75,6 @@ export const AuthProvider = ({ children }) => {
 
       // Verificar si el token expiró
       if (isTokenExpired(token)) {
-        console.log('⏰ Token expirado');
         logout(true); // Mostrar mensaje de sesión expirada
         setLoading(false);
         return;
@@ -92,16 +86,9 @@ export const AuthProvider = ({ children }) => {
         try {
           const parsedUser = JSON.parse(savedUser);
           console.log('📦 Usuario en localStorage (raw):', savedUser.substring(0, 200) + '...');
-          console.log('✅ Usuario parseado:', parsedUser);
           
           // Verificar estructura del rol
           const userRole = parsedUser.rol || parsedUser.role;
-          console.log('🔍 Verificando estructura del rol:');
-          console.log('  - tiene "rol":', !!parsedUser.rol);
-          console.log('  - tiene "role":', !!parsedUser.role);
-          console.log('  - objeto rol/role:', userRole);
-          console.log('  - código del rol:', userRole?.codigo);
-          console.log('  - nombre del rol:', userRole?.nombre);
           
           // CRÍTICO: Verificar que el usuario tiene rol antes de establecerlo
           if (!userRole || !userRole.codigo) {
@@ -118,8 +105,6 @@ export const AuthProvider = ({ children }) => {
           setIsAuthenticated(true);
           setSessionExpired(false);
           
-          console.log(`✅ Sesión restaurada exitosamente con rol: ${userRole.codigo}`);
-          console.log('✅ Usuario establecido en estado:', parsedUser.nombres || parsedUser.email);
         } catch (e) {
           console.error('❌ Error parseando usuario guardado:', e);
           console.error('❌ Contenido de localStorage:', savedUser);
@@ -144,9 +129,7 @@ export const AuthProvider = ({ children }) => {
         setLoading(false);
         return;
       }
-      
-      console.log('🌐 Validando sesión con el backend...');
-      
+
       // Marcar loading como false ANTES de la petición al backend
       // para que la UI sea responsive inmediatamente
       setLoading(false);
@@ -162,12 +145,9 @@ export const AuthProvider = ({ children }) => {
 
         if (response.ok) {
           const userData = await response.json();
-          console.log('✅ Respuesta del backend:', userData);
           
           // El backend puede devolver { user: {...} } o { success: true, user: {...} }
           const freshUser = userData.user || userData;
-          console.log('✅ Usuario procesado:', freshUser);
-          console.log('✅ Rol del usuario:', freshUser.rol?.codigo || freshUser.role?.codigo);
           
           // Actualizar usuario con datos frescos del backend
           setUser(freshUser);
@@ -215,18 +195,11 @@ export const AuthProvider = ({ children }) => {
 
       if (response.ok) {
         const data = await response.json();
-        
-        console.log('✅ Login exitoso - Datos recibidos completos:', data);
-        
+
         // El backend puede devolver: { access_token, user } o { success: true, user }
         // Extraer el usuario de manera robusta
         let userToSave = data.user || data;
-        
-        console.log('✅ Usuario extraído:', userToSave);
-        console.log('✅ Tiene rol:', !!userToSave.rol);
-        console.log('✅ Tiene role:', !!userToSave.role);
-        console.log('✅ rolId:', userToSave.rolId);
-        
+
         // CRÍTICO: Verificar que el usuario tenga rol
         const userRole = userToSave.rol || userToSave.role;
         if (!userRole && userToSave.rolId) {
@@ -238,7 +211,6 @@ export const AuthProvider = ({ children }) => {
         const token = data.access_token || data.token;
         if (token) {
           localStorage.setItem('authToken', token);
-          console.log('✅ Token guardado en localStorage');
         } else {
           console.warn('⚠️ No se encontró token en la respuesta del backend');
         }
@@ -247,8 +219,6 @@ export const AuthProvider = ({ children }) => {
         if (userToSave && userToSave.id) {
           const userStr = JSON.stringify(userToSave);
           localStorage.setItem('user', userStr);
-          console.log('✅ Usuario guardado en localStorage');
-          console.log('✅ Contenido guardado (primeros 300 chars):', userStr.substring(0, 300));
         } else {
           console.error('❌ Usuario inválido, no se puede guardar en localStorage');
           return { success: false, error: 'Usuario inválido recibido del servidor' };
@@ -258,12 +228,7 @@ export const AuthProvider = ({ children }) => {
         setUser(userToSave);
         setIsAuthenticated(true);
         setSessionExpired(false);
-        
-        console.log('✅ Usuario establecido en estado');
-        console.log('✅ Nombre:', userToSave.nombres);
-        console.log('✅ Email:', userToSave.email);
-        console.log('✅ Rol código:', userRole?.codigo);
-        
+
         return { success: true, user: data.user };
       } else {
         const errorData = await response.json();

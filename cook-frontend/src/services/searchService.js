@@ -3,16 +3,13 @@ const API_BASE_URL = 'http://localhost:3002';
 class SearchService {
   async getUnifiedCategories() {
     try {
-      console.log('🌐 Solicitando categorías a:', `${API_BASE_URL}/search/categories`);
       const response = await fetch(`${API_BASE_URL}/search/categories`);
-      console.log('📡 Respuesta del servidor:', response.status, response.statusText);
       
       if (!response.ok) {
         throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
       
       const data = await response.json();
-      console.log('✅ Categorías recibidas del backend:', data);
       
       if (!data || data.length === 0) {
         console.warn('⚠️ El backend devolvió un array vacío, usando categorías de fallback');
@@ -22,7 +19,6 @@ class SearchService {
       return data;
     } catch (error) {
       console.error('❌ Error obteniendo categorías unificadas:', error);
-      console.log('🔄 Usando categorías de fallback...');
       return this.getFallbackCategories();
     }
   }

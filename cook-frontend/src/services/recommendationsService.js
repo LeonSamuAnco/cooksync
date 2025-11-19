@@ -31,7 +31,6 @@ const recommendationsService = {
       }
 
       const data = await response.json();
-      console.log('✅ Recomendaciones obtenidas:', data);
       return data;
     } catch (error) {
       console.error('❌ Error obteniendo recomendaciones:', error);
@@ -63,7 +62,6 @@ const recommendationsService = {
       }
 
       const data = await response.json();
-      console.log('📊 Estadísticas de recomendaciones:', data);
       return data;
     } catch (error) {
       console.error('❌ Error obteniendo estadísticas:', error);
@@ -161,12 +159,7 @@ const recommendationsService = {
       });
 
       if (response.ok) {
-        console.log('✅ Click en recomendación tracked:', {
-          itemId,
-          itemType,
-          position,
-          algorithm
-        });
+        console.log('✅ Click tracking registrado exitosamente');
       }
     } catch (error) {
       console.error('❌ Error tracking click:', error);
@@ -196,7 +189,6 @@ const recommendationsService = {
       }
 
       const data = await response.json();
-      console.log('📊 Métricas de recomendaciones:', data);
       return data;
     } catch (error) {
       console.error('❌ Error obteniendo métricas:', error);

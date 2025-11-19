@@ -16,14 +16,10 @@ const ProductSearch = ({ onProductsFound, onLoading }) => {
   // Cargar categorías unificadas al montar
   useEffect(() => {
     const loadCategories = async () => {
-      console.log('🔍 Cargando categorías...');
       const categoriesData = await searchService.getUnifiedCategories();
-      console.log('📋 Categorías recibidas:', categoriesData);
       
       // Filtrar SOLO categorías de productos (no recetas)
       const productCategories = categoriesData.filter(cat => cat.type === 'product');
-      console.log('🛍️ Categorías de productos filtradas:', productCategories);
-      console.log('📊 Total de categorías de productos:', productCategories.length);
       
       setCategories(productCategories);
     };

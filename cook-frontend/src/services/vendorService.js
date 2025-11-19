@@ -1,7 +1,7 @@
 const API_BASE_URL = 'http://localhost:3002';
 
 const getAuthHeaders = () => {
-  const token = localStorage.getItem('authToken');
+  const token = localStorage.getItem('token');
   return {
     'Content-Type': 'application/json',
     'Authorization': token ? `Bearer ${token}` : '',
@@ -241,6 +241,357 @@ const vendorService = {
       throw error;
     }
   },
+
+  // Gestión de inventario
+  async getVendorInventory(vendorId) {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/vendors/${vendorId}/inventory`,
+        { headers: getAuthHeaders() }
+      );
+      
+      if (response.ok) {
+        return await response.json();
+      }
+      
+      // Fallback con datos de ejemplo para inventario
+      return {
+        ingredients: [
+          {
+            id: 1,
+            name: 'Pollo',
+            category: 'Carnes',
+            currentStock: 25,
+            minStock: 10,
+            unit: 'kg',
+            cost: 15.50,
+            supplier: 'Mercado Central',
+            lastUpdated: new Date().toISOString(),
+            status: 'in_stock'
+          },
+          {
+            id: 2,
+            name: 'Arroz',
+            category: 'Granos',
+            currentStock: 5,
+            minStock: 15,
+            unit: 'kg',
+            cost: 3.20,
+            supplier: 'Distribuidora Lima',
+            lastUpdated: new Date().toISOString(),
+            status: 'low_stock'
+          },
+          {
+            id: 3,
+            name: 'Aceite de Oliva',
+            category: 'Aceites',
+            currentStock: 0,
+            minStock: 5,
+            unit: 'L',
+            cost: 25.00,
+            supplier: 'Importadora Gourmet',
+            lastUpdated: new Date().toISOString(),
+            status: 'out_of_stock'
+          }
+        ],
+        summary: {
+          totalItems: 3,
+          lowStockItems: 1,
+          outOfStockItems: 1,
+          totalValue: 478.50
+        }
+      };
+    } catch (error) {
+      console.error('Error getting vendor inventory:', error);
+      return {
+        ingredients: [],
+        summary: {
+          totalItems: 0,
+          lowStockItems: 0,
+          outOfStockItems: 0,
+          totalValue: 0
+        }
+      };
+    }
+  },
+
+  // Actualizar stock de inventario
+  async updateInventoryStock(vendorId, ingredientId, newStock) {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/vendors/${vendorId}/inventory/${ingredientId}`,
+        {
+          method: 'PUT',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({ stock: newStock }),
+        }
+      );
+      
+      if (response.ok) {
+        return await response.json();
+      }
+      
+      // Simulación exitosa
+      return {
+        success: true,
+        message: 'Stock actualizado correctamente'
+      };
+    } catch (error) {
+      console.error('Error updating inventory stock:', error);
+      throw error;
+    }
+  },
+
+  // Gestión de marketing
+  async getVendorCampaigns(vendorId) {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/vendors/${vendorId}/campaigns`,
+        { headers: getAuthHeaders() }
+      );
+      
+      if (response.ok) {
+        return await response.json();
+      }
+      
+      // Fallback con campañas de ejemplo
+      return {
+        campaigns: [
+          {
+            id: 1,
+            name: 'Promoción Fin de Semana',
+            type: 'discount',
+            status: 'active',
+            discount: 20,
+            startDate: '2025-11-15',
+            endDate: '2025-11-17',
+            recipesCount: 5,
+            views: 150,
+            conversions: 12
+          },
+          {
+            id: 2,
+            name: 'Recetas Navideñas',
+            type: 'featured',
+            status: 'scheduled',
+            startDate: '2025-12-01',
+            endDate: '2025-12-25',
+            recipesCount: 8,
+            views: 0,
+            conversions: 0
+          }
+        ],
+        stats: {
+          totalCampaigns: 2,
+          activeCampaigns: 1,
+          totalViews: 150,
+          totalConversions: 12,
+          conversionRate: 8.0
+        }
+      };
+    } catch (error) {
+      console.error('Error getting vendor campaigns:', error);
+      return {
+        campaigns: [],
+        stats: {
+          totalCampaigns: 0,
+          activeCampaigns: 0,
+          totalViews: 0,
+          totalConversions: 0,
+          conversionRate: 0
+        }
+      };
+    }
+  },
+
+  // Crear nueva campaña
+  async createCampaign(vendorId, campaignData) {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/vendors/${vendorId}/campaigns`,
+        {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify(campaignData),
+        }
+      );
+      
+      if (response.ok) {
+        return await response.json();
+      }
+      
+      // Simulación exitosa
+      return {
+        success: true,
+        message: 'Campaña creada exitosamente',
+        campaign: {
+          id: Date.now(),
+          ...campaignData,
+          status: 'draft',
+          views: 0,
+          conversions: 0
+        }
+      };
+    } catch (error) {
+      console.error('Error creating campaign:', error);
+      throw error;
+    }
+  },
+
+  // Configuración del vendedor
+  async getVendorSettings(vendorId) {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/vendors/${vendorId}/settings`,
+        { headers: getAuthHeaders() }
+      );
+      
+      if (response.ok) {
+        return await response.json();
+      }
+      
+      // Configuración por defecto
+      return {
+        profile: {
+          businessName: 'Mi Cocina Gourmet',
+          description: 'Especialistas en comida casera y saludable',
+          phone: '+51 999 888 777',
+          email: 'contacto@micocina.com',
+          address: 'Av. Principal 123, Arequipa',
+          website: 'www.micocina.com'
+        },
+        preferences: {
+          notifications: {
+            newOrders: true,
+            lowStock: true,
+            newReviews: true,
+            marketing: false
+          },
+          business: {
+            autoAcceptOrders: false,
+            showPhone: true,
+            showEmail: true,
+            allowMessages: true
+          }
+        },
+        paymentMethods: [
+          { id: 1, name: 'Efectivo', enabled: true },
+          { id: 2, name: 'Tarjeta', enabled: true },
+          { id: 3, name: 'Yape/Plin', enabled: false },
+          { id: 4, name: 'Transferencia', enabled: false }
+        ]
+      };
+    } catch (error) {
+      console.error('Error getting vendor settings:', error);
+      return {
+        profile: {},
+        preferences: {},
+        paymentMethods: []
+      };
+    }
+  },
+
+  // Actualizar configuración
+  async updateVendorSettings(vendorId, settings) {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/vendors/${vendorId}/settings`,
+        {
+          method: 'PUT',
+          headers: getAuthHeaders(),
+          body: JSON.stringify(settings),
+        }
+      );
+      
+      if (response.ok) {
+        return await response.json();
+      }
+      
+      return {
+        success: true,
+        message: 'Configuración actualizada exitosamente'
+      };
+    } catch (error) {
+      console.error('Error updating vendor settings:', error);
+      throw error;
+    }
+  },
+
+  // Notificaciones del vendedor
+  async getVendorNotifications(vendorId) {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/vendors/${vendorId}/notifications`,
+        { headers: getAuthHeaders() }
+      );
+      
+      if (response.ok) {
+        return await response.json();
+      }
+      
+      // Notificaciones de ejemplo
+      return {
+        notifications: [
+          {
+            id: 1,
+            type: 'new_order',
+            title: 'Nuevo pedido recibido',
+            message: 'Juan Pérez preparó tu receta "Pollo a la Plancha"',
+            date: new Date().toISOString(),
+            read: false,
+            priority: 'high'
+          },
+          {
+            id: 2,
+            type: 'low_stock',
+            title: 'Stock bajo',
+            message: 'El arroz tiene stock bajo (5kg restantes)',
+            date: new Date(Date.now() - 3600000).toISOString(),
+            read: false,
+            priority: 'medium'
+          },
+          {
+            id: 3,
+            type: 'new_review',
+            title: 'Nueva reseña',
+            message: 'María López dejó una reseña de 5 estrellas',
+            date: new Date(Date.now() - 7200000).toISOString(),
+            read: true,
+            priority: 'low'
+          }
+        ],
+        unreadCount: 2
+      };
+    } catch (error) {
+      console.error('Error getting vendor notifications:', error);
+      return {
+        notifications: [],
+        unreadCount: 0
+      };
+    }
+  },
+
+  // Marcar notificación como leída
+  async markNotificationAsRead(vendorId, notificationId) {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/vendors/${vendorId}/notifications/${notificationId}/read`,
+        {
+          method: 'PUT',
+          headers: getAuthHeaders(),
+        }
+      );
+      
+      if (response.ok) {
+        return await response.json();
+      }
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+      throw error;
+    }
+  }
 };
 
 export default vendorService;

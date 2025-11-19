@@ -79,7 +79,13 @@ async function main() {
 
   // --- Creación de Categorías de Productos ---
   const celulares = await prisma.productCategory.create({ data: { nombre: 'Celulares' } });
-  const laptops = await prisma.productCategory.create({ data: { nombre: 'Laptops' } });
+  const tortas = await prisma.productCategory.create({ data: { nombre: 'Tortas' } });
+  const lugares = await prisma.productCategory.create({ data: { nombre: 'Lugares' } });
+  const saludBelleza = await prisma.productCategory.create({ data: { nombre: 'Salud & Belleza' } });
+  const deportes = await prisma.productCategory.create({ data: { nombre: 'Deportes' } });
+  const libros = await prisma.productCategory.create({ data: { nombre: 'Libros' } });
+  const juguetes = await prisma.productCategory.create({ data: { nombre: 'Juguetes' } });
+  const recetas = await prisma.productCategory.create({ data: { nombre: 'Recetas' } });
   console.log('Product categories created.');
 
   // --- Creación de Productos ---
@@ -103,7 +109,7 @@ async function main() {
         nombre: 'MacBook Pro 14"',
         descripcion: 'Potente laptop con chip M2 Pro para profesionales.',
         precio: 1999.99,
-        categoriaId: laptops.id,
+        categoriaId: recetas.id,
         atributos: { marca: 'Apple', procesador: 'M2 Pro', ram: '16GB' },
       },
     ],

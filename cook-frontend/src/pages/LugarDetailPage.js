@@ -37,7 +37,6 @@ const LugarDetailPage = () => {
             pais: data.pais,
           },
         }).then(() => {
-          console.log('✅ Actividad de lugar registrada');
         }).catch((actError) => {
           console.warn('⚠️ No se pudo registrar la actividad:', actError.message);
         });

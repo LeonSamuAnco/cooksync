@@ -7,7 +7,9 @@ export class CelularesService {
   constructor(private prisma: PrismaService) {}
 
   async findAll(filters: CelularFiltersDto) {
-    console.log('🔍 CelularesService.findAll - Filtros recibidos:', filters);
+    // Debug: Filtros recibidos (solo en desarrollo)
+    if (process.env.NODE_ENV === 'development') {
+    }
     
     const {
       marcaId,
@@ -38,8 +40,6 @@ export class CelularesService {
       conectividad5g = false;
     }
 
-    console.log('🔧 Conectividad5g normalizada:', conectividad5g, typeof conectividad5g);
-
     const skip = (page - 1) * limit;
 
     // Construir filtros dinámicos
@@ -52,21 +52,17 @@ export class CelularesService {
     // Convertir a números y agregar filtros
     if (marcaId) {
       where.marca_id = parseInt(marcaId.toString(), 10);
-      console.log('🔧 Filtro marcaId:', where.marca_id, typeof where.marca_id);
     }
     if (gamaId) {
       where.gama_id = parseInt(gamaId.toString(), 10);
-      console.log('🔧 Filtro gamaId:', where.gama_id, typeof where.gama_id);
     }
     if (sistemaOperativoId) {
       where.sistema_operativo_id = parseInt(sistemaOperativoId.toString(), 10);
-      console.log('🔧 Filtro sistemaOperativoId:', where.sistema_operativo_id, typeof where.sistema_operativo_id);
     }
     
     // Solo agregar conectividad_5g si es true o false (no undefined)
     if (conectividad5g === true || conectividad5g === false) {
       where.conectividad_5g = conectividad5g;
-      console.log('🔧 Filtro conectividad5g:', where.conectividad_5g, typeof where.conectividad_5g);
     }
     
     if (ramMin) where.memoria_ram_gb = { gte: parseInt(ramMin.toString(), 10) };
@@ -80,11 +76,9 @@ export class CelularesService {
       };
       if (precioMin) {
         where.items.precio.gte = parseFloat(precioMin.toString());
-        console.log('🔧 Filtro precioMin:', where.items.precio.gte);
       }
       if (precioMax) {
         where.items.precio.lte = parseFloat(precioMax.toString());
-        console.log('🔧 Filtro precioMax:', where.items.precio.lte);
       }
     }
 
@@ -106,8 +100,6 @@ export class CelularesService {
         break;
     }
 
-    console.log('📋 Filtros WHERE construidos:', JSON.stringify(where, null, 2));
-    
     const [celulares, total] = await Promise.all([
       this.prisma.celulares.findMany({
         where,
@@ -132,7 +124,9 @@ export class CelularesService {
       this.prisma.celulares.count({ where }),
     ]);
 
-    console.log(`✅ Celulares encontrados: ${celulares.length}/${total} (página ${page})`);
+    // Log resultado solo en desarrollo
+    if (process.env.NODE_ENV === 'development') {
+    }
 
     return {
       data: celulares,

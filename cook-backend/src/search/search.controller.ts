@@ -15,9 +15,7 @@ export class SearchController {
 
   @Get('categories')
   async findAllCategories() {
-    console.log('🎯 Endpoint /search/categories llamado');
     const categories = await this.searchService.findAllCategories();
-    console.log(`📤 Enviando ${categories.length} categorías al frontend`);
     return categories;
   }
 

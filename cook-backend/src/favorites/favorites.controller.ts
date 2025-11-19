@@ -111,10 +111,16 @@ export class FavoritesController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async create(@Request() req, @Body() createFavoriteDto: CreateFavoriteDto) {
-    this.logger.log(
-      `Usuario ${req.user.userId} agregando favorito: ${createFavoriteDto.tipo} ${createFavoriteDto.referenciaId}`,
-    );
-    return await this.favoritesService.create(req.user.userId, createFavoriteDto);
+    try {
+      this.logger.log(
+        `Usuario ${req.user.userId} agregando favorito: ${createFavoriteDto.tipo} ${createFavoriteDto.referenciaId}`,
+      );
+      return await this.favoritesService.create(req.user.userId, createFavoriteDto);
+    } catch (error) {
+      this.logger.error(`Error al crear favorito: ${error.message}`);
+      this.logger.error(`Stack: ${error.stack}`);
+      throw error;
+    }
   }
 
   /**
