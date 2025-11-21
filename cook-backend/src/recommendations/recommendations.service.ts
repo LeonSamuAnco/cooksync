@@ -16,7 +16,7 @@ interface UsuarioSimilar {
 
 @Injectable()
 export class RecommendationsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   /**
    * Obtener recomendaciones personalizadas basadas en el historial del usuario
@@ -512,14 +512,14 @@ export class RecommendationsService {
     try {
       // 1. Encontrar usuarios similares basados en actividades comunes
       const usuariosSimilares = await this.encontrarUsuariosSimilares(userId);
-      
+
       if (usuariosSimilares.length === 0) {
         return [];
       }
 
       // 2. Obtener items que les gustaron a usuarios similares
       const recomendacionesColaborativas: RecommendationScore[] = [];
-      
+
       for (const usuarioSimilar of usuariosSimilares.slice(0, 5)) { // Top 5 usuarios similares
         const actividadesSimilares = await this.prisma.userActivity.findMany({
           where: {
@@ -670,7 +670,7 @@ export class RecommendationsService {
   /**
    * Formatear item según su tipo
    */
-  private formatearItem(item: any, tipo: string): any {
+  public formatearItem(item: any, tipo: string): any {
     if (!item) return null;
 
     switch (tipo) {
