@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaTimes, FaMapMarkedAlt, FaGlobe, FaPhone, FaStar, FaUserTie, FaWhatsapp, FaInstagram, FaClock, FaCreditCard, FaTruck } from 'react-icons/fa';
+import { FaTimes, FaMapMarkedAlt, FaPhone, FaStar, FaUserTie, FaWhatsapp, FaInstagram, FaClock, FaCreditCard, FaTruck } from 'react-icons/fa';
 import './LugarPurchaseOptions.css';
 
 const LugarPurchaseOptions = ({ lugar, onClose }) => {

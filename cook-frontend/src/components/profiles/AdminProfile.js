@@ -563,19 +563,7 @@ const AdminProfile = ({ user }) => {
     setShowConfirmModal(true);
   };
 
-  const handleChangeUserRole = async (userId, newRoleId) => {
-    try {
-      const result = await adminService.changeUserRole(userId, newRoleId);
-      showNotification(result.message, 'success');
-      // Recargar usuarios
-      if (activeSection === 'users') {
-        loadAllUsers(usersPage, usersSearch);
-      }
-    } catch (error) {
-      console.error('Error changing user role:', error);
-      showNotification('Error al cambiar rol del usuario', 'error');
-    }
-  };
+
 
   const handleDeleteUser = async (userId, userName) => {
     setConfirmAction({

@@ -43,7 +43,7 @@ const RecommendationsWidget = ({ limit = 6 }) => {
       index + 1, // Posición 1-indexed
       'widget'
     );
-    
+
     const route = recommendationsService.getRouteByType(rec.tipo, rec.itemId);
     navigate(route);
   };
@@ -128,7 +128,7 @@ const RecommendationsWidget = ({ limit = 6 }) => {
                   <span>{recommendationsService.getIconByType(rec.tipo)}</span>
                 </div>
               )}
-              
+
               {/* Score badge */}
               <div className="rec-score-badge">
                 <span className="score-value">{rec.score}</span>
@@ -139,7 +139,7 @@ const RecommendationsWidget = ({ limit = 6 }) => {
             {/* Contenido */}
             <div className="rec-content">
               <h3 className="rec-title">{rec.item?.nombre || 'Sin título'}</h3>
-              
+
               {rec.item?.descripcion && (
                 <p className="rec-description">
                   {rec.item.descripcion.length > 80
@@ -150,7 +150,7 @@ const RecommendationsWidget = ({ limit = 6 }) => {
 
               {/* Detalles específicos por tipo */}
               <div className="rec-details">
-                {rec.tipo === 'receta' && (
+                {rec.tipo === 'receta' && rec.item && (
                   <>
                     {rec.item.tiempoTotal && (
                       <span className="rec-detail">⏱️ {rec.item.tiempoTotal} min</span>
@@ -166,7 +166,7 @@ const RecommendationsWidget = ({ limit = 6 }) => {
                   </>
                 )}
 
-                {rec.tipo === 'celular' && (
+                {rec.tipo === 'celular' && rec.item && (
                   <>
                     {rec.item.marca && (
                       <span className="rec-detail">📱 {rec.item.marca}</span>
@@ -180,7 +180,7 @@ const RecommendationsWidget = ({ limit = 6 }) => {
                   </>
                 )}
 
-                {rec.tipo === 'lugar' && (
+                {rec.tipo === 'lugar' && rec.item && (
                   <>
                     {rec.item.tipo && (
                       <span className="rec-detail">🏪 {rec.item.tipo}</span>
@@ -191,7 +191,7 @@ const RecommendationsWidget = ({ limit = 6 }) => {
                   </>
                 )}
 
-                {rec.tipo === 'torta' && (
+                {rec.tipo === 'torta' && rec.item && (
                   <>
                     {rec.item.sabor && (
                       <span className="rec-detail">🍰 {rec.item.sabor}</span>
@@ -202,7 +202,7 @@ const RecommendationsWidget = ({ limit = 6 }) => {
                   </>
                 )}
 
-                {rec.tipo === 'deporte' && (
+                {rec.tipo === 'deporte' && rec.item && (
                   <>
                     {rec.item.marca && (
                       <span className="rec-detail">🏷️ {rec.item.marca}</span>

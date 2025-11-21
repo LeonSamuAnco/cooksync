@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './PantryManager.css';
 
 const PantryManager = ({ user, onClose }) => {
@@ -15,12 +15,7 @@ const PantryManager = ({ user, onClose }) => {
     notas: ''
   });
 
-  useEffect(() => {
-    loadPantryItems();
-    loadAvailableIngredients();
-  }, [user.id]);
-
-  const loadPantryItems = async () => {
+  const loadPantryItems = useCallback(async () => {
     try {
       const token = localStorage.getItem('authToken');
       const response = await fetch(`http://localhost:3002/clients/${user.id}/pantry`, {
@@ -29,7 +24,7 @@ const PantryManager = ({ user, onClose }) => {
           'Content-Type': 'application/json'
         }
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         setPantryItems(data.items || []);
@@ -39,9 +34,9 @@ const PantryManager = ({ user, onClose }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user.id]);
 
-  const loadAvailableIngredients = async () => {
+  const loadAvailableIngredients = useCallback(async () => {
     try {
       const response = await fetch('http://localhost:3002/recipes/ingredients/all');
       if (response.ok) {
@@ -51,7 +46,12 @@ const PantryManager = ({ user, onClose }) => {
     } catch (error) {
       console.error('Error cargando ingredientes:', error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadPantryItems();
+    loadAvailableIngredients();
+  }, [loadPantryItems, loadAvailableIngredients]);
 
   const handleAddItem = async (e) => {
     e.preventDefault();
@@ -85,7 +85,7 @@ const PantryManager = ({ user, onClose }) => {
 
   const handleDeleteItem = async (itemId) => {
     if (!window.confirm('¿Estás seguro de eliminar este ingrediente?')) return;
-    
+
     try {
       const token = localStorage.getItem('authToken');
       const response = await fetch(`http://localhost:3002/clients/${user.id}/pantry/${itemId}`, {
@@ -106,11 +106,11 @@ const PantryManager = ({ user, onClose }) => {
 
   const getExpirationStatus = (fechaVencimiento) => {
     if (!fechaVencimiento) return 'sin-fecha';
-    
+
     const today = new Date();
     const expDate = new Date(fechaVencimiento);
     const diffDays = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays < 0) return 'vencido';
     if (diffDays <= 3) return 'por-vencer';
     if (diffDays <= 7) return 'proximo';
@@ -176,7 +176,7 @@ const PantryManager = ({ user, onClose }) => {
           </div>
 
           <div className="pantry-actions">
-            <button 
+            <button
               className="add-ingredient-btn"
               onClick={() => setShowAddForm(true)}
             >
@@ -193,7 +193,7 @@ const PantryManager = ({ user, onClose }) => {
                     <label>Ingrediente</label>
                     <select
                       value={newItem.ingredienteMaestroId}
-                      onChange={(e) => setNewItem({...newItem, ingredienteMaestroId: e.target.value})}
+                      onChange={(e) => setNewItem({ ...newItem, ingredienteMaestroId: e.target.value })}
                       required
                     >
                       <option value="">Seleccionar ingrediente</option>
@@ -208,7 +208,7 @@ const PantryManager = ({ user, onClose }) => {
                       type="number"
                       step="0.01"
                       value={newItem.cantidad}
-                      onChange={(e) => setNewItem({...newItem, cantidad: e.target.value})}
+                      onChange={(e) => setNewItem({ ...newItem, cantidad: e.target.value })}
                       required
                     />
                   </div>
@@ -219,7 +219,7 @@ const PantryManager = ({ user, onClose }) => {
                     <input
                       type="date"
                       value={newItem.fechaCompra}
-                      onChange={(e) => setNewItem({...newItem, fechaCompra: e.target.value})}
+                      onChange={(e) => setNewItem({ ...newItem, fechaCompra: e.target.value })}
                     />
                   </div>
                   <div className="form-group">
@@ -227,7 +227,7 @@ const PantryManager = ({ user, onClose }) => {
                     <input
                       type="date"
                       value={newItem.fechaVencimiento}
-                      onChange={(e) => setNewItem({...newItem, fechaVencimiento: e.target.value})}
+                      onChange={(e) => setNewItem({ ...newItem, fechaVencimiento: e.target.value })}
                     />
                   </div>
                 </div>
@@ -236,7 +236,7 @@ const PantryManager = ({ user, onClose }) => {
                   <input
                     type="text"
                     value={newItem.notas}
-                    onChange={(e) => setNewItem({...newItem, notas: e.target.value})}
+                    onChange={(e) => setNewItem({ ...newItem, notas: e.target.value })}
                     placeholder="Ej: Comprado en el mercado, orgánico, etc."
                   />
                 </div>
@@ -262,7 +262,7 @@ const PantryManager = ({ user, onClose }) => {
                     <div key={item.id} className="pantry-item">
                       <div className="item-header">
                         <h4>{item.nombre}</h4>
-                        <button 
+                        <button
                           className="delete-btn"
                           onClick={() => handleDeleteItem(item.id)}
                         >
@@ -271,7 +271,7 @@ const PantryManager = ({ user, onClose }) => {
                       </div>
                       <div className="item-details">
                         <span className="quantity">{item.cantidad} {item.unidad}</span>
-                        <span 
+                        <span
                           className="status"
                           style={{ color: getStatusColor(status) }}
                         >
